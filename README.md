@@ -1,4 +1,6 @@
-# 36Food - FOod Ordering & Delivery App.
+# 36Food - Food Ordering & Delivery App.
+
+> This repository isis for educational purposes only.
 
 # Team Members & Contributors
 

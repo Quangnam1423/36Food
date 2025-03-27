@@ -53,14 +53,8 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
-
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7")
-    implementation("androidx.lifecycle:lifecycle-lifedata-ktx:2.8.7")
-    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
-    implementation("com.squareup.okhttp3:okhttp:4.11.0")
-    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
-
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.gson)
 
 
     testImplementation(libs.junit)

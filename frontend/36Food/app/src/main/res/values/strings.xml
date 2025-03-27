@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">36Food</string>
     <string name="quote">Gì cũng có!</string>
+    <string name = "login">Đăng Nhập</string>
 </resources>

@@ -1,6 +1,7 @@
 package com.example.a36food.data.repository
 
 import com.example.a36food.data.remote.AuthApiService
+import com.example.a36food.data.remote.AuthRequest
 import com.example.a36food.domain.model.User
 import javax.inject.Inject
 
@@ -16,9 +17,19 @@ class AuthRepositoryImpl @Inject constructor(
 ) : AuthRepository{
 
     private var cachedUser: User? = null
+    private var token: String? = null
 
     override suspend fun resgisterUser(name: String, email: String, password: String): User {
-        TODO("Not yet implemented")
+        val request = AuthRequest(name = name, email = email, password = password)
+        val response = authApi.register(request)
+
+        val user = response.toUser()
+
+        token = response.token
+
+        cachedUser = user
+
+        return user
     }
 
     override suspend fun loginUser(email: String, password: String): User {
@@ -26,12 +37,11 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override suspend fun logoutUser() {
-        TODO("Not yet implemented")
+        cachedUser = null
+        token = null
     }
 
     override suspend fun getCurrentUser(): User? {
-        TODO("Not yet implemented")
+        return cachedUser
     }
-
-
 }

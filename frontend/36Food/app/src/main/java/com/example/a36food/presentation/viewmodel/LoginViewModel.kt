@@ -1,8 +1,9 @@
 package com.example.a36food.presentation.viewmodel
 
-import com.example.a36food.domain.model.User
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import com.example.a36food.data.remote.AuthApiService
 import com.example.a36food.data.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,6 +20,10 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel(){
 
     private val _loginState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
     val loginState: StateFlow<LoginUiState> = _loginState.asStateFlow()
+
+    var username by mutableStateOf("")
+
+    var password by mutableStateOf("")
 
     // check login
     fun checkLogin(userName: String, password: String) {

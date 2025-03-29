@@ -52,10 +52,16 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.hilt.android)
+    implementation(libs.androidx.espresso.core)
+    implementation(libs.androidx.animation.core.lint)
     kapt(libs.hilt.compiler)
     implementation(libs.retrofit)
     implementation(libs.retrofit.gson)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.material.icons.extended)
+    implementation(libs.accompanist.pager)
+    implementation(libs.accompanist.pager.indicators)
+
 
 
     testImplementation(libs.junit)

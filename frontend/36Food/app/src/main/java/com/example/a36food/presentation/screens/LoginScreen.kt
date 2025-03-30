@@ -1,6 +1,6 @@
 package com.example.a36food.presentation.screens
 
-import android.view.Surface
+
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.foundation.Image
@@ -42,7 +42,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
@@ -54,8 +53,6 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.lint.kotlin.metadata.Visibility
-import androidx.navigation.NavController
 import com.example.a36food.R
 import com.example.a36food.presentation.viewmodel.LoginUiState
 import com.example.a36food.presentation.viewmodel.LoginViewModel
@@ -67,7 +64,6 @@ fun LoginScreen(
     modifier: Modifier = Modifier,
     retryAction: () -> Unit,
     loginSuccessAction: () -> Unit,
-    contentPadding: PaddingValues = PaddingValues(0.dp)
     ) {
     val loginUiState by loginViewModel.loginState.collectAsState()
 
@@ -110,7 +106,7 @@ fun IdleScreen(
             painter = painterResource(R.drawable.logo),
             contentDescription = stringResource(R.string.app_name)
         )
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_maximum)))
         Text(
             text = stringResource(R.string.login),
             style = MaterialTheme.typography.titleLarge,

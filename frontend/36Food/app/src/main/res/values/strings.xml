@@ -2,6 +2,7 @@
     <string name="app_name">36Food</string>
     <string name="quote">Gì cũng có!</string>
     <string name = "login">Đăng Nhập</string>
+    <string name = "change_password">Quên mật khẩu</string>
     <string name = "username">TÊN ĐĂNG NHẬP</string>
     <string name = "password">MẬT KHẨU</string>
 </resources>

@@ -6,6 +6,8 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 
+sealed class ForgotPasswordUiState()
+
 class ForgotPasswordViewModel : ViewModel() {
     var email by mutableStateOf("")
     var verificationCode by mutableStateOf("")
@@ -16,6 +18,4 @@ class ForgotPasswordViewModel : ViewModel() {
     var isPasswordReset by mutableStateOf(false)
 
     private val coroutineScope = viewModelScope
-
-
 }

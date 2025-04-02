@@ -5,4 +5,5 @@
     <string name = "change_password">Quên mật khẩu</string>
     <string name = "username">TÊN ĐĂNG NHẬP</string>
     <string name = "password">MẬT KHẨU</string>
+    <string name = "email">email</string>
 </resources>

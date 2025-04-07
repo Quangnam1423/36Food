@@ -55,9 +55,10 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun ChangePassScreen(
-    viewModel: ForgotPasswordViewModel = viewModel()
+    viewModel: ForgotPasswordViewModel = viewModel(),
+    uiState: ForgotPasswordUiState = viewModel.uiState
+
 ) {
-    val uiState = viewModel.uiState
     val context = LocalContext.current
     val title = when (uiState) {
         is ForgotPasswordUiState.InputEmail -> "Quên Mật Khẩu"
@@ -118,6 +119,11 @@ fun EnterEmailLayout(
     email: String,
     onEmailChanged: (String) -> Unit
 ) {
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+    val screenHeight = configuration.screenHeightDp.dp
+
+
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -153,7 +159,7 @@ fun EnterEmailLayout(
             )
         )
 
-        Spacer(modifier = Modifier.padding(dimensionResource(R.dimen.padding_medium)))
+        Spacer(modifier = Modifier.height(screenHeight * 0.2f))
 
         // Button
         Button(
@@ -254,19 +260,24 @@ fun EnterVerificationCodeLayout(
 @Composable
 fun ChangePasswordScreenPreview() {
     _36FoodTheme {
-        EnterEmailLayout(
-            email = "tongquangnam.offical@gmail.com",
-            onEmailChanged = {}
+        ChangePassScreen(
+            uiState = ForgotPasswordUiState.InputEmail(
+                email = "tongquangnam.official@gmail.com"
+            )
         )
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-fun EnterVerificationCodeLayoutPreview(
-
-) {
+fun EnterVerificationCodeLayoutPreview() {
     _36FoodTheme {
-        EnterVerificationCodeLayout()
+        ChangePassScreen(
+            uiState = ForgotPasswordUiState.VerifyCode(
+                email = "tongquangnam.official@gmail.com",
+                code = "1234",
+                newPassword = "asdhasd"
+            )
+        )
     }
 }

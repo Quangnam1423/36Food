@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -227,16 +228,26 @@ fun EnterVerificationCodeLayout(
         Spacer(modifier = Modifier.height(screenHeight * 0.01f))
 
         Row(
-            verticalAlignment = Alignment.CenterVertically
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = screenWidth * 0.01f)
         ) {
             Text(
                 text = "Chưa nhận được mã?"
             )
+            Spacer(modifier = Modifier.width(screenWidth * 0.02f))
+
             Text(
-                text = "Gửi lại sau ",
-                color = Color.Gray,
+                text = if (!isResendEnabled) "Gửi lại sau ${countdown}s" else "Gửi lại mã",
+                color = if (isResendEnabled) Color.Green else Color.Gray,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.clickable { /*TO DO*/ }
+                modifier = Modifier.clickable (enabled = isResendEnabled){
+                    if (isResendEnabled) {
+                        // resend verify code from modelview
+                        isResendEnabled = false
+                        countdown = 60
+                    }
+                }
             )
         }
 

@@ -17,10 +17,15 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.shapes
@@ -44,6 +49,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -52,6 +59,7 @@ import com.example.a36food.presentation.viewmodel.ForgotPasswordUiState
 import com.example.a36food.presentation.viewmodel.ForgotPasswordViewModel
 import com.example.a36food.ui.theme._36FoodTheme
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.StateFlow
 
 @Composable
 fun ChangePassScreen(
@@ -278,6 +286,8 @@ fun ChangePasswordLayout(
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
+    val confirmPasswordVisibility = remember { mutableStateOf(false) }
+    val newPasswordVisibility = remember { mutableStateOf(false) }
 
     Column(
         verticalArrangement = Arrangement.Center,
@@ -306,6 +316,19 @@ fun ChangePasswordLayout(
             ),
             onValueChange = {/*TO DO*/},
             label = {Text(text = "Mật Khẩu")},
+            visualTransformation = if (newPasswordVisibility.value)
+                VisualTransformation.None else PasswordVisualTransformation(),
+            trailingIcon = {
+                val image = if (newPasswordVisibility.value)
+                    Icons.Filled.Visibility
+                else Icons.Filled.VisibilityOff
+
+                IconButton(
+                    onClick = {newPasswordVisibility.value = !newPasswordVisibility.value}
+                ) {
+                    Icon(imageVector = image, contentDescription = "hidden Icon")
+                }
+            },
             keyboardOptions = KeyboardOptions.Default.copy(
                 imeAction = ImeAction.Done
             ),
@@ -335,6 +358,19 @@ fun ChangePasswordLayout(
             ),
             onValueChange = {/*TO DO*/},
             label = {Text(text = "Nhập Lại Mật Khẩu")},
+            visualTransformation = if (confirmPasswordVisibility.value)
+                VisualTransformation.None else PasswordVisualTransformation(),
+            trailingIcon = {
+                val image = if (confirmPasswordVisibility.value)
+                    Icons.Filled.Visibility
+                else Icons.Filled.VisibilityOff
+
+                IconButton(
+                    onClick = {confirmPasswordVisibility.value = !confirmPasswordVisibility.value}
+                ) {
+                    Icon(imageVector = image, contentDescription = "hidden Icon")
+                }
+            },
             keyboardOptions = KeyboardOptions.Default.copy(
                 imeAction = ImeAction.Done
             ),

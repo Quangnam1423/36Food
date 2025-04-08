@@ -334,7 +334,7 @@ fun ChangePasswordLayout(
                 disabledContainerColor = colorScheme.surface,
             ),
             onValueChange = {/*TO DO*/},
-            label = {Text(text = "Mật Khẩu")},
+            label = {Text(text = "Nhập Lại Mật Khẩu")},
             keyboardOptions = KeyboardOptions.Default.copy(
                 imeAction = ImeAction.Done
             ),

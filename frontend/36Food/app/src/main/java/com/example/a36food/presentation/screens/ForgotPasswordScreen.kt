@@ -21,7 +21,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.shapes
@@ -64,6 +63,7 @@ fun ChangePassScreen(
     val title = when (uiState) {
         is ForgotPasswordUiState.InputEmail -> "Quên Mật Khẩu"
         is ForgotPasswordUiState.VerifyCode -> "Xác Thực"
+        is ForgotPasswordUiState.ChangePassWord -> "Nhập Mật Khẩu Mới"
     }
 
     Column(
@@ -109,6 +109,10 @@ fun ChangePassScreen(
 
                 is ForgotPasswordUiState.VerifyCode -> {
                     EnterVerificationCodeLayout()
+                }
+
+                is ForgotPasswordUiState.ChangePassWord -> {
+                    ChangePasswordLayout()
                 }
             }
         }
@@ -267,6 +271,94 @@ fun EnterVerificationCodeLayout(
     }
 }
 
+@Composable
+fun ChangePasswordLayout(
+
+) {
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+    val screenHeight = configuration.screenHeightDp.dp
+
+    Column(
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.padding(5.dp).fillMaxSize()
+    ) {
+        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_maximum)))
+
+        Text(
+            text = "new password",
+            style = MaterialTheme.typography.labelLarge,
+            modifier = Modifier.align(Alignment.Start)
+        )
+
+
+        // password field
+        OutlinedTextField(
+            value = "",
+            singleLine = true,
+            shape = shapes.large,
+            modifier = Modifier.fillMaxWidth(),
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = colorScheme.surface,
+                unfocusedContainerColor = colorScheme.surface,
+                disabledContainerColor = colorScheme.surface,
+            ),
+            onValueChange = {/*TO DO*/},
+            label = {Text(text = "Mật Khẩu")},
+            keyboardOptions = KeyboardOptions.Default.copy(
+                imeAction = ImeAction.Done
+            ),
+            keyboardActions = KeyboardActions(
+                onDone = {/*TO DO*/}
+            )
+        )
+
+        Spacer(modifier = Modifier.height(height = screenHeight * 0.01f))
+
+        Text(
+            text = "confirm password",
+            style = MaterialTheme.typography.labelLarge,
+            modifier = Modifier.align(Alignment.Start)
+        )
+
+        // password field
+        OutlinedTextField(
+            value = "",
+            singleLine = true,
+            shape = shapes.large,
+            modifier = Modifier.fillMaxWidth(),
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = colorScheme.surface,
+                unfocusedContainerColor = colorScheme.surface,
+                disabledContainerColor = colorScheme.surface,
+            ),
+            onValueChange = {/*TO DO*/},
+            label = {Text(text = "Mật Khẩu")},
+            keyboardOptions = KeyboardOptions.Default.copy(
+                imeAction = ImeAction.Done
+            ),
+            keyboardActions = KeyboardActions(
+                onDone = {/*TO DO*/}
+            )
+        )
+
+        Spacer(modifier = Modifier.height(screenHeight * 0.2f))
+
+        // Button
+        Button(
+            onClick = {/*TO DO*/},
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Green),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Text(text = "ĐỔI MẬT KHẨU", color = Color.White, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun ChangePasswordScreenPreview() {
@@ -289,6 +381,16 @@ fun EnterVerificationCodeLayoutPreview() {
                 code = "1234",
                 newPassword = "asdhasd"
             )
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ChangePasswordLayoutPreview() {
+    _36FoodTheme {
+        ChangePassScreen(
+            uiState = ForgotPasswordUiState.ChangePassWord()
         )
     }
 }

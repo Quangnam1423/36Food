@@ -23,6 +23,11 @@ sealed class ForgotPasswordUiState {
         val isLoading: Boolean = false,
         val errorMessage: String? = null
     ) : ForgotPasswordUiState()
+
+    data class ChangePassWord(
+        val password: String? = null,
+        val newPassword: String? = null
+    ) : ForgotPasswordUiState()
 }
 
 class ForgotPasswordViewModel : ViewModel() {

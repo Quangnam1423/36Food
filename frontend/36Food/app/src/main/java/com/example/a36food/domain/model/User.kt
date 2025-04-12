@@ -5,7 +5,8 @@ import java.util.UUID
 enum class UserRole {
     Customer,
     Owner,
-    Delivery
+    Delivery,
+    Restaurant
 }
 
 data class User(

@@ -61,6 +61,7 @@ dependencies {
     implementation(libs.material.icons.extended)
     implementation(libs.accompanist.pager)
     implementation(libs.accompanist.pager.indicators)
+    implementation(libs.datastore.preferences)
 
 
 

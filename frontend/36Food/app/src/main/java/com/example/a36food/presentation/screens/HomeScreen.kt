@@ -16,8 +16,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.a36food.ui.theme._36FoodTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -27,7 +25,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.a36food.R
-
 import com.example.a36food.ui.components.BottomNavBar
 import com.example.a36food.ui.components.HomeTopAppBar
 
@@ -60,7 +57,10 @@ fun MenuLayout(
             .verticalScroll(rememberScrollState())
     ) {
         Spacer(modifier = Modifier.height(16.dp))
-        Text(text = "Chúc bạn ngon miệng, Bình!", style = MaterialTheme.typography.headlineMedium)
+        Text(
+            text = "Chúc bạn ngon miệng, Bình!",
+            style = MaterialTheme.typography.headlineMedium
+        )
         Spacer(modifier = Modifier.height(24.dp))
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,

@@ -22,7 +22,10 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.a36food.R
 import com.example.a36food.ui.components.BottomNavBar
@@ -31,7 +34,7 @@ import com.example.a36food.ui.components.HomeTopAppBar
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun MainMenuScreen() {
+fun HomeScreen() {
     Scaffold (
         topBar = {
             HomeTopAppBar()
@@ -50,6 +53,15 @@ fun MainMenuScreen() {
 fun MenuLayout(
     modifier: Modifier = Modifier
 ) {
+
+    val restaurantList = listOf(
+        Triple("Nhà Hàng Bình Thái", R.drawable.restaurant, 3.6),
+        Triple("Quán Quang Nam", R.drawable.restaurant, 4.9),
+        Triple("Bún Chả Hà Nội", R.drawable.restaurant, 4.5),
+        Triple("Bánh Mì 36", R.drawable.restaurant, 4.2),
+        Triple("Lẩu Phan", R.drawable.restaurant, 4.0)
+    )
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -58,8 +70,11 @@ fun MenuLayout(
     ) {
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "Chúc bạn ngon miệng, Bình!",
-            style = MaterialTheme.typography.headlineMedium
+            text = "Chúc Bạn Ngon Miệng, Bình!",
+            style = MaterialTheme.typography.titleMedium,
+            color = Color(0xFFFF9800),
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(24.dp))
         Row(
@@ -79,6 +94,18 @@ fun MenuLayout(
             )
         }
         CategoryGrid(onCategoryClick = {})
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            restaurantList.forEach { (name, imageRes, rating) ->
+                RestaurantCard(
+                    name = name,
+                    imageRes = imageRes,
+                    rating = rating
+                )
+            }
+        }
     }
 }
 
@@ -118,11 +145,47 @@ fun CategoryGrid (
 }
 
 @Composable
-fun SuggestionRestaurants (
-
+fun RestaurantCard(
+    name: String,
+    imageRes: Int,
+    rating: Double,
+    modifier: Modifier = Modifier
 ) {
-    //val restaurants = listOf (
-       // Restaurant("Nhà Hàng Bình Thái", 3.6, "18%", "36p", R.drawable.res1)
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(100.dp)
+        ) {
+            Image(
+                painter = painterResource(imageRes),
+                contentDescription = name,
+                modifier = Modifier.fillMaxSize()
+            )
+            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_small)))
+            Text(
+                text = "⭐ $rating",
+                color = Color.Green,
+                style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(4.dp)
+            )
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(
+            text = name,
+            style = MaterialTheme.typography.bodyMedium
+        )
+    }
+}
 
-    //)
+@Preview(showBackground = true)
+@Composable
+fun HomeScreenPreview() {
+    HomeScreen()
 }

@@ -40,6 +40,7 @@ androidx-animation-core-lint = { group = "androidx.compose.animation", name = "a
 material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIcons" }
 accompanist-pager = { module = "com.google.accompanist:accompanist-pager", version.ref = "accompanist" }
 accompanist-pager-indicators = { module = "com.google.accompanist:accompanist-pager-indicators", version.ref = "accompanist" }
+accompanist-flowlayout = { module = "com.google.accompanist:accompanist-flowlayout", version.ref = "accompanist" }
 datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 
 [plugins]

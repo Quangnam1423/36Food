@@ -62,6 +62,7 @@ dependencies {
     implementation(libs.accompanist.pager)
     implementation(libs.accompanist.pager.indicators)
     implementation(libs.datastore.preferences)
+    implementation(libs.accompanist.flowlayout)
 
 
 

@@ -6,6 +6,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -33,6 +34,17 @@ fun BottomNavBar(
         NavigationBarItem (
             icon = { Icon(Icons.Default.Home,  contentDescription = "Home") },
             label = { Text("Home") },
+            selected = homeSelected.value,
+            onClick = {
+                homeSelected.value = true
+                favoriteSelected.value = false
+                historySelected.value = false
+                personalSelected.value = false
+            }
+        )
+        NavigationBarItem (
+            icon = { Icon(Icons.Default.Search,  contentDescription = "Home") },
+            label = { Text("Search") },
             selected = homeSelected.value,
             onClick = {
                 homeSelected.value = true

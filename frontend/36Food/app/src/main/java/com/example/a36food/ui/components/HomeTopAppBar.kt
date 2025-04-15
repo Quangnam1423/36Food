@@ -53,7 +53,7 @@ fun HomeTopAppBar() {
                 Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_small)))
                 Text("Yên Xá, Tân Triều, Thanh Trì...",
                     style = MaterialTheme.typography.labelMedium,
-                    color = Color(0xFFFF5722),
+                    color = Color(0xFFFF9800),
                     maxLines = 1,
                     modifier = Modifier
                         .clickable { /* TO DO*/ }

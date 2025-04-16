@@ -15,6 +15,7 @@ animationCoreLint = "1.8.0-rc02"
 materialIcons = "1.6.0"
 accompanist = "0.32.0"
 datastore = "1.0.0"
+play_services_location = "21.0.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -42,6 +43,7 @@ accompanist-pager = { module = "com.google.accompanist:accompanist-pager", versi
 accompanist-pager-indicators = { module = "com.google.accompanist:accompanist-pager-indicators", version.ref = "accompanist" }
 accompanist-flowlayout = { module = "com.google.accompanist:accompanist-flowlayout", version.ref = "accompanist" }
 datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
+play_services_location = { module = "com.google.android.gms:play-services-location", version.ref = "play_services_location" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

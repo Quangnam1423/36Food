@@ -63,7 +63,7 @@ dependencies {
     implementation(libs.accompanist.pager.indicators)
     implementation(libs.datastore.preferences)
     implementation(libs.accompanist.flowlayout)
-
+    implementation(libs.play.services.location)
 
 
     testImplementation(libs.junit)

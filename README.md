@@ -4,13 +4,24 @@ This repository is for educational purposes only.
 '''
 ## Contents
 -[Introduction](#36food---food-ordering--delivery-app)
+
 -[Team Members & Contributors](team-members-and-contributors)
+
 -[Demo](#demo)
+
 -[Technology Stack](#technology-stack)
+
     -[Backend](#backend-java-spring--mysql)
+
     -[Frontend](#frontend-kotlin--jetpack-compose)
+
 -[Directory Structure](#directory-structure)
+
+    -[Backend Structure](#backend)
+    -[Frontend Structure](#frontend)
+
 -[Contact](#contact)
+
 -[License](#license)
 
 ## Team Members and Contributors

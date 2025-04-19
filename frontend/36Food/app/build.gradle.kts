@@ -58,12 +58,14 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.retrofit.gson)
     implementation(libs.androidx.navigation.compose)
-    implementation(libs.material.icons.extended)
     implementation(libs.accompanist.pager)
     implementation(libs.accompanist.pager.indicators)
     implementation(libs.datastore.preferences)
     implementation(libs.accompanist.flowlayout)
     implementation(libs.play.services.location)
+    implementation(libs.compose.material3)
+    implementation(libs.material.icons.extended)
+
 
 
     testImplementation(libs.junit)

@@ -1,15 +1,15 @@
 package com.example.a36food.ui.components
 
 //noinspection UsingMaterialAndMaterial3Libraries
-import androidx.compose.material.Badge
+import androidx.compose.material3.Badge
 //noinspection UsingMaterialAndMaterial3Libraries
-import androidx.compose.material.BadgedBox
+import androidx.compose.material3.BadgedBox
 //noinspection UsingMaterialAndMaterial3Libraries
-import androidx.compose.material.Icon
+import androidx.compose.material3.Icon
 //noinspection UsingMaterialAndMaterial3Libraries
-import androidx.compose.material.IconButton
+import androidx.compose.material3.IconButton
 //noinspection UsingMaterialAndMaterial3Libraries
-import androidx.compose.material.Text
+import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.runtime.Composable

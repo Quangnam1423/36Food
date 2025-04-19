@@ -5,11 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bbcecbf0-cd20-4043-8e2b-7aa697268b86" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/frontend/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.idea/caches/deviceStreaming.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/36Food/app/src/main/java/com/example/a36food/presentation/screens/ForgotPasswordScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/36Food/app/src/main/java/com/example/a36food/presentation/screens/ForgotPasswordScreen.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/36Food/app/src/main/java/com/example/a36food/presentation/viewmodel/ForgotPasswordViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/36Food/app/src/main/java/com/example/a36food/presentation/viewmodel/ForgotPasswordViewModel.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/36Food/app/src/main/java/com/example/a36food/ui/theme/Type.kt" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/36Food/app/src/main/java/com/example/a36food/ui/theme/Type.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/36Food/app/src/main/res/values/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/36Food/app/src/main/res/values/strings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/36Food/app/src/main/java/com/example/a36food/presentation/screens/SearchResultScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/36Food/app/src/main/java/com/example/a36food/presentation/screens/SearchResultScreen.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -22,9 +18,9 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 2
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 2
+}</component>
   <component name="ProjectId" id="2v7sifPm5vFXLoaQrrYVYJyXlH7" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -39,7 +35,7 @@
     "cidr.known.project.marker": "true",
     "git-widget-placeholder": "main",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "D:/36Food/frontend"
+    "last_opened_file_path": "D:/36Food"
   }
 }]]></component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />

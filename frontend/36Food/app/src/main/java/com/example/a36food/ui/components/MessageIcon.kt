@@ -22,7 +22,6 @@ fun MessageIcon(
             BadgedBox(
                 badge = {
                     Badge(
-                        containerColor = Color.Red
                     ) {
                         Text(messageCount.toString())
                     }

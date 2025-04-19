@@ -21,8 +21,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -268,7 +266,7 @@ fun RestaurantDetailLayout(
         item{
             RestaurantDetailHeader(
                 restaurant = sampleRestaurant,
-                modifier = modifier.fillMaxWidth().height(200.dp)
+                modifier = Modifier.fillMaxWidth()
             )
         }
         item{
@@ -294,7 +292,7 @@ fun RestaurantDetailHeader(
     Image(
         painter = painterResource(restaurant.imageRes),
         contentDescription = "restaurant banner",
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier,
         contentScale = ContentScale.Crop
     )
 

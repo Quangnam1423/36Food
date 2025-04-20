@@ -187,6 +187,7 @@ fun MenuLayout(
 
     val restaurantList = listOf(
         Restaurant(
+            id = 1,
             name = "Nhà hàng ABC",
             imageRes = R.drawable.restaurant, // thay bằng resource thật nếu có
             rating = 4.5f,
@@ -195,6 +196,7 @@ fun MenuLayout(
             isOpen = true
         ),
         Restaurant(
+            id = 1,
             name = "Nhà hàng ABC",
             imageRes = R.drawable.restaurant, // thay bằng resource thật nếu có
             rating = 4.5f,
@@ -203,6 +205,7 @@ fun MenuLayout(
             isOpen = true
         ),
         Restaurant(
+            id = 1,
             name = "Nhà hàng ABC",
             imageRes = R.drawable.restaurant, // thay bằng resource thật nếu có
             rating = 4.5f,
@@ -211,6 +214,7 @@ fun MenuLayout(
             isOpen = true
         ),
         Restaurant(
+            id = 1,
             name = "Nhà hàng ABC",
             imageRes = R.drawable.restaurant, // thay bằng resource thật nếu có
             rating = 4.5f,
@@ -219,6 +223,7 @@ fun MenuLayout(
             isOpen = true
         ),
         Restaurant(
+            id = 1,
             name = "Nhà hàng ABC",
             imageRes = R.drawable.restaurant, // thay bằng resource thật nếu có
             rating = 4.5f,
@@ -227,6 +232,7 @@ fun MenuLayout(
             isOpen = true
         ),
         Restaurant(
+            id = 1,
             name = "Nhà hàng ABC",
             imageRes = R.drawable.restaurant, // thay bằng resource thật nếu có
             rating = 4.5f,
@@ -235,6 +241,7 @@ fun MenuLayout(
             isOpen = true
         ),
         Restaurant(
+            id = 1,
             name = "Nhà hàng ABC",
             imageRes = R.drawable.restaurant, // thay bằng resource thật nếu có
             rating = 4.5f,
@@ -398,18 +405,4 @@ fun RestaurantCard(
 @Composable
 fun HomeScreenPreview() {
     HomeScreen()
-}
-
-@Preview
-@Composable
-fun RestaurantCardPreview() {
-    val sampleRestaurant = Restaurant(
-        name = "Nhà hàng ABC",
-        imageRes = R.drawable.restaurant, // thay bằng resource thật nếu có
-        rating = 4.5f,
-        address = "123 Đường ABC, TP.HCM",
-        priceRange = "$$",
-        isOpen = true
-    )
-    RestaurantCard(sampleRestaurant, modifier = Modifier.fillMaxWidth())
 }

@@ -67,6 +67,7 @@ fun SearchResultLayout(
     modifier: Modifier = Modifier,
 ) {
     val sampleRestaurant = Restaurant(
+        id = 1,
         name = "Nhà hàng ABC",
         imageRes = R.drawable.restaurant, // thay bằng resource thật nếu có
         rating = 4.5f,

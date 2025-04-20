@@ -65,6 +65,7 @@ dependencies {
     implementation(libs.play.services.location)
     implementation(libs.compose.material3)
     implementation(libs.material.icons.extended)
+    implementation(libs.coil.compose)
 
 
 

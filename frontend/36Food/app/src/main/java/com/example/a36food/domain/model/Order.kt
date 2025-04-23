@@ -30,15 +30,14 @@ enum class ServiceType {
 
 
 data class Order(
-    val orderId: String,
-    val restaurantName: String,
-    val restaurantImage: String,
-    val orderItems: List<OrderItem>,
-    val totalPrice: Double,
-    val orderDate: Long,
+    val id: String,
+    val userId: String,
+    val restaurantId: String,
+    val items: List<OrderItem>,
     val status: OrderStatus,
-    val deliveryAddress: String,
-    val paymentMethod: String,
-    val serviceType: ServiceType,
-    val isCompleted: Boolean
+    val totalPrice: Double,
+    val address: String,
+    val phoneNumber: String,
+    val note: String = "",
+    val createdAt: Long = System.currentTimeMillis()
 )

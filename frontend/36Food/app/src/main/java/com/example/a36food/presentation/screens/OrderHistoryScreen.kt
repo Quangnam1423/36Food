@@ -776,6 +776,15 @@ private fun OrderCard(order: Order) {
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
+            if (order.status in listOf(OrderStatus.COMPLETED, OrderStatus.CANCELLED, OrderStatus.FAILED)) {
+                Text(
+                    text = "Ngày đặt: ${formatDate(order.orderDate)}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -868,6 +877,11 @@ private fun OrderStatus.toColor(): Color = when(this) {
 
 private fun formatPrice(price: Double): String {
     return String.format("%,.0f", price)
+}
+
+private fun formatDate(timestamp: Long): String {
+    val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+    return dateFormat.format(Date(timestamp))
 }
 
 @Preview(showBackground = true)

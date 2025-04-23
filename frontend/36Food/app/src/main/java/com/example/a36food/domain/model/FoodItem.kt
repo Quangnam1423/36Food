@@ -1,13 +1,16 @@
 package com.example.a36food.domain.model
 
 data class FoodItem(
-    val id: Int,
+    val id: String,
+    val restaurantId: String,
     val name: String,
+    val description: String = "",
     val price: Double,
-    val restaurant: Restaurant? = null,
-    val imageResId: Int,
+    val imageUrl: String,
+    val categoryId: String, // Bắt buộc phải có category
     val isAvailable: Boolean = true,
     val isPopular: Boolean = false,
-    val like: Int = 0,
-    val saleCount: Int = 0
+    val likes: Int = 0,
+    val saleCount: Int = 0,
+    val createdAt: Long = System.currentTimeMillis()
 )

@@ -62,7 +62,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.style.TextOverflow
-import com.example.a36food.domain.OrderStatus
+import com.example.a36food.domain.model.OrderStatus
 import com.example.a36food.domain.model.Order
 import com.example.a36food.domain.model.OrderItem
 import com.example.a36food.domain.model.ServiceType
@@ -134,150 +134,240 @@ fun OrderHistoryLayout(
     ) {
 
     val testOrders = listOf(
-        // Đơn đang đến
+        // Đơn chờ xác nhận
         Order(
             orderId = "HD001",
             restaurantName = "Phở 24",
             restaurantImage = "https://example.com/pho24.jpg",
             orderItems = listOf(
-                OrderItem(id = "1", name = "Phở bò tái", quantity = 2, price = 55000.0, imageUrl = "https://example.com/pho.jpg"),
-                OrderItem(id = "2", name = "Nước ngọt", quantity = 2, price = 15000.0, imageUrl = "https://example.com/drink.jpg")
+                OrderItem(
+                    id = "1",
+                    name = "Phở bò tái",
+                    quantity = 2,
+                    price = 55000.0,
+                    imageUrl = "https://example.com/pho.jpg"
+                ),
+                OrderItem(
+                    id = "2",
+                    name = "Nước ngọt",
+                    quantity = 2,
+                    price = 15000.0,
+                    imageUrl = "https://example.com/drink.jpg"
+                )
             ),
             totalPrice = 140000.0,
             orderDate = System.currentTimeMillis(),
-            status = OrderStatus.UPCOMING,
+            status = OrderStatus.PENDING,
             deliveryAddress = "123 Nguyễn Văn Cừ, Q.5, TP.HCM",
             paymentMethod = "Tiền mặt",
             serviceType = ServiceType.FOOD,
             isCompleted = false
         ),
+
+        // Đơn đã xác nhận
         Order(
             orderId = "HD002",
             restaurantName = "Bếp Thái",
             restaurantImage = "https://example.com/bepthai.jpg",
             orderItems = listOf(
-                OrderItem(id = "3", name = "Pad Thai", quantity = 1, price = 75000.0, imageUrl = "https://example.com/padthai.jpg"),
+                OrderItem(
+                    id = "3",
+                    name = "Pad Thai",
+                    quantity = 1,
+                    price = 75000.0,
+                    imageUrl = "https://example.com/padthai.jpg"
+                )
             ),
             totalPrice = 75000.0,
             orderDate = System.currentTimeMillis(),
-            status = OrderStatus.UPCOMING,
+            status = OrderStatus.CONFIRMED,
             deliveryAddress = "45 Lý Tự Trọng, Q.1, TP.HCM",
             paymentMethod = "Ví Momo",
             serviceType = ServiceType.FOOD,
             isCompleted = false
         ),
 
-        // Đơn đang xử lý
+        // Đơn đang chuẩn bị
         Order(
             orderId = "HD003",
+            restaurantName = "Cơm Tấm Thuận Kiều",
+            restaurantImage = "https://example.com/comtam.jpg",
+            orderItems = listOf(
+                OrderItem(
+                    id = "4",
+                    name = "Cơm tấm sườn",
+                    quantity = 1,
+                    price = 45000.0,
+                    imageUrl = "https://example.com/comtam.jpg"
+                )
+            ),
+            totalPrice = 45000.0,
+            orderDate = System.currentTimeMillis() - 86400000,
+            status = OrderStatus.PREPARING,
+            deliveryAddress = "67 Lê Lợi, Q.1, TP.HCM",
+            paymentMethod = "ZaloPay",
+            serviceType = ServiceType.FOOD,
+            isCompleted = false
+        ),
+
+        // Đơn chờ lấy hàng
+        Order(
+            orderId = "HD004",
+            restaurantName = "KFC",
+            restaurantImage = "https://example.com/kfc.jpg",
+            orderItems = listOf(
+                OrderItem(
+                    id = "5",
+                    name = "Gà rán",
+                    quantity = 1,
+                    price = 89000.0,
+                    imageUrl = "https://example.com/chicken.jpg"
+                )
+            ),
+            totalPrice = 89000.0,
+            orderDate = System.currentTimeMillis() - 172800000,
+            status = OrderStatus.READY_TO_PICKUP,
+            deliveryAddress = "34 CMT8, Q.3, TP.HCM",
+            paymentMethod = "Thẻ tín dụng",
+            serviceType = ServiceType.FOOD,
+            isCompleted = false
+        ),
+
+        // Đơn shipper đã lấy
+        Order(
+            orderId = "HD005",
+            restaurantName = "Trà sữa TocoToco",
+            restaurantImage = "https://example.com/tocotoco.jpg",
+            orderItems = listOf(
+                OrderItem(
+                    id = "6",
+                    name = "Trà sữa trân châu",
+                    quantity = 2,
+                    price = 50000.0,
+                    imageUrl = "https://example.com/bubbletea.jpg"
+                )
+            ),
+            totalPrice = 100000.0,
+            orderDate = System.currentTimeMillis() - 259200000,
+            status = OrderStatus.PICKED_UP,
+            deliveryAddress = "78 Võ Văn Tần, Q.3, TP.HCM",
+            paymentMethod = "ZaloPay",
+            serviceType = ServiceType.DRINK,
+            isCompleted = false
+        ),
+
+        // Đơn đang giao
+        Order(
+            orderId = "HD006",
             restaurantName = "Circle K",
             restaurantImage = "https://example.com/circlek.jpg",
             orderItems = listOf(
-                OrderItem(id = "4", name = "Snack Mix", quantity = 2, price = 25000.0, imageUrl = "https://example.com/snack.jpg")
+                OrderItem(
+                    id = "7",
+                    name = "Snack Mix",
+                    quantity = 2,
+                    price = 25000.0,
+                    imageUrl = "https://example.com/snack.jpg"
+                )
             ),
             totalPrice = 50000.0,
-            orderDate = System.currentTimeMillis() - 86400000,
+            orderDate = System.currentTimeMillis() - 345600000,
             status = OrderStatus.IN_PROGRESS,
-            deliveryAddress = "67 Lê Lợi, Q.1, TP.HCM",
-            paymentMethod = "ZaloPay",
+            deliveryAddress = "156 Trần Hưng Đạo, Q.5, TP.HCM",
+            paymentMethod = "Tiền mặt",
             serviceType = ServiceType.SUPERMARKET,
             isCompleted = false
         ),
 
-        // Đơn đã hoàn thành
+        // Đơn hoàn thành
         Order(
-            orderId = "HD004",
-            restaurantName = "Nhà thuốc An Khang",
-            restaurantImage = "https://example.com/ankhang.jpg",
+            orderId = "HD007",
+            restaurantName = "Lotteria",
+            restaurantImage = "https://example.com/lotteria.jpg",
             orderItems = listOf(
-                OrderItem(id = "5", name = "Vitamin C", quantity = 1, price = 85000.0, imageUrl = "https://example.com/vitamin.jpg")
+                OrderItem(
+                    id = "8",
+                    name = "Hamburger",
+                    quantity = 2,
+                    price = 45000.0,
+                    imageUrl = "https://example.com/hamburger.jpg"
+                )
             ),
-            totalPrice = 85000.0,
-            orderDate = System.currentTimeMillis() - 172800000,
-            status = OrderStatus.DELIVERED,
-            deliveryAddress = "78 Võ Văn Tần, Q.3, TP.HCM",
-            paymentMethod = "ZaloPay",
-            serviceType = ServiceType.MEDICINE,
-            isCompleted = true
-        ),
-        Order(
-            orderId = "HD005",
-            restaurantName = "BigC",
-            restaurantImage = "https://example.com/bigc.jpg",
-            orderItems = listOf(
-                OrderItem(id = "6", name = "Gạo ST25", quantity = 2, price = 180000.0, imageUrl = "https://example.com/rice.jpg"),
-                OrderItem(id = "7", name = "Nước mắm", quantity = 1, price = 45000.0, imageUrl = "https://example.com/fishsauce.jpg")
-            ),
-            totalPrice = 405000.0,
-            orderDate = System.currentTimeMillis() - 259200000,
-            status = OrderStatus.DELIVERED,
-            deliveryAddress = "34 CMT8, Q.3, TP.HCM",
-            paymentMethod = "Thẻ tín dụng",
-            serviceType = ServiceType.GROCERY,
+            totalPrice = 90000.0,
+            orderDate = System.currentTimeMillis() - 432000000,
+            status = OrderStatus.COMPLETED,
+            deliveryAddress = "89 Nguyễn Du, Q.1, TP.HCM",
+            paymentMethod = "Tiền mặt",
+            serviceType = ServiceType.FOOD,
             isCompleted = true
         ),
 
         // Đơn đã hủy
         Order(
-            orderId = "HD006",
-            restaurantName = "Flower Box",
-            restaurantImage = "https://example.com/flowerbox.jpg",
-            orderItems = listOf(
-                OrderItem(id = "8", name = "Bó hoa hồng", quantity = 1, price = 350000.0, imageUrl = "https://example.com/rose.jpg")
-            ),
-            totalPrice = 350000.0,
-            orderDate = System.currentTimeMillis() - 345600000,
-            status = OrderStatus.CANCELLED,
-            deliveryAddress = "156 Trần Hưng Đạo, Q.5, TP.HCM",
-            paymentMethod = "Tiền mặt",
-            serviceType = ServiceType.FLOWER,
-            isCompleted = false
-        ),
-        Order(
-            orderId = "HD007",
-            restaurantName = "Heniken Store",
-            restaurantImage = "https://example.com/heniken.jpg",
-            orderItems = listOf(
-                OrderItem(id = "9", name = "Bia Heniken", quantity = 24, price = 450000.0, imageUrl = "https://example.com/beer.jpg")
-            ),
-            totalPrice = 450000.0,
-            orderDate = System.currentTimeMillis() - 432000000,
-            status = OrderStatus.CANCELLED,
-            deliveryAddress = "89 Nguyễn Du, Q.1, TP.HCM",
-            paymentMethod = "Tiền mặt",
-            serviceType = ServiceType.ALCOHOL,
-            isCompleted = false
-        ),
-
-        // Thêm đơn hoàn thành khác
-        Order(
             orderId = "HD008",
             restaurantName = "PetMart",
             restaurantImage = "https://example.com/petmart.jpg",
             orderItems = listOf(
-                OrderItem(id = "10", name = "Thức ăn cho mèo", quantity = 2, price = 120000.0, imageUrl = "https://example.com/catfood.jpg")
+                OrderItem(
+                    id = "9",
+                    name = "Thức ăn cho mèo",
+                    quantity = 2,
+                    price = 120000.0,
+                    imageUrl = "https://example.com/catfood.jpg"
+                )
             ),
             totalPrice = 240000.0,
             orderDate = System.currentTimeMillis() - 518400000,
-            status = OrderStatus.DELIVERED,
+            status = OrderStatus.CANCELLED,
             deliveryAddress = "34 Nguyễn Thị Minh Khai, Q.1, TP.HCM",
             paymentMethod = "Thẻ tín dụng",
             serviceType = ServiceType.PET,
             isCompleted = true
         ),
+
+        // Đơn thất bại
         Order(
             orderId = "HD009",
             restaurantName = "Guardian",
             restaurantImage = "https://example.com/guardian.jpg",
             orderItems = listOf(
-                OrderItem(id = "11", name = "Kem chống nắng", quantity = 1, price = 250000.0, imageUrl = "https://example.com/sunscreen.jpg")
+                OrderItem(
+                    id = "10",
+                    name = "Kem chống nắng",
+                    quantity = 1,
+                    price = 250000.0,
+                    imageUrl = "https://example.com/sunscreen.jpg"
+                )
             ),
             totalPrice = 250000.0,
             orderDate = System.currentTimeMillis() - 604800000,
-            status = OrderStatus.DELIVERED,
+            status = OrderStatus.FAILED,
             deliveryAddress = "56 Lê Thánh Tôn, Q.1, TP.HCM",
             paymentMethod = "Momo",
             serviceType = ServiceType.MEDICINE,
+            isCompleted = true
+        ),
+
+        // Đơn hoàn tiền
+        Order(
+            orderId = "HD010",
+            restaurantName = "BigC",
+            restaurantImage = "https://example.com/bigc.jpg",
+            orderItems = listOf(
+                OrderItem(
+                    id = "11",
+                    name = "Gạo ST25",
+                    quantity = 2,
+                    price = 180000.0,
+                    imageUrl = "https://example.com/rice.jpg"
+                )
+            ),
+            totalPrice = 360000.0,
+            orderDate = System.currentTimeMillis() - 691200000,
+            status = OrderStatus.REFUNDED,
+            deliveryAddress = "90 Hai Bà Trưng, Q.1, TP.HCM",
+            paymentMethod = "Thẻ tín dụng",
+            serviceType = ServiceType.GROCERY,
             isCompleted = true
         )
     )
@@ -598,13 +688,24 @@ fun OrderHistoryContent(
 ) {
     val filteredOrders = orders.filter { order ->
         when (selectedTabIndex) {
-            0 -> order.status == OrderStatus.UPCOMING || order.status == OrderStatus.IN_PROGRESS
+            0 -> order.status in listOf(
+                OrderStatus.PENDING,
+                OrderStatus.CONFIRMED,
+                OrderStatus.PREPARING,
+                OrderStatus.READY_TO_PICKUP,
+                OrderStatus.PICKED_UP,
+                OrderStatus.IN_PROGRESS
+            )
             2 -> {
                 val matchesService = selectedService == ServiceType.ALL || order.serviceType == selectedService
                 val matchesCompletion = when (selectedCompletion) {
-                    "Hoàn thành" -> order.isCompleted && order.status == OrderStatus.DELIVERED
-                    "Đã hủy" -> order.status == OrderStatus.CANCELLED
-                    else -> order.status == OrderStatus.DELIVERED || order.status == OrderStatus.CANCELLED
+                    "Hoàn thành" -> order.status == OrderStatus.COMPLETED
+                    "Đã hủy" -> order.status in listOf(OrderStatus.CANCELLED, OrderStatus.FAILED)
+                    else -> order.status in listOf(
+                        OrderStatus.COMPLETED,
+                        OrderStatus.CANCELLED,
+                        OrderStatus.FAILED
+                    )
                 }
                 val matchesDate = if (startDate != null && endDate != null) {
                     order.orderDate in startDate..endDate
@@ -739,19 +840,30 @@ private fun OrderCard(order: Order) {
     }
 }
 
-// Helper functions
 private fun OrderStatus.toDisplayString(): String = when(this) {
-    OrderStatus.UPCOMING -> "Đang đến"
-    OrderStatus.IN_PROGRESS -> "Đang xử lý"
-    OrderStatus.DELIVERED -> "Đã giao"
+    OrderStatus.PENDING -> "Chờ xác nhận"
+    OrderStatus.CONFIRMED -> "Đã xác nhận"
+    OrderStatus.PREPARING -> "Đang chuẩn bị"
+    OrderStatus.READY_TO_PICKUP -> "Chờ lấy hàng"
+    OrderStatus.PICKED_UP -> "Đã lấy hàng"
+    OrderStatus.IN_PROGRESS -> "Đang giao"
+    OrderStatus.COMPLETED -> "Đã giao"
     OrderStatus.CANCELLED -> "Đã hủy"
+    OrderStatus.REFUNDED -> "Đã hoàn tiền"
+    OrderStatus.FAILED -> "Giao hàng thất bại"
 }
 
 private fun OrderStatus.toColor(): Color = when(this) {
-    OrderStatus.UPCOMING -> Color(0xFFFF5722)
+    OrderStatus.PENDING -> Color(0xFF9E9E9E)
+    OrderStatus.CONFIRMED,
+    OrderStatus.PREPARING -> Color(0xFFFF9800)
+    OrderStatus.READY_TO_PICKUP,
+    OrderStatus.PICKED_UP,
     OrderStatus.IN_PROGRESS -> Color(0xFF2196F3)
-    OrderStatus.DELIVERED -> Color(0xFF4CAF50)
-    OrderStatus.CANCELLED -> Color.Gray
+    OrderStatus.COMPLETED -> Color(0xFF4CAF50)
+    OrderStatus.CANCELLED,
+    OrderStatus.FAILED -> Color.Red
+    OrderStatus.REFUNDED -> Color(0xFF673AB7)
 }
 
 private fun formatPrice(price: Double): String {

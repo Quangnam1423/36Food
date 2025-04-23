@@ -1,10 +1,9 @@
 package com.example.a36food.domain.model
 
-import com.example.a36food.domain.OrderStatus
-
-
 
 enum class ServiceType {
+
+   DRINK,
     ALL,
     FOOD,
     GROCERY,
@@ -17,6 +16,7 @@ enum class ServiceType {
     fun toDisplayString(): String {
         return when (this) {
             ALL -> "Tất cả"
+            DRINK -> "Đồ uống"
             FOOD -> "Đồ ăn"
             GROCERY -> "Thực phẩm"
             ALCOHOL -> "Rượu bia"

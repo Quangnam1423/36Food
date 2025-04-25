@@ -41,6 +41,20 @@ android {
     buildFeatures {
         compose = true
     }
+    packaging {
+        resources {
+            excludes += setOf(
+                "META-INF/INDEX.LIST",
+                "META-INF/io.netty.versions.properties",
+                "META-INF/DEPENDENCIES",
+                // Add other META-INF files if needed
+                "META-INF/LICENSE",
+                "META-INF/LICENSE.txt",
+                "META-INF/NOTICE",
+                "META-INF/NOTICE.txt"
+            )
+        }
+    }
 }
 
 dependencies {
@@ -56,6 +70,7 @@ dependencies {
     implementation(libs.hilt.android)
     implementation(libs.androidx.espresso.core)
     implementation(libs.androidx.animation.core.lint)
+    implementation(libs.firebase.appdistribution.gradle)
     kapt(libs.hilt.compiler)
     implementation(libs.retrofit)
     implementation(libs.retrofit.gson)

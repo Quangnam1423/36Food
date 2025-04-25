@@ -10,89 +10,93 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
 fun BottomNavBar(
-
+    selectedRoute: String = Screen.Home.route,
+    onNavigateToHome: () -> Unit = {},
+    onNavigateToSearch: () -> Unit = {},
+    onNavigateToFavorite: () -> Unit = {},
+    onNavigateToHistory: () -> Unit = {},
+    onNavigateToProfile: () -> Unit = {}
 ) {
+    val navItems = listOf(
+        NavItem(
+            route = Screen.Home.route,
+            icon = Icons.Default.Home,
+            label = "Home",
+            onClick = onNavigateToHome
+        ),
+        NavItem(
+            route = Screen.Search.route,
+            icon = Icons.Default.Search,
+            label = "Search",
+            onClick = onNavigateToSearch
+        ),
+        NavItem(
+            route = Screen.Favorite.route,
+            icon = Icons.Filled.Favorite,
+            label = "Favorite",
+            onClick = onNavigateToFavorite
+        ),
+        NavItem(
+            route = Screen.History.route,
+            icon = Icons.Default.History,
+            label = "History",
+            onClick = onNavigateToHistory
+        ),
+        NavItem(
+            route = Screen.Profile.route,
+            icon = Icons.Filled.Person,
+            label = "Profile",
+            onClick = onNavigateToProfile
+        )
+    )
 
-    val homeSelected = remember { mutableStateOf(false) }
-    val favoriteSelected = remember { mutableStateOf(false) }
-    val historySelected = remember { mutableStateOf(false) }
-    val personalSelected = remember { mutableStateOf(false) }
-
-    NavigationBar (
-        modifier = Modifier.background(Color.Green)
+    NavigationBar(
+        modifier = Modifier.background(Color.White),
+        containerColor = Color.White
     ) {
-        NavigationBarItem (
-            icon = { Icon(Icons.Default.Home,  contentDescription = "Home") },
-            label = { Text("Home") },
-            selected = homeSelected.value,
-            onClick = {
-                homeSelected.value = true
-                favoriteSelected.value = false
-                historySelected.value = false
-                personalSelected.value = false
-            }
-        )
-        NavigationBarItem (
-            icon = { Icon(Icons.Default.Search,  contentDescription = "Home") },
-            label = { Text("Search") },
-            selected = homeSelected.value,
-            onClick = {
-                homeSelected.value = true
-                favoriteSelected.value = false
-                historySelected.value = false
-                personalSelected.value = false
-            }
-        )
-        NavigationBarItem (
-            icon = { Icon(Icons.Filled.Favorite, contentDescription = "Yêu Thích") },
-            label = { Text("Favorite") },
-            selected = favoriteSelected.value,
-            onClick = {
-                favoriteSelected.value = true
-                homeSelected.value = false
-                historySelected.value = false
-                personalSelected.value = false
-            }
-        )
-        NavigationBarItem (
-            icon = { Icon(Icons.Default.History,  contentDescription = "History") },
-            label = { Text("History") },
-            selected = historySelected.value,
-            onClick = {
-                /*TO DO*/
-                favoriteSelected.value = false
-                homeSelected.value = false
-                historySelected.value = true
-                personalSelected.value = false
-            }
-        )
-        NavigationBarItem (
-            icon = { Icon(Icons.Filled.Person,  contentDescription = "Profile") },
-            label = { Text("Profile") },
-            selected = personalSelected.value,
-            onClick = {
-                /*TO DO*/
-                favoriteSelected.value = false
-                homeSelected.value = false
-                historySelected.value = false
-                personalSelected.value = true
-            }
-        )
+        navItems.forEach { item ->
+            val isSelected = selectedRoute == item.route
+            NavigationBarItem(
+                icon = {
+                    Icon(
+                        imageVector = item.icon,
+                        contentDescription = item.label,
+                        tint = if (isSelected) Color(0xFFFF5722) else Color.Gray
+                    )
+                },
+                label = {
+                    Text(
+                        text = item.label,
+                        color = if (isSelected) Color(0xFFFF5722) else Color.Gray
+                    )
+                },
+                selected = isSelected,
+                onClick = item.onClick,
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = Color(0xFFFF5722),
+                    selectedTextColor = Color(0xFFFF5722),
+                    indicatorColor = Color.White,
+                    unselectedIconColor = Color.Gray,
+                    unselectedTextColor = Color.Gray
+                )
+            )
+        }
     }
 }
 
-@Preview
-@Composable
-fun BottomNavBarPreview() {
-    BottomNavBar()
-}
+private data class NavItem(
+    val route: String,
+    val icon: ImageVector,
+    val label: String,
+    val onClick: () -> Unit
+)

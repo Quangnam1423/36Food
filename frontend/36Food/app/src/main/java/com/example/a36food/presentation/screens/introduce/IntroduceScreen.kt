@@ -9,7 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -35,10 +35,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -62,14 +63,13 @@ val introPages = listOf(
     )
 )
 
-
 @Composable
 fun IntroduceScreen(
     onNavigateToHome: () -> Unit,
-    onNavigateToLogin: () -> Unit,
-    viewModel: IntroduceViewModel = hiltViewModel()
+    onNavigateToLogin: () -> Unit
 ) {
     var showLoading by remember { mutableStateOf(true) }
+
     val scale by animateFloatAsState(
         targetValue = if (showLoading) 1.2f else 1f,
         animationSpec = infiniteRepeatable(
@@ -79,18 +79,17 @@ fun IntroduceScreen(
         label = "scale"
     )
 
-    LaunchedEffect(key1 = true) {
-        delay(3000) // Loading duration
+    LaunchedEffect(Unit) {
+        delay(2000)
         showLoading = false
-        // Check auto login
-        if (viewModel.checkUserSession()) {
-            onNavigateToHome()
-        }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+    ) {
         if (showLoading) {
-            // Loading screen with animated logo
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
@@ -104,7 +103,6 @@ fun IntroduceScreen(
                 )
             }
         } else {
-            // Intro content
             IntroContent(onNavigateToLogin = onNavigateToLogin)
         }
     }
@@ -113,34 +111,56 @@ fun IntroduceScreen(
 @Composable
 private fun IntroContent(onNavigateToLogin: () -> Unit) {
     val pagerState = rememberPagerState(pageCount = { introPages.size })
-    val coroutineScope = rememberCoroutineScope()
+    val scope = rememberCoroutineScope()
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White),
+        modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Pager
         HorizontalPager(
             state = pagerState,
             modifier = Modifier
                 .weight(1f)
                 .padding(16.dp)
         ) { page ->
-            IntroPage(page = introPages[page])
+            IntroPage(introPages[page])
         }
 
+        // Indicators
+        Row(
+            Modifier
+                .padding(bottom = 16.dp)
+                .height(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            repeat(pagerState.pageCount) { index ->
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .background(
+                            color = if (pagerState.currentPage == index)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                            shape = MaterialTheme.shapes.small
+                        )
+                )
+            }
+        }
+
+        // Buttons
         if (pagerState.currentPage != introPages.lastIndex) {
             Button(
                 onClick = {
-                    coroutineScope.launch {
+                    scope.launch {
                         pagerState.animateScrollToPage(pagerState.currentPage + 1)
                     }
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Green),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(horizontal = 16.dp)
                     .height(50.dp)
             ) {
                 Text("Tiếp Theo")
@@ -150,7 +170,7 @@ private fun IntroContent(onNavigateToLogin: () -> Unit) {
                 onClick = onNavigateToLogin,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
+                    .padding(16.dp)
                     .height(50.dp)
             ) {
                 Text("Bỏ qua")
@@ -180,23 +200,199 @@ private fun IntroPage(page: IntroPage) {
         Image(
             painter = painterResource(id = page.image),
             contentDescription = null,
-            modifier = Modifier
-                .padding(16.dp)
-                .size(350.dp)
+            modifier = Modifier.size(200.dp)
         )
-        Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = page.title,
-            fontWeight = FontWeight.Bold,
-            style = MaterialTheme.typography.headlineMedium,
-            textAlign = TextAlign.Center
+            style = MaterialTheme.typography.headlineSmall,
+            modifier = Modifier.padding(top = 32.dp, bottom = 16.dp)
         )
-        Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = page.description,
-            fontWeight = FontWeight.Medium,
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 24.dp)
         )
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+fun IntroduceScreenPreview() {
+    IntroduceScreen(
+        onNavigateToHome = {},
+        onNavigateToLogin = {}
+    )
+}
+
+/*
+@Composable
+fun IntroduceScreen(
+    onNavigateToHome: () -> Unit,
+    onNavigateToLogin: () -> Unit,
+    viewModel: IntroduceViewModel = hiltViewModel()
+) {
+    var showLoading by remember { mutableStateOf(true) }
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
+    val scale by animateFloatAsState(
+        targetValue = if (showLoading) 1.2f else 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(800),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "scale"
+    )
+
+    LaunchedEffect(state.shouldNavigateToHome, state.shouldNavigateToLogin) {
+        delay(3000) // Loading duration
+        showLoading = false
+
+        when {
+            state.shouldNavigateToHome -> onNavigateToHome()
+            state.shouldNavigateToLogin -> {} // Stay on intro screen
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+    ) {
+        if (showLoading) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.logo),
+                    contentDescription = "Logo",
+                    modifier = Modifier
+                        .size(120.dp)
+                        .scale(scale)
+                )
+            }
+        } else {
+            IntroContent(onNavigateToLogin = onNavigateToLogin)
+        }
+    }
+}
+
+@Composable
+private fun IntroContent(onNavigateToLogin: () -> Unit) {
+    val pagerState = rememberPagerState(pageCount = { introPages.size })
+    val coroutineScope = rememberCoroutineScope()
+
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier
+                .weight(1f)
+                .padding(16.dp)
+        ) { page ->
+            IntroPage(page = introPages[page])
+        }
+
+        // Page indicator
+        Row(
+            Modifier
+                .padding(bottom = 16.dp)
+                .height(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            repeat(pagerState.pageCount) { iteration ->
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .background(
+                            color = if (pagerState.currentPage == iteration)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                            shape = MaterialTheme.shapes.small
+                        )
+                )
+            }
+        }
+
+        if (pagerState.currentPage != introPages.lastIndex) {
+            Button(
+                onClick = {
+                    coroutineScope.launch {
+                        pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Green),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .height(50.dp)
+            ) {
+                Text("Tiếp Theo")
+            }
+
+            OutlinedButton(
+                onClick = onNavigateToLogin,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+                    .height(50.dp)
+            ) {
+                Text("Bỏ qua")
+            }
+        } else {
+            Button(
+                onClick = onNavigateToLogin,
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Green),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+                    .height(50.dp)
+            ) {
+                Text("Bắt đầu")
+            }
+        }
+    }
+}
+
+@Composable
+private fun IntroPage(page: IntroPage) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Image(
+            painter = painterResource(id = page.image),
+            contentDescription = null,
+            modifier = Modifier.size(200.dp)
+        )
+        Text(
+            text = page.title,
+            style = MaterialTheme.typography.headlineSmall,
+            modifier = Modifier.padding(top = 32.dp, bottom = 16.dp)
+        )
+        Text(
+            text = page.description,
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 24.dp)
+        )
+    }
+}
+
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewIntroPage(
+    page: IntroPage = introPages[0]
+) {
+    IntroContent(
+        onNavigateToLogin = {}
+    )
+}
+
+ */

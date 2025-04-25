@@ -1,78 +1,75 @@
-package com.example.a36food.presentation.screens
+package com.example.a36food.presentation.screens.homes
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.a36food.R
+import com.example.a36food.domain.model.BusinessHours
+import com.example.a36food.domain.model.OpeningStatus
 import com.example.a36food.domain.model.Restaurant
+import com.example.a36food.domain.model.ServiceType
 import com.example.a36food.ui.components.BottomNavBar
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme.colorScheme
-import com.example.a36food.ui.components.RoundedIconButton
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Message
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.TopAppBarColors
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.TopAppBarScrollBehavior
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.sp
 import com.example.a36food.ui.components.CartIcon
 import com.example.a36food.ui.components.MessageIcon
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun HomeScreen() {
+fun HomeScreen(
+    onNavigateToSearch: () -> Unit = {},
+    onNavigateToFavorite: () -> Unit = {},
+    onNavigateToHistory: () -> Unit = {},
+    onNavigateToProfile: () -> Unit = {}
+) {
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val lazyListState = rememberLazyListState()
@@ -86,7 +83,13 @@ fun HomeScreen() {
             )
         },
         bottomBar = {
-            BottomNavBar()
+            BottomNavBar(
+                selectedRoute = Screen.Home.route,
+                onNavigateToSearch = onNavigateToSearch,
+                onNavigateToFavorite = onNavigateToFavorite,
+                onNavigateToHistory = onNavigateToHistory,
+                onNavigateToProfile = onNavigateToProfile
+            )
         },
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
     ) { paddingValues ->
@@ -109,10 +112,10 @@ fun HomeTopAppBar(
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                   Icon(
-                       Icons.Default.LocationOn,
-                       contentDescription = "location"
-                   )
+                    Icon(
+                        Icons.Default.LocationOn,
+                        contentDescription = "location"
+                    )
                     Text(
                         text = location,
                         modifier = Modifier.weight(1f),
@@ -187,67 +190,72 @@ fun MenuLayout(
 
     val restaurantList = listOf(
         Restaurant(
-            id = 1,
-            name = "Nhà hàng ABC",
-            imageRes = R.drawable.restaurant, // thay bằng resource thật nếu có
+            id = "1",
+            name = "Phở Thìn Bờ Hồ",
+            imageUrl = "https://example.com/pho.jpg", // tạm thời dùng R.drawable khi hiển thị
             rating = 4.5f,
-            address = "123 Đường ABC, TP.HCM",
-            priceRange = "$$",
-            isOpen = true
+            ratingCount = 234,
+            address = "13 Lò Đúc, Hai Bà Trưng, Hà Nội",
+            priceRange = "20000",
+            openingStatus = OpeningStatus.SCHEDULED,
+            businessHours = BusinessHours(
+                openTime = "07:00",
+                closeTime = "22:00"
+            ),
+            serviceType = ServiceType.FOOD,
+            phoneNumber = "0123456789",
+            likes = 156,
+            categories = listOf("Phở", "Món Việt", "Đặc sản")
         ),
         Restaurant(
-            id = 1,
-            name = "Nhà hàng ABC",
-            imageRes = R.drawable.restaurant, // thay bằng resource thật nếu có
-            rating = 4.5f,
-            address = "123 Đường ABC, TP.HCM",
-            priceRange = "$$",
-            isOpen = true
+            id = "2",
+            name = "Pizza 4P's",
+            imageUrl = "https://example.com/pizza.jpg",
+            rating = 4.8f,
+            ratingCount = 543,
+            address = "8 Tông Đản, Hoàn Kiếm, Hà Nội",
+            priceRange = "100000",
+            openingStatus = OpeningStatus.OPEN_24H,
+            serviceType = ServiceType.FOOD,
+            phoneNumber = "0987654321",
+            likes = 324,
+            categories = listOf("Pizza", "Ý", "Nhật")
         ),
         Restaurant(
-            id = 1,
-            name = "Nhà hàng ABC",
-            imageRes = R.drawable.restaurant, // thay bằng resource thật nếu có
-            rating = 4.5f,
-            address = "123 Đường ABC, TP.HCM",
-            priceRange = "$$",
-            isOpen = true
+            id = "3",
+            name = "King BBQ",
+            imageUrl = "https://example.com/bbq.jpg",
+            rating = 4.3f,
+            ratingCount = 876,
+            address = "Vincom Bà Triệu, Hai Bà Trưng, Hà Nội",
+            priceRange = "100000",
+            openingStatus = OpeningStatus.SCHEDULED,
+            businessHours = BusinessHours(
+                openTime = "10:00",
+                closeTime = "22:00"
+            ),
+            serviceType = ServiceType.FOOD,
+            phoneNumber = "0345678912",
+            likes = 234,
+            categories = listOf("Lẩu", "Nướng", "Hàn Quốc")
         ),
         Restaurant(
-            id = 1,
-            name = "Nhà hàng ABC",
-            imageRes = R.drawable.restaurant, // thay bằng resource thật nếu có
-            rating = 4.5f,
-            address = "123 Đường ABC, TP.HCM",
-            priceRange = "$$",
-            isOpen = true
-        ),
-        Restaurant(
-            id = 1,
-            name = "Nhà hàng ABC",
-            imageRes = R.drawable.restaurant, // thay bằng resource thật nếu có
-            rating = 4.5f,
-            address = "123 Đường ABC, TP.HCM",
-            priceRange = "$$",
-            isOpen = true
-        ),
-        Restaurant(
-            id = 1,
-            name = "Nhà hàng ABC",
-            imageRes = R.drawable.restaurant, // thay bằng resource thật nếu có
-            rating = 4.5f,
-            address = "123 Đường ABC, TP.HCM",
-            priceRange = "$$",
-            isOpen = true
-        ),
-        Restaurant(
-            id = 1,
-            name = "Nhà hàng ABC",
-            imageRes = R.drawable.restaurant, // thay bằng resource thật nếu có
-            rating = 4.5f,
-            address = "123 Đường ABC, TP.HCM",
-            priceRange = "$$",
-            isOpen = true
+            id = "4",
+            name = "Highlands Coffee",
+            imageUrl = "https://example.com/coffee.jpg",
+            rating = 4.0f,
+            ratingCount = 432,
+            address = "54 Lý Thường Kiệt, Hoàn Kiếm, Hà Nội",
+            priceRange = "100000",
+            openingStatus = OpeningStatus.SCHEDULED,
+            businessHours = BusinessHours(
+                openTime = "07:00",
+                closeTime = "23:00"
+            ),
+            serviceType = ServiceType.FOOD,
+            phoneNumber = "0567891234",
+            likes = 178,
+            categories = listOf("Cà phê", "Trà", "Bánh ngọt")
         )
     )
 
@@ -339,13 +347,6 @@ fun RestaurantCard(
     restaurant: Restaurant,
     modifier: Modifier = Modifier
 ) {
-    val configuration = LocalConfiguration.current
-    val screenWidth = configuration.screenWidthDp.dp
-    val screenHeight = configuration.screenHeightDp.dp
-
-    val cardWidth = screenWidth - 16.dp
-    val cardHeight = screenHeight / 3
-
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -354,17 +355,22 @@ fun RestaurantCard(
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(8.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
         ) {
+            // Tạm thời dùng ảnh local thay vì load từ URL
             Image(
-                painter = painterResource(restaurant.imageRes),
+                painter = painterResource(R.drawable.restaurant),
                 contentDescription = "Restaurant Image",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(120.dp)
                     .clip(RoundedCornerShape(8.dp))
             )
+
             Spacer(modifier = Modifier.width(8.dp))
+
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -384,18 +390,25 @@ fun RestaurantCard(
                         tint = Color(0xFFFFA500)
                     )
                     Text(
-                        text = restaurant.rating.toString(),
+                        text = "${restaurant.rating} (${restaurant.ratingCount} ratings)  |  ",
                         fontWeight = FontWeight.Bold
                     )
+
                     Text(
-                        text = "  |  km",
-                        modifier = Modifier.padding(start = 4.dp)
-                    )
-                    Text(
-                        text = "  |  phút",
-                        modifier = Modifier.padding(start = 4.dp)
+                        text = "${restaurant.distance} km",
+                        fontWeight = FontWeight.Bold
                     )
                 }
+                Text(
+                    text = restaurant.address,
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = "Giá: ${restaurant.priceRange} VNĐ",
+                    style = MaterialTheme.typography.bodySmall
+                )
             }
         }
     }

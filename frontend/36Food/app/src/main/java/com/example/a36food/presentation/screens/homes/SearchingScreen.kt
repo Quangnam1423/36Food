@@ -1,4 +1,4 @@
-package com.example.a36food.presentation.screens
+package com.example.a36food.presentation.screens.homes
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -23,15 +24,22 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.shapes
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,48 +47,101 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import com.example.a36food.ui.components.CartIcon
+import com.example.a36food.ui.components.RoundedIconButton
+import com.example.a36food.ui.components.BottomNavBar
 import com.example.a36food.R
 import com.example.a36food.data.local.RecentSearchManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
-import com.example.a36food.ui.components.BottomNavBar
-import com.example.a36food.ui.components.SearchingTopAppBar
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun SearchingScreen(
-
+    onNavigateToHome: () -> Unit = {},
+    onNavigateToSearch: () -> Unit = {},
+    onNavigateToFavorite: () -> Unit = {},
+    onNavigateToHistory: () -> Unit = {},
+    onNavigateToProfile: () -> Unit = {},
+    onSearchClick: (String) -> Unit = {},
+    onCartClick: () -> Unit = {}
 ) {
+
+    var searchQuery by remember { mutableStateOf("") }
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+
     Scaffold (
         topBar = {
-            SearchingTopAppBar()
+            SearchingTopAppBar(
+                onBackClick = onNavigateToHome,
+                onCartClick = {/*TO SEE CART DETAIL*/}
+            )
         },
         bottomBar = {
-            BottomNavBar()
-        }
+            BottomNavBar(
+                selectedRoute = Screen.Search.route,
+                onNavigateToHome = onNavigateToHome,
+                onNavigateToSearch = onNavigateToSearch,
+                onNavigateToFavorite = onNavigateToFavorite,
+                onNavigateToHistory = onNavigateToHistory,
+                onNavigateToProfile = onNavigateToProfile
+            )
+        },
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
     ) { paddingValues ->
         SearchingLayout(
             Modifier.padding(paddingValues),
-            searchQuery = "",
+            searchQuery = searchQuery,
             onSearchingChanged = {},
             onSearchClick = {},
             onViewAll = {}
         )
+    }
+}
 
+@Composable
+fun SearchingTopAppBar(
+    onCartClick: () -> Unit,
+    onBackClick: () -> Unit
+) {
+    TopAppBar(
+        backgroundColor = colorScheme.surface,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            RoundedIconButton(
+                onClick = {onBackClick},
+                icon = Icons.Filled.ArrowBackIosNew,
+                contentDescription = "Back"
+            )
+            Spacer(modifier = Modifier.width(dimensionResource(R.dimen.padding_medium)))
+            Text (
+                text = "Tìm Kiếm",
+                style = androidx.compose.material.MaterialTheme.typography.h4,
+                color = Color.Green
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            CartIcon(
+                cartCount = 1, // change after that
+                onClick = {onCartClick}
+            )
+        }
     }
 }
 
@@ -96,13 +157,6 @@ fun SearchingLayout(
     var recentSearches by remember {mutableStateOf(listOf("Bánh Mì", "Sushi", "Trà Sữa", "Pizza", "Phở", "Bún Bò", "Cà Phê"))}
 
 
-    // mã thât, loại trừ cho trường hợp debug
-    /*
-    LaunchedEffect(Unit) {
-        recentSearches = RecentSearchManager.getSearches(context)
-    }
-
-     */
 
     Column(
         modifier = modifier
@@ -157,7 +211,7 @@ fun SearchingLayout(
             onSearchClick = {},
             recentSearches = recentSearches
         )
-        
+
         SuggestionList()
     }
 }
@@ -199,7 +253,7 @@ fun RecentSearchGrid(
 fun SuggestionList(
     modifier: Modifier = Modifier,
 
-) {
+    ) {
 
     val suggestions = listOf(
         Pair("Pizza", R.drawable.pizza_suggestion),

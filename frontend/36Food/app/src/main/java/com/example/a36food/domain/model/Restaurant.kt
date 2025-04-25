@@ -25,6 +25,7 @@ data class Restaurant(
     val serviceType: ServiceType,
     val phoneNumber: String = "",
     val likes: Int = 0,
+    val distance: Double = 0.0,
     val categories: List<String> = emptyList(),
     val createdAt: Long = System.currentTimeMillis()
 )

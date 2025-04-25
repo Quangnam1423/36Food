@@ -1,4 +1,4 @@
-package com.example.a36food.presentation.screens
+package com.example.a36food.presentation.screens.homes
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.BorderStroke
@@ -10,26 +10,23 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Scaffold
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.Fastfood
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -40,6 +37,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedIconButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -51,7 +49,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -59,24 +56,48 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.a36food.R
+import com.example.a36food.domain.model.BusinessHours
+import com.example.a36food.domain.model.OpeningStatus
 import com.example.a36food.domain.model.Restaurant
 import com.example.a36food.domain.model.ServiceType
 import com.example.a36food.ui.components.BottomNavBar
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun FavoriteScreen() {
+fun FavoriteScreen(
+    onNavigateToHome: () -> Unit = {},
+    onNavigateToHistory: () -> Unit = {},
+    onNavigateToProfile: () -> Unit = {},
+    onNavigateToSearch: () -> Unit = {},
+) {
     Scaffold(
-        topBar = { FavoriteTopAppBar() },
-        bottomBar = { BottomNavBar() }
+        topBar = {
+            FavoriteTopAppBar(
+                onBackClick = { onNavigateToHome() }
+            )
+        },
+        bottomBar = {
+            BottomNavBar(
+                selectedRoute = Screen.Favorite.route,
+                onNavigateToHome = onNavigateToHome,
+                onNavigateToHistory = onNavigateToHistory,
+                onNavigateToProfile = onNavigateToProfile,
+                onNavigateToSearch = onNavigateToSearch
+            )
+        }
     ) { paddingValues ->
-        FavoriteContent(modifier = Modifier.padding(paddingValues))
+        FavoriteLayout(
+            modifier = Modifier.padding(paddingValues)
+        )
+
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun FavoriteTopAppBar() {
+private fun FavoriteTopAppBar(
+    onBackClick: () -> Unit = {},
+) {
     CenterAlignedTopAppBar(
         title = {
             Text(
@@ -89,7 +110,7 @@ private fun FavoriteTopAppBar() {
             )
         },
         navigationIcon = {
-            IconButton(onClick = { /*TODO*/ }) {
+            IconButton(onClick = {onBackClick }) {
                 Icon(
                     Icons.Default.ArrowBackIosNew,
                     contentDescription = "Back",
@@ -103,9 +124,11 @@ private fun FavoriteTopAppBar() {
     )
 }
 
-
 @Composable
-private fun FavoriteContent(modifier: Modifier = Modifier) {
+private fun FavoriteLayout(
+    modifier: Modifier = Modifier
+) {
+    // Your favorite layout implementation here
     var selectedService by remember { mutableStateOf(ServiceType.ALL) }
     val restaurants = remember { generateSampleRestaurants() }
     val favoriteRestaurants = remember { generateSampleFavoriteRestaurants() }
@@ -174,37 +197,7 @@ private fun FavoriteContent(modifier: Modifier = Modifier) {
                     }
                 }
             }
-        }
-
-        // Favorite Restaurants Section
-        item {
-            Spacer(modifier = Modifier.height(24.dp))
-            Text(
-                text = "Quán Yêu Thích",
-                style = MaterialTheme.typography.titleLarge,
-                color = Color(0xFFFF5722),
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-        }
-
-        if (favoriteRestaurants.isEmpty()) {
-            item {
-                EmptyFavoriteState()
-            }
-        } else {
-            items(favoriteRestaurants) { restaurant ->
-                FavoriteRestaurantCard(
-                    restaurant = restaurant,
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-        }
-    }
 }
-
 
 @Composable
 private fun ServiceTypeFilter(
@@ -282,7 +275,7 @@ private fun RestaurantSection(restaurants: List<Restaurant>) {
                         border = BorderStroke(1.dp, Color(0xFFFF5722))
                     ) {
                         Icon(
-                            Icons.Default.ArrowForwardIos,
+                            Icons.AutoMirrored.Filled.ArrowForwardIos,
                             contentDescription = "Xem thêm",
                             tint = Color(0xFFFF5722)
                         )
@@ -354,7 +347,7 @@ private fun FavoriteRestaurantCard(
         Box {
             Row(modifier = Modifier.fillMaxWidth()) {
                 AsyncImage(
-                    model = restaurant.imageRes,
+                    model = restaurant.imageUrl,
                     contentDescription = null,
                     modifier = Modifier
                         .width(120.dp)
@@ -457,13 +450,22 @@ private fun EmptyFavoriteState() {
 private fun generateSampleRestaurants(): List<Restaurant> {
     return List(20) { index ->
         Restaurant(
-            id = index,
-            name = "Nhà hàng ${index + 1}",
-            imageRes = R.drawable.restaurant,  // Thêm placeholder image vào res/drawable
+            id = "1",
+            name = "Phở Thìn Bờ Hồ",
+            imageUrl = "https://example.com/pho.jpg", // tạm thời dùng R.drawable khi hiển thị
             rating = 4.5f,
-            address = "Địa chỉ ${index + 1}",
-            priceRange = "50.000đ - 200.000đ",
-            isOpen = true
+            ratingCount = 234,
+            address = "13 Lò Đúc, Hai Bà Trưng, Hà Nội",
+            priceRange = "20000",
+            openingStatus = OpeningStatus.SCHEDULED,
+            businessHours = BusinessHours(
+                openTime = "07:00",
+                closeTime = "22:00"
+            ),
+            serviceType = ServiceType.FOOD,
+            phoneNumber = "0123456789",
+            likes = 156,
+            categories = listOf("Phở", "Món Việt", "Đặc sản")
         )
     }
 }
@@ -471,13 +473,28 @@ private fun generateSampleRestaurants(): List<Restaurant> {
 private fun generateSampleFavoriteRestaurants(): List<Restaurant> {
     return List(5) { index ->
         Restaurant(
-            id = 100 + index,  // ID khác với nhà hàng thông thường
-            name = "Nhà hàng yêu thích ${index + 1}",
-            imageRes = R.drawable.restaurant,
-            rating = 4.8f,
-            address = "Địa chỉ yêu thích ${index + 1}",
-            priceRange = "100.000đ - 300.000đ",
-            isOpen = true
+            id = "1",
+            name = "Phở Thìn Bờ Hồ",
+            imageUrl = "https://example.com/pho.jpg",
+            rating = 4.5f,
+            ratingCount = 234,
+            address = "13 Lò Đúc, Hai Bà Trưng, Hà Nội",
+            priceRange = "20000",
+            openingStatus = OpeningStatus.SCHEDULED,
+            businessHours = BusinessHours(
+                openTime = "07:00",
+                closeTime = "22:00"
+            ),
+            serviceType = ServiceType.FOOD,
+            phoneNumber = "0123456789",
+            likes = 156,
+            categories = listOf("Phở", "Món Việt", "Đặc sản")
         )
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun FavoriteScreenPreview() {
+    FavoriteScreen()
 }

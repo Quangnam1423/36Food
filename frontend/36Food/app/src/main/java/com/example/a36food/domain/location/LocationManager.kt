@@ -19,6 +19,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resumeWithException
 import kotlin.time.Duration.Companion.seconds
 
+@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 object LocationManager {
     private var fusedLocationClient: FusedLocationProviderClient? = null
 

@@ -310,7 +310,7 @@ private fun PopularRestaurantCard(restaurant: Restaurant) {
     ) {
         Column {
             AsyncImage(
-                model = restaurant.imageRes,
+                model = restaurant.imageUrl,
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -480,10 +480,4 @@ private fun generateSampleFavoriteRestaurants(): List<Restaurant> {
             isOpen = true
         )
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun FavoriteScreenPreview() {
-    FavoriteScreen()
 }

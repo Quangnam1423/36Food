@@ -71,6 +71,7 @@ dependencies {
     implementation(libs.androidx.espresso.core)
     implementation(libs.androidx.animation.core.lint)
     implementation(libs.firebase.appdistribution.gradle)
+    implementation(libs.androidx.room.runtime.android)
     kapt(libs.hilt.compiler)
     implementation(libs.retrofit)
     implementation(libs.retrofit.gson)

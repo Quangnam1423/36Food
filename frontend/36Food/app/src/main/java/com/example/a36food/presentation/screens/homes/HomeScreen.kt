@@ -17,14 +17,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -34,8 +30,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
@@ -46,12 +40,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.a36food.R
 import com.example.a36food.domain.model.BusinessHours
 import com.example.a36food.domain.model.OpeningStatus
@@ -72,7 +70,6 @@ fun HomeScreen(
 ) {
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-    val lazyListState = rememberLazyListState()
 
 
     Scaffold (
@@ -145,46 +142,14 @@ fun HomeTopAppBar(
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Color(0xFFFF5722), // Màu đỏ cam ShopeeFood
+            containerColor = Color(0xFFFF5722),
             titleContentColor = Color.White
         )
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchBar(
-    query: String,
-    onQueryChange: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    TextField(
-        value = query,
-        onValueChange = onQueryChange,
-        placeholder = {
-            Text("Tìm món hoặc quán")
-        },
-        leadingIcon = {
-            Icon(Icons.Default.Search, contentDescription = null)
-        },
-        singleLine = true,
-        shape = RoundedCornerShape(16.dp),
-        modifier = modifier
-            .height(40.dp)
-            .padding(end = 8.dp),
-        colors = TextFieldDefaults.textFieldColors(
-            containerColor = Color.White,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent,
-            disabledIndicatorColor = Color.Transparent
-        )
-    )
-}
-
-
-
-@Composable
-fun MenuLayout(
+private fun MenuLayout(
     modifier: Modifier = Modifier
 ) {
 
@@ -192,7 +157,7 @@ fun MenuLayout(
         Restaurant(
             id = "1",
             name = "Phở Thìn Bờ Hồ",
-            imageUrl = "https://example.com/pho.jpg", // tạm thời dùng R.drawable khi hiển thị
+            imageUrl = "https://example.com/pho.jpg",
             rating = 4.5f,
             ratingCount = 234,
             address = "13 Lò Đúc, Hai Bà Trưng, Hà Nội",
@@ -258,61 +223,75 @@ fun MenuLayout(
             categories = listOf("Cà phê", "Trà", "Bánh ngọt")
         )
     )
-
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp)
-            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 12.dp)
     ) {
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
+
         Text(
             text = "Chúc Bạn Ngon Miệng, Bình!",
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontSize = 18.sp, // Cố định kích thước chữ
+                lineHeight = 24.sp
+            ),
             color = Color(0xFFFF9800),
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
         )
-        Spacer(modifier = Modifier.height(24.dp))
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
                 text = "Danh Mục",
-                style = MaterialTheme.typography.titleSmall,
+                style = MaterialTheme.typography.titleSmall.copy(
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium
+                ),
                 color = Color(0xFFFF5722)
             )
 
             Text(
                 "Tất cả >",
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontSize = 14.sp
+                ),
                 color = Color.Gray,
                 modifier = Modifier.clickable { /* TODO */ }
             )
         }
-        CategoryGrid(onCategoryClick = {})
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            restaurantList.forEach { it ->
+        CategoryGrid(onCategoryClick = {})
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Column(
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            restaurantList.forEach { restaurant ->
                 RestaurantCard(
-                    restaurant = it,
+                    restaurant = restaurant,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
         }
-
-
     }
 }
 
 @Composable
-fun CategoryGrid (
+private fun CategoryGrid(
     onCategoryClick: (String) -> Unit
 ) {
-    val categories = listOf (
-        "Com" to R.drawable.rice,
+    val categories = listOf(
+        "Cơm" to R.drawable.rice,
         "Phở" to R.drawable.pho,
         "Pizza" to R.drawable.pizza,
         "Burger" to R.drawable.burger,
@@ -322,92 +301,132 @@ fun CategoryGrid (
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(3),
-        modifier = Modifier.height(200.dp),
-        contentPadding = PaddingValues(4.dp)
+        modifier = Modifier.height(180.dp), // Giảm chiều cao grid
+        contentPadding = PaddingValues(vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(categories) { (name, imageRes) ->
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(8.dp).clickable { onCategoryClick(name) }
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onCategoryClick(name) }
+                    .padding(4.dp)
             ) {
                 Image(
-                    painterResource(imageRes),
-                    contentDescription = name,
-                    modifier = Modifier.size(64.dp)
+                    painter = painterResource(imageRes),
+                    contentDescription = null,
+                    modifier = Modifier.size(48.dp) // Giảm kích thước icon
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(name, style = MaterialTheme.typography.bodySmall)
+                Text(
+                    text = name,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontSize = 12.sp,
+                        textAlign = TextAlign.Center
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
     }
 }
 
 @Composable
-fun RestaurantCard(
+private fun RestaurantCard(
     restaurant: Restaurant,
     modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 4.dp),
+            .padding(vertical = 4.dp), // Giảm padding
         shape = RoundedCornerShape(8.dp),
-        elevation = CardDefaults.cardElevation(4.dp)
+        elevation = CardDefaults.cardElevation(2.dp) // Giảm độ nổi
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(8.dp)
+                .padding(8.dp),
+            horizontalArrangement = Arrangement.Start,
+            verticalAlignment = Alignment.Top
         ) {
-            // Tạm thời dùng ảnh local thay vì load từ URL
-            Image(
-                painter = painterResource(R.drawable.restaurant),
-                contentDescription = "Restaurant Image",
+            AsyncImage(
+                model = ImageRequest.Builder(context = LocalContext.current).data(restaurant.imageUrl)
+                    .crossfade(true)
+                    .build(),
+                error = painterResource(R.drawable.ic_broken_image),
+                placeholder = painterResource(R.drawable.restaurant),
+                contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .size(120.dp)
+                    .size(80.dp)
                     .clip(RoundedCornerShape(8.dp))
             )
 
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(12.dp))
 
             Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .align(Alignment.CenterVertically)
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp) // Thêm khoảng cách giữa các phần tử
             ) {
                 Text(
                     text = restaurant.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
+
                 Row(
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Start,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Icon(
                         Icons.Default.Star,
-                        contentDescription = "Star",
-                        tint = Color(0xFFFFA500)
+                        contentDescription = null,
+                        tint = Color(0xFFFFA500),
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "${restaurant.rating}",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium
+                        )
                     )
                     Text(
-                        text = "${restaurant.rating} (${restaurant.ratingCount} ratings)  |  ",
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Text(
-                        text = "${restaurant.distance} km",
-                        fontWeight = FontWeight.Bold
+                        text = " (${restaurant.ratingCount})",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontSize = 12.sp
+                        ),
+                        color = Color.Gray
                     )
                 }
+
                 Text(
                     text = restaurant.address,
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontSize = 12.sp,
+                        lineHeight = 16.sp
+                    ),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
+
                 Text(
-                    text = "Giá: ${restaurant.priceRange} VNĐ",
-                    style = MaterialTheme.typography.bodySmall
+                    text = "Giá: ${restaurant.priceRange}đ",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium
+                    ),
+                    color = Color(0xFFFF5722)
                 )
             }
         }

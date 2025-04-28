@@ -1,9 +1,10 @@
 package com.example.a36food.presentation.screens.restaurantDetail
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,9 +12,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -32,10 +35,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.shapes
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBarDefaults
@@ -78,21 +79,50 @@ fun RestaurantDetailScreen (
     var query by remember {mutableStateOf("")}
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
-    Scaffold(
-        topBar = {
-            RestaurantDetailAppBar(
-                restaurantName = "Restaurant Name",
-                query = query,
-                onQueryChanged = {query = it},
-                onBackClick = {onBackClick},
-                onShareClick = {},
-                scrollBehavior = scrollBehavior
-            )
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        LazyColumn(
+            state = rememberLazyListState(),
+            modifier = Modifier
+                .fillMaxSize()
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
+        ) {
+            item{
+                RestaurantDetailHeader(
+                    restaurant = createRestaurantSample(restaurantId),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
 
-        },
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
-    ) { paddingValues ->
-        RestaurantDetailLayout(Modifier.padding(paddingValues))
+            item{
+                Text(
+                    text = "Danh sách các món ăn của nhà hàng",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(16.dp)
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
+            items(generateSampleFoodItems()) { foodItem ->
+                FoodItemCard(
+                    foodItem = foodItem,
+                    onAddClick = { /* Handle add click */ },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+        RestaurantDetailAppBar(
+            restaurantName = "Restaurant Name",
+            query = query,
+            onQueryChanged = { query = it },
+            onBackClick = onBackClick,
+            onShareClick = onShareClick,
+            scrollBehavior = scrollBehavior,
+            modifier = Modifier
+                .statusBarsPadding()
+                .align(Alignment.TopStart)
+        )
     }
 }
 
@@ -104,7 +134,8 @@ fun  RestaurantDetailAppBar(
     onQueryChanged: (String) -> Unit,
     onBackClick: () -> Unit,
     onShareClick: () -> Unit,
-    scrollBehavior: TopAppBarScrollBehavior
+    scrollBehavior: TopAppBarScrollBehavior,
+    modifier: Modifier = Modifier
 ) {
     CenterAlignedTopAppBar(
         title = {
@@ -116,9 +147,9 @@ fun  RestaurantDetailAppBar(
                     horizontal = 2.dp, vertical = 2.dp
                 ),
                 colors = TextFieldDefaults.colors(
-                    focusedContainerColor = colorScheme.surface,
-                    unfocusedContainerColor = colorScheme.surface,
-                    disabledContainerColor = colorScheme.surface,
+                    focusedContainerColor = Color.White.copy(alpha = 0.9f),
+                    unfocusedContainerColor = Color.White.copy(alpha = 0.9f),
+                    disabledContainerColor = Color.White.copy(alpha = 0.9f),
                 ),
                 onValueChange = { onQueryChanged(it) },
                 trailingIcon = {
@@ -147,25 +178,26 @@ fun  RestaurantDetailAppBar(
             RoundedIconButton(
                 onClick = onShareClick,
                 icon = Icons.Default.Share,
-                contentDescription = "Share"
+                contentDescription = "Share",
             )
         },
         scrollBehavior = scrollBehavior,
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
             containerColor = Color.Transparent,
-            scrolledContainerColor = Color.Transparent
+            scrolledContainerColor = Color.White.copy(alpha = 0.9f)
         ),
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier
     )
 }
 
 @Composable
 fun RestaurantDetailLayout(
+    contentPadding: PaddingValues,
     modifier: Modifier = Modifier
 ) {
     // Implementation of the restaurant detail layout
     LazyColumn(
-        modifier = modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize().padding(contentPadding)
     ) {
         item {
             RestaurantDetailHeader(
@@ -199,7 +231,7 @@ private fun RestaurantDetailHeader(
             .crossfade(true)
             .build(),
         error = painterResource(R.drawable.ic_broken_image),
-        placeholder = painterResource(R.drawable.restaurant),
+        placeholder = painterResource(R.drawable.loading_img),
         contentDescription = null,
         contentScale = ContentScale.Crop,
         modifier = modifier

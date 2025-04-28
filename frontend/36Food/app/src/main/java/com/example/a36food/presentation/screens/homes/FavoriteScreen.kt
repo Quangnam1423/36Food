@@ -10,12 +10,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -55,7 +57,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.example.a36food.R
 import com.example.a36food.domain.model.BusinessHours
 import com.example.a36food.domain.model.OpeningStatus
 import com.example.a36food.domain.model.Restaurant
@@ -69,6 +70,7 @@ fun FavoriteScreen(
     onNavigateToHistory: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
     onNavigateToSearch: () -> Unit = {},
+    onRestaurantClick: (String) -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -87,7 +89,8 @@ fun FavoriteScreen(
         }
     ) { paddingValues ->
         FavoriteLayout(
-            modifier = Modifier.padding(paddingValues)
+            modifier = Modifier.padding(paddingValues),
+            onRestaurantClick = onRestaurantClick
         )
 
     }
@@ -126,7 +129,8 @@ private fun FavoriteTopAppBar(
 
 @Composable
 private fun FavoriteLayout(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onRestaurantClick: (String) -> Unit
 ) {
     // Your favorite layout implementation here
     var selectedService by remember { mutableStateOf(ServiceType.ALL) }
@@ -157,7 +161,7 @@ private fun FavoriteLayout(
             ) {
                 Text(
                     text = "Đặt Nhiều Nhất",
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.headlineMedium,
                     color = Color(0xFFFF5722),
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(horizontal = 16.dp)
@@ -170,7 +174,7 @@ private fun FavoriteLayout(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(restaurants.take(19)) { restaurant ->
-                        PopularRestaurantCard(restaurant)
+                        PopularRestaurantCard(restaurant, onRestaurantClick)
                     }
                     item {
                         Column(
@@ -197,6 +201,36 @@ private fun FavoriteLayout(
                     }
                 }
             }
+        }
+
+        // Favorite Restaurants Section
+        item {
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                text = "Quán Yêu Thích",
+                style = MaterialTheme.typography.headlineMedium,
+                color = Color(0xFFFF5722),
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
+        if (favoriteRestaurants.isEmpty()) {
+            item {
+                EmptyFavoriteState()
+            }
+        } else {
+            items(favoriteRestaurants) { restaurant ->
+                FavoriteRestaurantCard(
+                    restaurant = restaurant,
+                    onRestaurantClick = onRestaurantClick,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+    }
 }
 
 @Composable
@@ -240,8 +274,12 @@ private fun ServiceTypeFilter(
     }
 }
 
+
 @Composable
-private fun RestaurantSection(restaurants: List<Restaurant>) {
+private fun RestaurantSection(
+    restaurants: List<Restaurant>,
+    onRestaurantClick: (String) -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -263,7 +301,7 @@ private fun RestaurantSection(restaurants: List<Restaurant>) {
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             items(restaurants.take(19)) { restaurant ->
-                PopularRestaurantCard(restaurant)
+                PopularRestaurantCard(restaurant, onRestaurantClick)
             }
             item {
                 Column(
@@ -293,11 +331,15 @@ private fun RestaurantSection(restaurants: List<Restaurant>) {
 }
 
 @Composable
-private fun PopularRestaurantCard(restaurant: Restaurant) {
+private fun PopularRestaurantCard(
+    restaurant: Restaurant,
+    onRestaurantClick: (String) -> Unit
+) {
     Card(
         modifier = Modifier
             .width(160.dp)
-            .wrapContentHeight(),
+            .wrapContentHeight()
+            .clickable { onRestaurantClick(restaurant.id) },
         shape = RoundedCornerShape(8.dp),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
@@ -337,10 +379,11 @@ private fun PopularRestaurantCard(restaurant: Restaurant) {
 @Composable
 private fun FavoriteRestaurantCard(
     restaurant: Restaurant,
+    onRestaurantClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().clickable { onRestaurantClick(restaurant.id) },
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {

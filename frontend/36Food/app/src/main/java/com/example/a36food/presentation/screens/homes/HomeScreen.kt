@@ -14,12 +14,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
@@ -34,10 +37,15 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -104,36 +112,43 @@ fun HomeTopAppBar(
     TopAppBar(
         scrollBehavior = scrollBehavior,
         title = {
-            Column(
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        Icons.Default.LocationOn,
-                        contentDescription = "location"
+                Icon(
+                    Icons.Default.LocationOn,
+                    contentDescription = "location",
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = location,
+                    modifier = Modifier.weight(1f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontSize = 13.sp,
+                        lineHeight = 16.sp
                     )
-                    Text(
-                        text = location,
-                        modifier = Modifier.weight(1f),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Icon(
-                        Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                        contentDescription = "fix location"
-
-                    )
-                }
+                )
+                Icon(
+                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = "fix location",
+                    modifier = Modifier.size(18.dp)
+                )
             }
         },
         actions = {
             CartIcon(
                 cartCount = 3,
-                onClick = {}
+                onClick = {},
             )
             IconButton(
-                onClick = {}
+                onClick = {},
+                modifier = Modifier.size(40.dp)
             ) {
                 MessageIcon(
                     messageCount = 3,
@@ -144,16 +159,368 @@ fun HomeTopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = Color(0xFFFF5722),
             titleContentColor = Color.White
-        )
+        ),
+        modifier = Modifier.height(56.dp)
     )
 }
+
 
 @Composable
 private fun MenuLayout(
     modifier: Modifier = Modifier
 ) {
+    var selectedFilter by remember { mutableStateOf(FilterOption.NEAR_ME) }
+    val restaurantList = createRestaurantList()
 
-    val restaurantList = listOf(
+    LazyColumn(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        // Welcome Card
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFFFFF3E0)
+                ),
+                elevation = CardDefaults.cardElevation(0.dp)
+            ) {
+                Text(
+                    text = "Chúc Bạn Ngon Miệng, Bình!",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontSize = 18.sp,
+                        lineHeight = 24.sp
+                    ),
+                    color = Color(0xFFFF9800),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                )
+            }
+        }
+
+        // Categories Card
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFFFAFAFA)
+                ),
+                elevation = CardDefaults.cardElevation(1.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "Danh Mục",
+                            style = MaterialTheme.typography.titleSmall.copy(
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium
+                            ),
+                            color = Color(0xFFFF5722)
+                        )
+
+                        Text(
+                            "Tất cả >",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontSize = 14.sp
+                            ),
+                            color = Color.Gray,
+                            modifier = Modifier.clickable { /* TODO */ }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                    CategoryGrid(onCategoryClick = {})
+                }
+            }
+        }
+
+        // Filter Card
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFFFAFAFA)
+                ),
+                elevation = CardDefaults.cardElevation(1.dp)
+            ) {
+                FilterBar(
+                    selectedFilter = selectedFilter,
+                    onFilterSelected = { selectedFilter = it },
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+        }
+
+        // Restaurant List
+        val filteredRestaurants = when (selectedFilter) {
+            FilterOption.NEAR_ME -> restaurantList.sortedBy { it.distance }
+            FilterOption.POPULAR -> restaurantList.sortedByDescending { it.ratingCount }
+            FilterOption.TOP_RATED -> restaurantList.sortedByDescending { it.rating }
+        }
+
+        items(filteredRestaurants) { restaurant ->
+            RestaurantCard(
+                restaurant = restaurant,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+@Composable
+private fun CategoryGrid(
+    onCategoryClick: (String) -> Unit
+) {
+    val categories = listOf(
+        "Cơm" to R.drawable.rice,
+        "Phở" to R.drawable.pho,
+        "Pizza" to R.drawable.pizza,
+        "Burger" to R.drawable.burger,
+        "Đồ ăn nhanh" to R.drawable.fast_food,
+        "Đồ uống" to R.drawable.drink
+    )
+
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(3),
+        modifier = Modifier.height(180.dp),
+        contentPadding = PaddingValues(vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(categories) { (name, imageRes) ->
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onCategoryClick(name) }
+                    .padding(4.dp)
+            ) {
+                Image(
+                    painter = painterResource(imageRes),
+                    contentDescription = null,
+                    modifier = Modifier.size(48.dp)
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = name,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontSize = 12.sp,
+                        textAlign = TextAlign.Center
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun RestaurantCard(
+    restaurant: Restaurant,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        shape = RoundedCornerShape(8.dp),
+        elevation = CardDefaults.cardElevation(2.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            horizontalArrangement = Arrangement.Start,
+            verticalAlignment = Alignment.Top
+        ) {
+            AsyncImage(
+                model = ImageRequest.Builder(context = LocalContext.current).data(restaurant.imageUrl)
+                    .crossfade(true)
+                    .build(),
+                error = painterResource(R.drawable.ic_broken_image),
+                placeholder = painterResource(R.drawable.restaurant),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(RoundedCornerShape(8.dp))
+            )
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = restaurant.name,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Start,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        Icons.Default.Star,
+                        contentDescription = null,
+                        tint = Color(0xFFFFA500),
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "${restaurant.rating}",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    )
+                    Text(
+                        text = " (${restaurant.ratingCount})",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontSize = 12.sp
+                        ),
+                        color = Color.Gray
+                    )
+                }
+
+                Text(
+                    text = restaurant.address,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontSize = 12.sp,
+                        lineHeight = 16.sp
+                    ),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Text(
+                    text = "Giá: ${restaurant.priceRange}đ",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium
+                    ),
+                    color = Color(0xFFFF5722)
+                )
+            }
+        }
+    }
+}
+
+enum class FilterOption(val title: String, val icon: ImageVector) {
+    NEAR_ME("Gần tôi", Icons.Default.LocationOn),
+    POPULAR("Bán chạy", Icons.Default.LocalFireDepartment),
+    TOP_RATED("Đánh giá", Icons.Default.Star)
+}
+
+@Composable
+private fun FilterBar(
+    selectedFilter: FilterOption,
+    onFilterSelected: (FilterOption) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        FilterOption.values().forEachIndexed { index, filter ->
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { onFilterSelected(filter) }
+                        .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = filter.icon,
+                        contentDescription = null,
+                        tint = if (selectedFilter == filter) Color(0xFFFF5722) else Color.Gray,
+                        modifier = Modifier.size(12.dp)
+                    )
+                    Spacer(modifier = Modifier.width(2.dp))
+                    Text(
+                        text = filter.title,
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontSize = 11.sp,
+                            fontWeight = if (selectedFilter == filter) FontWeight.Medium else FontWeight.Normal,
+                        ),
+                        color = if (selectedFilter == filter) Color(0xFFFF5722) else Color.Gray,
+                    )
+                }
+                if (index < FilterOption.values().size - 1) {
+                    Text(
+                        text = "|",
+                        color = Color.Gray,
+                        modifier = Modifier.padding(horizontal = 2.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FilterChip(
+    selected: Boolean,
+    onClick: () -> Unit,
+    filter: FilterOption,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .clickable(onClick = onClick)
+            .padding(vertical = 8.dp, horizontal = 4.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = filter.icon,
+            contentDescription = null,
+            tint = if (selected) Color(0xFFFF5722) else Color.Gray,
+            modifier = Modifier.size(14.dp)
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(
+            text = filter.title,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontSize = 12.sp,
+                fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal
+            ),
+            color = if (selected) Color(0xFFFF5722) else Color.Gray
+        )
+    }
+}
+
+private fun createRestaurantList() : List<Restaurant>{
+    return listOf(
         Restaurant(
             id = "1",
             name = "Phở Thìn Bờ Hồ",
@@ -223,214 +590,6 @@ private fun MenuLayout(
             categories = listOf("Cà phê", "Trà", "Bánh ngọt")
         )
     )
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 12.dp)
-    ) {
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Text(
-            text = "Chúc Bạn Ngon Miệng, Bình!",
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontSize = 18.sp, // Cố định kích thước chữ
-                lineHeight = 24.sp
-            ),
-            color = Color(0xFFFF9800),
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(
-                text = "Danh Mục",
-                style = MaterialTheme.typography.titleSmall.copy(
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
-                ),
-                color = Color(0xFFFF5722)
-            )
-
-            Text(
-                "Tất cả >",
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontSize = 14.sp
-                ),
-                color = Color.Gray,
-                modifier = Modifier.clickable { /* TODO */ }
-            )
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        CategoryGrid(onCategoryClick = {})
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Column(
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            restaurantList.forEach { restaurant ->
-                RestaurantCard(
-                    restaurant = restaurant,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun CategoryGrid(
-    onCategoryClick: (String) -> Unit
-) {
-    val categories = listOf(
-        "Cơm" to R.drawable.rice,
-        "Phở" to R.drawable.pho,
-        "Pizza" to R.drawable.pizza,
-        "Burger" to R.drawable.burger,
-        "Đồ ăn nhanh" to R.drawable.fast_food,
-        "Đồ uống" to R.drawable.drink
-    )
-
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(3),
-        modifier = Modifier.height(180.dp), // Giảm chiều cao grid
-        contentPadding = PaddingValues(vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        items(categories) { (name, imageRes) ->
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onCategoryClick(name) }
-                    .padding(4.dp)
-            ) {
-                Image(
-                    painter = painterResource(imageRes),
-                    contentDescription = null,
-                    modifier = Modifier.size(48.dp) // Giảm kích thước icon
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = name,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontSize = 12.sp,
-                        textAlign = TextAlign.Center
-                    ),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun RestaurantCard(
-    restaurant: Restaurant,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp), // Giảm padding
-        shape = RoundedCornerShape(8.dp),
-        elevation = CardDefaults.cardElevation(2.dp) // Giảm độ nổi
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            horizontalArrangement = Arrangement.Start,
-            verticalAlignment = Alignment.Top
-        ) {
-            AsyncImage(
-                model = ImageRequest.Builder(context = LocalContext.current).data(restaurant.imageUrl)
-                    .crossfade(true)
-                    .build(),
-                error = painterResource(R.drawable.ic_broken_image),
-                placeholder = painterResource(R.drawable.restaurant),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(RoundedCornerShape(8.dp))
-            )
-
-            Spacer(modifier = Modifier.width(12.dp))
-
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp) // Thêm khoảng cách giữa các phần tử
-            ) {
-                Text(
-                    text = restaurant.name,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold
-                    ),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Start,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(
-                        Icons.Default.Star,
-                        contentDescription = null,
-                        tint = Color(0xFFFFA500),
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "${restaurant.rating}",
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                    )
-                    Text(
-                        text = " (${restaurant.ratingCount})",
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            fontSize = 12.sp
-                        ),
-                        color = Color.Gray
-                    )
-                }
-
-                Text(
-                    text = restaurant.address,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontSize = 12.sp,
-                        lineHeight = 16.sp
-                    ),
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Text(
-                    text = "Giá: ${restaurant.priceRange}đ",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium
-                    ),
-                    color = Color(0xFFFF5722)
-                )
-            }
-        }
-    }
 }
 
 @Preview(showBackground = true)

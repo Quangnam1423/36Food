@@ -11,7 +11,9 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.a36food.presentation.screens.restaurantDetail.RestaurantDetailScreen
 import com.example.a36food.presentation.screens.homes.FavoriteScreen
+import com.example.a36food.presentation.screens.homes.HistoryScreen
 import com.example.a36food.presentation.screens.homes.HomeScreen
+import com.example.a36food.presentation.screens.homes.ProfileScreen
 import com.example.a36food.presentation.screens.homes.SearchingScreen
 import com.example.a36food.presentation.screens.introduce.IntroduceScreen
 import com.example.a36food.presentation.screens.login.LoginScreen
@@ -97,15 +99,28 @@ fun AppNavigation() {
         }
 
         composable(Screen.History.route) {
-            Box(modifier = Modifier.fillMaxSize()) {
-                Text("History Screen", modifier = Modifier.align(Alignment.Center))
-            }
+            HistoryScreen(
+                onNavigateToHome = { navController.navigate(Screen.Home.route) },
+                onNavigateToSearch = { navController.navigate(Screen.Search.route) },
+                onNavigateToFavorite = { navController.navigate(Screen.Favorite.route) },
+                onNavigateToProfile = { navController.navigate(Screen.Profile.route) }
+            )
         }
 
         composable(Screen.Profile.route) {
-            Box(modifier = Modifier.fillMaxSize()) {
-                Text("Profile Screen", modifier = Modifier.align(Alignment.Center))
-            }
+            ProfileScreen(
+                onNavigateToHome = { navController.navigate(Screen.Home.route) },
+                onNavigateToSearch = { navController.navigate(Screen.Search.route) },
+                onNavigateToFavorite = { navController.navigate(Screen.Favorite.route) },
+                onNavigateToHistory = { navController.navigate(Screen.History.route) },
+                onEditClick = { /* TODO: Implement edit profile */ },
+                onPasswordChange = { /* TODO: Implement password change */ },
+                onLogout = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(navController.graph.id) { inclusive = true }
+                    }
+                }
+            )
         }
 
         // navController.navigate(Screen.RestaurantDetail.createRoute

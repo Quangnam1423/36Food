@@ -23,11 +23,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.a36food.Screen
+import com.example.a36food.domain.model.Order
 import com.example.a36food.ui.components.BottomNavBar
 import java.text.SimpleDateFormat
 import java.util.*
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
     onNavigateToHome: () -> Unit = {},
@@ -35,6 +36,9 @@ fun HistoryScreen(
     onNavigateToFavorite: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {}
 ) {
+
+    var Orders = remember { mutableStateListOf<Order>() }
+
     Scaffold(
         topBar = {
             HistoryTopAppBar(onSearchClick = onNavigateToSearch)
@@ -93,7 +97,7 @@ private fun HistoryTopAppBar(
 private fun HistoryContent(
     modifier: Modifier = Modifier
 ) {
-    var selectedTab by remember { mutableStateOf(0) }
+    var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("Đang đến", "Lịch sử", "Đánh giá", "Đơn nháp")
 
     Column(modifier = modifier) {
@@ -191,7 +195,6 @@ private fun HistorySection() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FilterSection(
     selectedServiceType: String,
@@ -260,7 +263,7 @@ private fun FilterDropdownButton(
 ) {
     var expanded by remember { mutableStateOf(false) }
 
-    Box(modifier = modifier) {
+    Box(modifier = modifier.fillMaxWidth()) {
         OutlinedButton(
             onClick = { expanded = true },
             modifier = Modifier.fillMaxWidth(),
@@ -282,7 +285,7 @@ private fun FilterDropdownButton(
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            modifier = Modifier.width(IntrinsicSize.Min)
+            modifier = Modifier.fillMaxWidth()
         ) {
             options.forEach { option ->
                 DropdownMenuItem(

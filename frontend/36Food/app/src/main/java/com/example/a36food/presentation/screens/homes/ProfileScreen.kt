@@ -50,6 +50,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.a36food.Screen
 import com.example.a36food.ui.components.BottomNavBar
 
 @OptIn(ExperimentalMaterial3Api::class)

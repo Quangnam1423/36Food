@@ -57,6 +57,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.a36food.Screen
 import com.example.a36food.domain.model.BusinessHours
 import com.example.a36food.domain.model.OpeningStatus
 import com.example.a36food.domain.model.Restaurant
@@ -113,7 +114,7 @@ private fun FavoriteTopAppBar(
             )
         },
         navigationIcon = {
-            IconButton(onClick = {onBackClick }) {
+            IconButton(onClick = onBackClick) {
                 Icon(
                     Icons.Default.ArrowBackIosNew,
                     contentDescription = "Back",

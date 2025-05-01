@@ -1,14 +1,12 @@
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
+package com.example.a36food
+
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.a36food.presentation.screens.foodscreen.FoodDetailScreen
 import com.example.a36food.presentation.screens.restaurantDetail.RestaurantDetailScreen
 import com.example.a36food.presentation.screens.homes.FavoriteScreen
 import com.example.a36food.presentation.screens.homes.HistoryScreen
@@ -19,15 +17,18 @@ import com.example.a36food.presentation.screens.introduce.IntroduceScreen
 import com.example.a36food.presentation.screens.login.LoginScreen
 
 sealed class Screen(val route: String) {
-    object Introduce : Screen("introduce")
-    object Login : Screen("login")
-    object Home : Screen("home")
-    object Search : Screen("search")
-    object Favorite : Screen("favorite")
-    object History : Screen("history")
-    object Profile : Screen("profile")
-    object RestaurantDetail : Screen("restaurant_detail/{restaurantId}") {
+    data object Introduce : Screen("introduce")
+    data object Login : Screen("login")
+    data object Home : Screen("home")
+    data object Search : Screen("search")
+    data object Favorite : Screen("favorite")
+    data object History : Screen("history")
+    data object Profile : Screen("profile")
+    data object RestaurantDetail : Screen("restaurant_detail/{restaurantId}") {
         fun createRoute(restaurantId: String) = "restaurant_detail/$restaurantId"
+    }
+    data object FoodDetail : Screen("food_detail/{foodId}") {
+        fun createRoute(foodId: String) = "food_detail/$foodId"
     }
 }
 
@@ -136,7 +137,25 @@ fun AppNavigation() {
             RestaurantDetailScreen(
                 restaurantId = restaurantId,
                 onBackClick = { navController.popBackStack() },
-                onShareClick = { /* TODO: Implement share functionality */ }
+                onShareClick = { /* TODO: Implement share functionality */ },
+                onAddClick = {/*TO DO ADD FOOD TO CART*/},
+                onFoodClick = { foodId ->
+                    navController.navigate(Screen.FoodDetail.createRoute(foodId))
+                }
+            )
+        }
+
+        composable(
+            route = Screen.FoodDetail.route,
+            arguments = listOf(
+                navArgument("foodId") { type = NavType.StringType }
+            )
+        ) {
+            FoodDetailScreen(
+                foodId = it.arguments?.getString("foodId") ?: "",
+                onBackClick = { navController.popBackStack() },
+                onAddToCartClick = {},
+                onShareClick = {},
             )
         }
     }

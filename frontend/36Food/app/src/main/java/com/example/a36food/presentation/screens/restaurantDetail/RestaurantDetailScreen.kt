@@ -1,10 +1,10 @@
 package com.example.a36food.presentation.screens.restaurantDetail
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -52,7 +52,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -74,7 +73,10 @@ import com.example.a36food.ui.components.RoundedIconButton
 fun RestaurantDetailScreen (
     onBackClick: () -> Unit,
     onShareClick: () -> Unit = {},
+    onFoodClick: (String) -> Unit = {},
+    onAddClick: (FoodItem) -> Unit = {},
     restaurantId: String,
+
 ) {
     var query by remember {mutableStateOf("")}
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -107,7 +109,8 @@ fun RestaurantDetailScreen (
             items(generateSampleFoodItems()) { foodItem ->
                 FoodItemCard(
                     foodItem = foodItem,
-                    onAddClick = { /* Handle add click */ },
+                    onAddClick = onAddClick,
+                    onFoodClick = onFoodClick,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -191,37 +194,6 @@ fun  RestaurantDetailAppBar(
 }
 
 @Composable
-fun RestaurantDetailLayout(
-    contentPadding: PaddingValues,
-    modifier: Modifier = Modifier
-) {
-    // Implementation of the restaurant detail layout
-    LazyColumn(
-        modifier = modifier.fillMaxSize().padding(contentPadding)
-    ) {
-        item {
-            RestaurantDetailHeader(
-                restaurant = createRestaurantSample("1"),
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-
-        item {
-            Text(text = "Danh sách các món ăn của nhà hàng", modifier = Modifier.padding(4.dp))
-            Spacer(modifier = Modifier.height(10.dp))
-        }
-        items(generateSampleFoodItems()) {
-            foodItem ->
-                FoodItemCard(
-                    foodItem = foodItem,
-                    onAddClick = { /* Handle add click */ },
-                    modifier = Modifier.fillMaxWidth()
-                )
-        }
-    }
-}
-
-@Composable
 private fun RestaurantDetailHeader(
     restaurant: Restaurant,
     modifier: Modifier = Modifier
@@ -280,14 +252,12 @@ private fun RestaurantDetailHeader(
 private fun FoodItemCard(
     modifier: Modifier = Modifier,
     foodItem: FoodItem,
-    onAddClick: (FoodItem) -> Unit
+    onAddClick: (FoodItem) -> Unit,
+    onFoodClick: (String) -> Unit = {}
 ) {
-    val configuration = LocalConfiguration.current
-    val screenWidth = configuration.screenWidthDp.dp
-    val screenHeight = configuration.screenHeightDp.dp
-
     Card(
         modifier = modifier
+            .clickable { onFoodClick(foodItem.id) }
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 4.dp),
         shape = RoundedCornerShape(8.dp),

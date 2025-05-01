@@ -59,6 +59,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.a36food.R
+import com.example.a36food.Screen
 import com.example.a36food.domain.model.BusinessHours
 import com.example.a36food.domain.model.OpeningStatus
 import com.example.a36food.domain.model.Restaurant

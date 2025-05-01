@@ -61,6 +61,7 @@ import com.example.a36food.ui.components.CartIcon
 import com.example.a36food.ui.components.RoundedIconButton
 import com.example.a36food.ui.components.BottomNavBar
 import com.example.a36food.R
+import com.example.a36food.Screen
 import com.example.a36food.data.local.RecentSearchManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

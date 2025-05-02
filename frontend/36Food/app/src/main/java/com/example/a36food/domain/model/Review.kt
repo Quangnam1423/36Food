@@ -8,4 +8,7 @@ data class Review(
     val imageUrls: List<String> = emptyList(),
     val createdAt: Long = System.currentTimeMillis(),
     val isAnonymous: Boolean = false, // Đánh giá ẩn danh hay không
+    val foodId: String,
+    val restaurantId: String,
+    val orderId: String? = null // Link tới đơn hàng nếu là verified purchase
 )

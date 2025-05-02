@@ -15,10 +15,12 @@ import com.example.a36food.presentation.screens.homes.ProfileScreen
 import com.example.a36food.presentation.screens.homes.SearchingScreen
 import com.example.a36food.presentation.screens.introduce.IntroduceScreen
 import com.example.a36food.presentation.screens.login.LoginScreen
+import com.example.a36food.presentation.screens.register.RegisterScreen
 
 sealed class Screen(val route: String) {
     data object Introduce : Screen("introduce")
     data object Login : Screen("login")
+    data object Register : Screen("register")
     data object Home : Screen("home")
     data object Search : Screen("search")
     data object Favorite : Screen("favorite")
@@ -64,6 +66,20 @@ fun AppNavigation() {
                 },
                 onNavigateToRegister = {
                     // Add register navigation when ready
+                    navController.navigate(Screen.Register.route)
+                }
+            )
+        }
+
+        composable(Screen.Register.route) {
+            RegisterScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onLoginClick = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.Register.route) { inclusive = true }
+                    }
                 }
             )
         }

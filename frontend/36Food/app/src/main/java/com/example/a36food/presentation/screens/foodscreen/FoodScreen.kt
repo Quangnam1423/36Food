@@ -23,7 +23,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.a36food.domain.model.FoodItem
-import com.example.a36food.domain.model.FoodReview
 import com.example.a36food.domain.model.Review
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -326,50 +325,44 @@ object SampleData {
         )
     }
 
-    fun createSampleReviews(): List<FoodReview> {
+    fun createSampleReviews(): List<Review> {
         return listOf(
-            FoodReview(
-                review = Review(
-                    id = "review_1",
-                    userId = "user_1",
-                    content = "Phở ngon tuyệt vời, nước dùng đậm đà, thịt bò tươi ngon. Quán phục vụ nhanh và nhiệt tình. Chắc chắn sẽ quay lại!",
-                    rating = 5f,
-                    imageUrls = listOf(
-                        "https://images.unsplash.com/photo-1576644461179-ac01048e621f",
-                    ),
-                    createdAt = System.currentTimeMillis() - 86400000, // 1 day ago
-                    isAnonymous = false
+            Review(
+                id = "review_1",
+                userId = "user_1",
+                content = "Phở ngon tuyệt vời, nước dùng đậm đà, thịt bò tươi ngon. Quán phục vụ nhanh và nhiệt tình. Chắc chắn sẽ quay lại!",
+                rating = 5f,
+                imageUrls = listOf(
+                    "https://images.unsplash.com/photo-1576644461179-ac01048e621f",
                 ),
+                createdAt = System.currentTimeMillis() - 86400000, // 1 day ago
+                isAnonymous = false,
                 foodId = "food_1",
                 restaurantId = "rest_1",
                 orderId = "order_1"
             ),
-            FoodReview(
-                review = Review(
-                    id = "review_2",
-                    userId = "user_2",
-                    content = "Phần ăn nhiều, thịt bò tươi. Tuy nhiên giá hơi cao so với mặt bằng chung.",
-                    rating = 4f,
-                    createdAt = System.currentTimeMillis() - 172800000, // 2 days ago
-                    isAnonymous = true
-                ),
+            Review(
+                id = "review_2",
+                userId = "user_2",
+                content = "Phần ăn nhiều, thịt bò tươi. Tuy nhiên giá hơi cao so với mặt bằng chung.",
+                rating = 4f,
+                createdAt = System.currentTimeMillis() - 172800000, // 2 days ago
+                isAnonymous = true,
                 foodId = "food_1",
                 restaurantId = "rest_1",
                 orderId = "order_2"
             ),
-            FoodReview(
-                review = Review(
-                    id = "review_3",
-                    userId = "user_3",
-                    content = "Quán sạch sẽ, nhân viên phục vụ nhiệt tình. Sẽ giới thiệu cho bạn bè.",
-                    rating = 5f,
-                    imageUrls = listOf(
-                        "https://images.unsplash.com/photo-1583057341910-49cc0d7c8989",
-                        "https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43"
-                    ),
-                    createdAt = System.currentTimeMillis() - 259200000, // 3 days ago
-                    isAnonymous = false
+            Review(
+                id = "review_3",
+                userId = "user_3",
+                content = "Quán sạch sẽ, nhân viên phục vụ nhiệt tình. Sẽ giới thiệu cho bạn bè.",
+                rating = 5f,
+                imageUrls = listOf(
+                    "https://images.unsplash.com/photo-1583057341910-49cc0d7c8989",
+                    "https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43"
                 ),
+                createdAt = System.currentTimeMillis() - 259200000, // 3 days ago
+                isAnonymous = false,
                 foodId = "food_1",
                 restaurantId = "rest_1",
                 orderId = "order_3"

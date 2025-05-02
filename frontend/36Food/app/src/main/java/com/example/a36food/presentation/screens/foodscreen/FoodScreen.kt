@@ -316,7 +316,7 @@ object SampleData {
                     "tái và các loại rau thơm tươi ngon. Được nấu theo công thức gia truyền hơn 50 năm.",
             price = 69000.0,
             imageUrl = "https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43",
-            categoryId = "category_vietnamese",
+            category = "Phở",
             isAvailable = true,
             isPopular = true,
             likes = 4567,

@@ -73,7 +73,10 @@ fun AppNavigation() {
                 onNavigateToSearch = { navController.navigate(Screen.Search.route) },
                 onNavigateToFavorite = { navController.navigate(Screen.Favorite.route) },
                 onNavigateToHistory = { navController.navigate(Screen.History.route) },
-                onNavigateToProfile = { navController.navigate(Screen.Profile.route) }
+                onNavigateToProfile = { navController.navigate(Screen.Profile.route) },
+                onRestaurantClick = { restaurantId ->
+                    navController.navigate(Screen.RestaurantDetail.createRoute(restaurantId))
+                }
             )
         }
 

@@ -75,7 +75,8 @@ fun HomeScreen(
     onNavigateToSearch: () -> Unit = {},
     onNavigateToFavorite: () -> Unit = {},
     onNavigateToHistory: () -> Unit = {},
-    onNavigateToProfile: () -> Unit = {}
+    onNavigateToProfile: () -> Unit = {},
+    onRestaurantClick: (String) -> Unit = {}
 ) {
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -99,7 +100,10 @@ fun HomeScreen(
         },
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
     ) { paddingValues ->
-        MenuLayout(Modifier.padding(paddingValues))
+        MenuLayout(
+            Modifier.padding(paddingValues),
+            onRestaurantClick = onRestaurantClick
+        )
     }
 }
 
@@ -168,7 +172,8 @@ fun HomeTopAppBar(
 
 @Composable
 private fun MenuLayout(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onRestaurantClick: (String) -> Unit = {}
 ) {
     var selectedFilter by remember { mutableStateOf(FilterOption.NEAR_ME) }
     val restaurantList = createRestaurantList()
@@ -278,7 +283,8 @@ private fun MenuLayout(
         items(filteredRestaurants) { restaurant ->
             RestaurantCard(
                 restaurant = restaurant,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                onRestaurantClick = onRestaurantClick
             )
         }
     }
@@ -335,12 +341,14 @@ private fun CategoryGrid(
 @Composable
 private fun RestaurantCard(
     restaurant: Restaurant,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onRestaurantClick: (String) -> Unit = {}
 ) {
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 4.dp)
+            .clickable {onRestaurantClick(restaurant.id) },
         shape = RoundedCornerShape(8.dp),
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
@@ -447,7 +455,7 @@ private fun FilterBar(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        FilterOption.values().forEachIndexed { index, filter ->
+        FilterOption.entries.forEachIndexed { index, filter ->
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.weight(1f)
@@ -476,7 +484,7 @@ private fun FilterBar(
                         color = if (selectedFilter == filter) Color(0xFFFF5722) else Color.Gray,
                     )
                 }
-                if (index < FilterOption.values().size - 1) {
+                if (index < FilterOption.entries.size - 1) {
                     Text(
                         text = "|",
                         color = Color.Gray,
@@ -485,38 +493,6 @@ private fun FilterBar(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun FilterChip(
-    selected: Boolean,
-    onClick: () -> Unit,
-    filter: FilterOption,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier
-            .clickable(onClick = onClick)
-            .padding(vertical = 8.dp, horizontal = 4.dp),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = filter.icon,
-            contentDescription = null,
-            tint = if (selected) Color(0xFFFF5722) else Color.Gray,
-            modifier = Modifier.size(14.dp)
-        )
-        Spacer(modifier = Modifier.width(4.dp))
-        Text(
-            text = filter.title,
-            style = MaterialTheme.typography.bodyMedium.copy(
-                fontSize = 12.sp,
-                fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal
-            ),
-            color = if (selected) Color(0xFFFF5722) else Color.Gray
-        )
     }
 }
 

@@ -1,5 +1,6 @@
 package com.example.a36food.presentation.screens.restaurantDetail
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -19,12 +20,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBackIosNew
-import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
@@ -35,10 +33,11 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MaterialTheme.shapes
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.ScrollableTabRow
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRowDefaults.SecondaryIndicator
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
@@ -55,7 +54,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -75,11 +74,26 @@ fun RestaurantDetailScreen (
     onShareClick: () -> Unit = {},
     onFoodClick: (String) -> Unit = {},
     onAddClick: (FoodItem) -> Unit = {},
+    onFavoriteClick: (String) -> Unit = {},
     restaurantId: String,
 
-) {
-    var query by remember {mutableStateOf("")}
+    ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    val restaurant = remember { createRestaurantSample(restaurantId) }
+    val allFoodItem = remember { generateSampleFoodItems() }
+
+    val categories = remember { listOf("Tất cả") + restaurant.categories }
+
+    var selectedCategory by remember { mutableStateOf(categories.first()) }
+
+    val filteredFoodItems = remember(selectedCategory, allFoodItem) {
+        when (selectedCategory) {
+            "Tất cả" -> allFoodItem
+            else -> allFoodItem.filter {
+                it.category.equals(selectedCategory, ignoreCase = true)
+            }
+        }
+    }
 
     Box(
         modifier = Modifier.fillMaxSize()
@@ -93,20 +107,21 @@ fun RestaurantDetailScreen (
             item{
                 RestaurantDetailHeader(
                     restaurant = createRestaurantSample(restaurantId),
+                    onFavoriteClick = {onFavoriteClick(it)},
                     modifier = Modifier.fillMaxWidth()
                 )
             }
 
-            item{
-                Text(
-                    text = "Danh sách các món ăn của nhà hàng",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(16.dp)
+            item {
+                CategoryTabs(
+                    categories = categories,
+                    selectedCategory = selectedCategory,
+                    onCategorySelected = {selectedCategory = it},
+                    modifier = Modifier.padding(horizontal = 16.dp)
                 )
-                Spacer(modifier = Modifier.height(10.dp))
             }
 
-            items(generateSampleFoodItems()) { foodItem ->
+            items(filteredFoodItems) { foodItem ->
                 FoodItemCard(
                     foodItem = foodItem,
                     onAddClick = onAddClick,
@@ -116,9 +131,7 @@ fun RestaurantDetailScreen (
             }
         }
         RestaurantDetailAppBar(
-            restaurantName = "Restaurant Name",
-            query = query,
-            onQueryChanged = { query = it },
+            restaurantName = restaurant.name,
             onBackClick = onBackClick,
             onShareClick = onShareClick,
             scrollBehavior = scrollBehavior,
@@ -132,42 +145,20 @@ fun RestaurantDetailScreen (
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun  RestaurantDetailAppBar(
-    restaurantName: String,
-    query: String,
-    onQueryChanged: (String) -> Unit,
+    restaurantName: String = "Phở Thìn Bờ Hồ",
     onBackClick: () -> Unit,
     onShareClick: () -> Unit,
     scrollBehavior: TopAppBarScrollBehavior,
-    modifier: Modifier = Modifier
+    @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
 ) {
     CenterAlignedTopAppBar(
         title = {
-            OutlinedTextField(
-                value = query,
-                singleLine = true,
-                shape = shapes.large,
-                modifier = Modifier.padding(
-                    horizontal = 2.dp, vertical = 2.dp
-                ),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.White.copy(alpha = 0.9f),
-                    unfocusedContainerColor = Color.White.copy(alpha = 0.9f),
-                    disabledContainerColor = Color.White.copy(alpha = 0.9f),
-                ),
-                onValueChange = { onQueryChanged(it) },
-                trailingIcon = {
-                    IconButton(
-                        onClick = {/*TO DO*/ }
-                    ) {
-                        Icon(imageVector = Icons.Default.Cancel, contentDescription = "hidden Icon")
-                    }
-                },
-                keyboardOptions = KeyboardOptions.Default.copy(
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = {/*TO DO*/ }
-                )
+            Text(
+                text = restaurantName,
+                style = MaterialTheme.typography.titleMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = Color(0xFFFF5722)
             )
         },
         navigationIcon = {
@@ -196,7 +187,8 @@ fun  RestaurantDetailAppBar(
 @Composable
 private fun RestaurantDetailHeader(
     restaurant: Restaurant,
-    modifier: Modifier = Modifier
+    onFavoriteClick: (String) -> Unit = {},
+    @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
 ) {
     AsyncImage(
         model = ImageRequest.Builder(context = LocalContext.current).data(restaurant.imageUrl)
@@ -218,11 +210,6 @@ private fun RestaurantDetailHeader(
             modifier = Modifier.padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            Text(
-                text = restaurant.name,
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray
-            )
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -231,10 +218,10 @@ private fun RestaurantDetailHeader(
                     contentDescription = null,
                     tint =  Color(0xFFFFA500)
                 )
-                Text(" |  10+ bình luận  |  29 phút", modifier = Modifier.padding(start = 4.dp))
+                Text("${restaurant.reviewsCount} đánh giá  |  29 phút", modifier = Modifier.padding(start = 4.dp))
                 Spacer(modifier = Modifier.weight(1f))
                 IconButton(
-                    onClick = { /* Handle favorite click */ },
+                    onClick = { onFavoriteClick(restaurant.id) },
                     modifier = Modifier.padding(start = 8.dp)
                 ) {
                     Icon(
@@ -244,6 +231,46 @@ private fun RestaurantDetailHeader(
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun CategoryTabs(
+    categories: List<String>,
+    selectedCategory: String,
+    onCategorySelected: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    ScrollableTabRow(
+        selectedTabIndex = categories.indexOf(selectedCategory),
+        modifier = modifier,
+        edgePadding = 16.dp,
+        containerColor = Color.Transparent,
+        contentColor = Color(0xFFFF5722),
+        indicator = { tabPositions ->
+            SecondaryIndicator(
+                modifier = Modifier
+                    .tabIndicatorOffset(
+                        tabPositions[categories.indexOf(selectedCategory)]
+                    ),
+                height = 2.dp,
+                color = Color(0xFFFF5722)
+            )
+        }
+    ) {
+        categories.forEach { category ->
+            Tab(
+                selected = category == selectedCategory,
+                onClick = { onCategorySelected(category) },
+                text = {
+                    Text(
+                        text = category,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (category == selectedCategory) Color(0xFFFF5722) else Color.Gray
+                    )
+                }
+            )
         }
     }
 }
@@ -306,7 +333,7 @@ private fun FoodItemCard(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = "${foodItem.price.toInt()}đ",
+                    text = formatPrice(foodItem.price),
                     style = MaterialTheme.typography.bodyLarge,
                     color = Color.Red,
                     fontWeight = FontWeight.Bold
@@ -331,6 +358,11 @@ private fun FoodItemCard(
     }
 }
 
+@SuppressLint("DefaultLocale")
+private fun formatPrice(price: Double): String {
+    return String.format("%,d", price.toInt()).replace(",", ".") + "đ"
+}
+
 private fun createRestaurantSample(restaurantId: String): Restaurant {
     return Restaurant(
         id = restaurantId,
@@ -347,8 +379,9 @@ private fun createRestaurantSample(restaurantId: String): Restaurant {
         ),
         serviceType = ServiceType.FOOD,
         phoneNumber = "0123456789",
+        reviewsCount = 100,
         likes = 156,
-        categories = listOf("Phở", "Món Việt", "Đặc sản")
+        categories = listOf("Phở", "Bún", "Mì trộn" , "Đồ uống" , "Khác")
     )
 }
 
@@ -361,7 +394,7 @@ private fun generateSampleFoodItems(): List<FoodItem> {
             price = 45000.0,
             imageUrl = "https://example.com/pho-bo.jpg",
             restaurantId = "1",
-            categoryId = "pho",
+            category = "Phở",
             isAvailable = true,
             isPopular = true,
             likes = 156,
@@ -374,7 +407,7 @@ private fun generateSampleFoodItems(): List<FoodItem> {
             price = 40000.0,
             imageUrl = "https://example.com/pho-ga.jpg",
             restaurantId = "1",
-            categoryId = "pho",
+            category = "Phở",
             isAvailable = true,
             isPopular = true,
             likes = 120,
@@ -387,7 +420,7 @@ private fun generateSampleFoodItems(): List<FoodItem> {
             price = 50000.0,
             imageUrl = "https://example.com/pho-trung.jpg",
             restaurantId = "1",
-            categoryId = "pho",
+            category = "Phở",
             isAvailable = true,
             isPopular = false,
             likes = 89,
@@ -400,7 +433,7 @@ private fun generateSampleFoodItems(): List<FoodItem> {
             price = 5000.0,
             imageUrl = "https://example.com/quay.jpg",
             restaurantId = "1",
-            categoryId = "side_dish",
+            category = "Khác",
             isAvailable = true,
             isPopular = false,
             likes = 45,
@@ -413,12 +446,77 @@ private fun generateSampleFoodItems(): List<FoodItem> {
             price = 5000.0,
             imageUrl = "https://example.com/tra-da.jpg",
             restaurantId = "1",
-            categoryId = "drink",
+            category = "Đồ uống",
             isAvailable = true,
             isPopular = false,
             likes = 30,
             saleCount = 1500
-        )
+        ),
+        FoodItem(
+        id = "6",
+        name = "Bún Bò Huế",
+        description = "Bún Bò Huế Gia Truyền",
+        price = 40000.0,
+        imageUrl = "https://example.com/pho-ga.jpg",
+        restaurantId = "1",
+        category = "Bún",
+        isAvailable = true,
+        isPopular = true,
+        likes = 120,
+        saleCount = 800
+        ),
+        FoodItem(
+            id = "7",
+            name = "Bún Thịt Nướng",
+            description = "Phở với thịt gà ta chuẩn vị, nước dùng trong và ngọt",
+            price = 40000.0,
+            imageUrl = "https://example.com/pho-ga.jpg",
+            restaurantId = "1",
+            category = "Bún",
+            isAvailable = true,
+            isPopular = true,
+            likes = 120,
+            saleCount = 800
+        ),
+        FoodItem(
+            id = "8",
+            name = "Quẩy",
+            description = "Quẩy Giòn",
+            price = 40000.0,
+            imageUrl = "https://example.com/pho-ga.jpg",
+            restaurantId = "1",
+            category = "Khác",
+            isAvailable = true,
+            isPopular = true,
+            likes = 120,
+            saleCount = 800
+        ),
+        FoodItem(
+            id = "9",
+            name = "Nhân Trần",
+            description = "Phở với thịt gà ta chuẩn vị, nước dùng trong và ngọt",
+            price = 3000.0,
+            imageUrl = "https://example.com/pho-ga.jpg",
+            restaurantId = "1",
+            category = "Đồ Uống",
+            isAvailable = true,
+            isPopular = true,
+            likes = 120,
+            saleCount = 800
+        ),
+        FoodItem(
+            id = "10",
+            name = "Phở bò đặc biệt",
+            description = "Phở bò với thịt tái và nạm, bánh phở mềm, nước dùng đậm đà",
+            price = 1500000.0,
+            imageUrl = "https://example.com/pho-bo.jpg",
+            restaurantId = "1",
+            category = "Phở",
+            isAvailable = true,
+            isPopular = true,
+            likes = 156,
+            saleCount = 1200
+        ),
     )
 }
 

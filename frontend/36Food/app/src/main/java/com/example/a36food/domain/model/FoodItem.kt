@@ -7,7 +7,7 @@ data class FoodItem(
     val description: String = "",
     val price: Double,
     val imageUrl: String,
-    val categoryId: String, // Bắt buộc phải có category
+    val category: String, // Bắt buộc phải có category
     val isAvailable: Boolean = true,
     val isPopular: Boolean = false,
     val likes: Int = 0,

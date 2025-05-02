@@ -2,7 +2,7 @@ package com.example.a36food.domain.model
 
 data class Category(
     val id: String,
-    val restaurantId: String, // nhà hàng có thể tùy biến kiểu món ăn trên menu của mình
+    val restaurantId: String,
     val name: String,
     val imageUrl: String? = null,
     val description: String = "",

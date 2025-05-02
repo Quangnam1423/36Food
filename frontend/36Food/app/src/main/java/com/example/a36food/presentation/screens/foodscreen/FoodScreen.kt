@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.ui.Alignment
@@ -75,7 +76,7 @@ fun FoodDetailScreen(
                         navigationIcon = {
                             IconButton(onClick = onBackClick) {
                                 Icon(
-                                    imageVector = Icons.Default.ArrowBack,
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                     contentDescription = "Back",
                                     tint = Color.White
                                 )
@@ -336,7 +337,6 @@ object SampleData {
                     imageUrls = listOf(
                         "https://images.unsplash.com/photo-1576644461179-ac01048e621f",
                     ),
-                    likes = 12,
                     createdAt = System.currentTimeMillis() - 86400000, // 1 day ago
                     isAnonymous = false
                 ),
@@ -350,7 +350,6 @@ object SampleData {
                     userId = "user_2",
                     content = "Phần ăn nhiều, thịt bò tươi. Tuy nhiên giá hơi cao so với mặt bằng chung.",
                     rating = 4f,
-                    likes = 5,
                     createdAt = System.currentTimeMillis() - 172800000, // 2 days ago
                     isAnonymous = true
                 ),
@@ -368,7 +367,6 @@ object SampleData {
                         "https://images.unsplash.com/photo-1583057341910-49cc0d7c8989",
                         "https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43"
                     ),
-                    likes = 8,
                     createdAt = System.currentTimeMillis() - 259200000, // 3 days ago
                     isAnonymous = false
                 ),

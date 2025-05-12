@@ -157,7 +157,9 @@ private fun IntroContent(onNavigateToLogin: () -> Unit) {
                         pagerState.animateScrollToPage(pagerState.currentPage + 1)
                     }
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Green),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFFF5722)
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
@@ -178,7 +180,9 @@ private fun IntroContent(onNavigateToLogin: () -> Unit) {
         } else {
             Button(
                 onClick = onNavigateToLogin,
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Green),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFFF5722)
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)

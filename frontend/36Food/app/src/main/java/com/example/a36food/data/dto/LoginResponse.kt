@@ -1,7 +1,12 @@
 package com.example.a36food.data.dto
 
-import androidx.core.app.NotificationCompat.MessagingStyle.Message
+import com.example.a36food.domain.model.User
+import com.google.gson.annotations.SerializedName
 
 data class LoginResponse(
-    val message: String
+    @SerializedName("accessToken")
+    val token: String?,
+
+    @SerializedName("user")
+    val userProfile: User? = null
 )

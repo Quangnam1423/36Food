@@ -7,7 +7,7 @@ import retrofit2.http.Query
 
 interface RestaurantApi {
     @GET("restaurants")
-    suspend fun getRestaurants(
+    suspend fun getNearbyRestaurants(
         @Query("userLat") userLat: Double,
         @Query("userLng") userLng: Double
     ): List<Restaurant>

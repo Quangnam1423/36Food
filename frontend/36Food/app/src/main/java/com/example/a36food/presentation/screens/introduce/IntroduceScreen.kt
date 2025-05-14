@@ -40,6 +40,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.a36food.presentation.viewmodel.IntroduceViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -65,10 +66,12 @@ val introPages = listOf(
 
 @Composable
 fun IntroduceScreen(
+    viewModel: IntroduceViewModel = hiltViewModel(),
     onNavigateToHome: () -> Unit,
     onNavigateToLogin: () -> Unit
 ) {
     var showLoading by remember { mutableStateOf(true) }
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
     val scale by animateFloatAsState(
         targetValue = if (showLoading) 1.2f else 1f,
@@ -79,9 +82,26 @@ fun IntroduceScreen(
         label = "scale"
     )
 
+    // First check if we should skip intro
     LaunchedEffect(Unit) {
-        delay(2000)
-        showLoading = false
+        viewModel.checkFirstLaunch()
+    }
+
+    // Handle navigation based on state
+    LaunchedEffect(state) {
+        if (showLoading) {
+            delay(2000) // Show splash for at least 2 seconds
+            showLoading = false
+        }
+
+        if (state.hasValidToken) {
+            // User already logged in, go directly to home
+            onNavigateToHome()
+        } else if (!state.isFirstLaunch && !state.hasValidToken) {
+            // Not first launch, but user not logged in
+            onNavigateToLogin()
+        }
+        // Otherwise, stay on intro screen
     }
 
     Box(
@@ -102,8 +122,14 @@ fun IntroduceScreen(
                         .scale(scale)
                 )
             }
-        } else {
-            IntroContent(onNavigateToLogin = onNavigateToLogin)
+        } else if (state.isFirstLaunch && !state.hasValidToken) {
+            // Only show intro content on first launch
+            IntroContent(
+                onNavigateToLogin = {
+                    viewModel.setFirstLaunchComplete()
+                    onNavigateToLogin()
+                }
+            )
         }
     }
 }
@@ -228,175 +254,3 @@ fun IntroduceScreenPreview() {
         onNavigateToLogin = {}
     )
 }
-
-/*
-@Composable
-fun IntroduceScreen(
-    onNavigateToHome: () -> Unit,
-    onNavigateToLogin: () -> Unit,
-    viewModel: IntroduceViewModel = hiltViewModel()
-) {
-    var showLoading by remember { mutableStateOf(true) }
-    val state by viewModel.state.collectAsStateWithLifecycle()
-
-    val scale by animateFloatAsState(
-        targetValue = if (showLoading) 1.2f else 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(800),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "scale"
-    )
-
-    LaunchedEffect(state.shouldNavigateToHome, state.shouldNavigateToLogin) {
-        delay(3000) // Loading duration
-        showLoading = false
-
-        when {
-            state.shouldNavigateToHome -> onNavigateToHome()
-            state.shouldNavigateToLogin -> {} // Stay on intro screen
-        }
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-    ) {
-        if (showLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.logo),
-                    contentDescription = "Logo",
-                    modifier = Modifier
-                        .size(120.dp)
-                        .scale(scale)
-                )
-            }
-        } else {
-            IntroContent(onNavigateToLogin = onNavigateToLogin)
-        }
-    }
-}
-
-@Composable
-private fun IntroContent(onNavigateToLogin: () -> Unit) {
-    val pagerState = rememberPagerState(pageCount = { introPages.size })
-    val coroutineScope = rememberCoroutineScope()
-
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier
-                .weight(1f)
-                .padding(16.dp)
-        ) { page ->
-            IntroPage(page = introPages[page])
-        }
-
-        // Page indicator
-        Row(
-            Modifier
-                .padding(bottom = 16.dp)
-                .height(8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            repeat(pagerState.pageCount) { iteration ->
-                Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .background(
-                            color = if (pagerState.currentPage == iteration)
-                                MaterialTheme.colorScheme.primary
-                            else
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
-                            shape = MaterialTheme.shapes.small
-                        )
-                )
-            }
-        }
-
-        if (pagerState.currentPage != introPages.lastIndex) {
-            Button(
-                onClick = {
-                    coroutineScope.launch {
-                        pagerState.animateScrollToPage(pagerState.currentPage + 1)
-                    }
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Green),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .height(50.dp)
-            ) {
-                Text("Tiếp Theo")
-            }
-
-            OutlinedButton(
-                onClick = onNavigateToLogin,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .height(50.dp)
-            ) {
-                Text("Bỏ qua")
-            }
-        } else {
-            Button(
-                onClick = onNavigateToLogin,
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Green),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .height(50.dp)
-            ) {
-                Text("Bắt đầu")
-            }
-        }
-    }
-}
-
-@Composable
-private fun IntroPage(page: IntroPage) {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Image(
-            painter = painterResource(id = page.image),
-            contentDescription = null,
-            modifier = Modifier.size(200.dp)
-        )
-        Text(
-            text = page.title,
-            style = MaterialTheme.typography.headlineSmall,
-            modifier = Modifier.padding(top = 32.dp, bottom = 16.dp)
-        )
-        Text(
-            text = page.description,
-            style = MaterialTheme.typography.bodyMedium,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = 24.dp)
-        )
-    }
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewIntroPage(
-    page: IntroPage = introPages[0]
-) {
-    IntroContent(
-        onNavigateToLogin = {}
-    )
-}
-
- */

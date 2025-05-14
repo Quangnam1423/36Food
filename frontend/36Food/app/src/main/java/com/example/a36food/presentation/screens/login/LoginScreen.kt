@@ -22,12 +22,15 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,18 +50,42 @@ import androidx.compose.ui.unit.dp
 import com.example.a36food.R
 import com.example.a36food.ui.theme._36FoodTheme
 import androidx.compose.ui.graphics.Color
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.a36food.presentation.viewmodel.LoginViewModel
 
 
 @SuppressLint("RememberReturnType")
 @Composable
 fun LoginScreen(
+    viewModel: LoginViewModel = hiltViewModel(),
     onNavigateToHome: () -> Unit,
-    onNavigateToRegister: () -> Unit
+    onNavigateToRegister: () -> Unit,
+    onNetworkError: () ->Unit = {}
 ) {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    val loginState by viewModel.loginState.collectAsStateWithLifecycle()
     var isPasswordVisible by remember { mutableStateOf(false) }
-    var isLoading by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        viewModel.setNetworkErrorCallback {
+            onNetworkError()
+        }
+    }
+
+    LaunchedEffect(loginState.isSuccess) {
+        if (loginState.isSuccess) {
+            onNavigateToHome()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        android.util.Log.d("LoginScreen", "Screen launched, checking token...")
+    }
+
+    LaunchedEffect(loginState) {
+        android.util.Log.d("LoginScreen", "LoginState: isLoading=${loginState.isLoading}, " +
+                "isSuccess=${loginState.isSuccess}, error=${loginState.errorMessage}")
+    }
 
     // Tạo focus manager để điều khiển focus
     val focusManager = LocalFocusManager.current
@@ -93,8 +120,8 @@ fun LoginScreen(
             )
 
             OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
+                value = loginState.email,
+                onValueChange = { viewModel.updateEmail(it) },
                 label = { Text("Email") },
                 leadingIcon = {
                     Icon(Icons.Default.Email, "Email Icon")
@@ -119,8 +146,8 @@ fun LoginScreen(
             )
 
             OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
+                value = loginState.password,
+                onValueChange = { viewModel.updatePassword(it) },
                 label = { Text("Password") },
                 leadingIcon = {
                     Icon(Icons.Default.Lock, "Password Icon")
@@ -161,16 +188,25 @@ fun LoginScreen(
             )
 
             Button(
-                onClick = { onNavigateToHome() },
+                onClick = { viewModel.login() }, // Fix: Call viewModel.login() instead of direct navigation
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
-                enabled = email.isNotEmpty() && password.isNotEmpty(),
+                enabled = loginState.email.isNotEmpty() &&
+                        loginState.password.isNotEmpty() &&
+                        !loginState.isLoading,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFFFF5722)
                 ),
             ) {
-                Text("Login")
+                if (loginState.isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = Color.White
+                    )
+                } else {
+                    Text("Login")
+                }
             }
 
             Row(
@@ -183,6 +219,17 @@ fun LoginScreen(
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.clickable(onClick = onNavigateToRegister)
                 )
+            }
+        }
+
+        // Show error message
+        loginState.errorMessage?.let { error ->
+            Snackbar(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .align(Alignment.BottomCenter)
+            ) {
+                Text(error)
             }
         }
     }

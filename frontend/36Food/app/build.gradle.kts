@@ -75,6 +75,8 @@ dependencies {
     kapt(libs.hilt.compiler)
     implementation(libs.retrofit)
     implementation(libs.retrofit.gson)
+    implementation(libs.okhttp.logging)
+    implementation(libs.coroutines.adapter)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.accompanist.pager)
@@ -85,6 +87,8 @@ dependencies {
     implementation(libs.compose.material3)
     implementation(libs.material.icons.extended)
     implementation(libs.coil.compose)
+    implementation(libs.kotlinx.coroutines.play.services)
+    implementation(libs.accompanist.permissions)
 
 
 

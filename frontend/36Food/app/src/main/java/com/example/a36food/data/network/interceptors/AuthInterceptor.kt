@@ -1,14 +1,14 @@
 package com.example.a36food.data.network.interceptors
 
-import com.example.a36food.data.local.UserPreferences
+import android.content.SharedPreferences
 import okhttp3.Interceptor
 import javax.inject.Inject
 
 class AuthInterceptor @Inject constructor(
-    private val userPreferences: UserPreferences
+    private val sharedPreferences: SharedPreferences
 ) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): okhttp3.Response {
-        val token = userPreferences.getAccessToken()
+        val token = sharedPreferences.getString("access_token", null)
         val request = chain.request().newBuilder()
 
         if (!token.isNullOrEmpty()) {

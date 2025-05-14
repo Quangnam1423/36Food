@@ -2,7 +2,6 @@ package com.example.a36food.di.local
 
 import android.content.Context
 import android.content.SharedPreferences
-import com.example.a36food.data.local.UserPreferences
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,11 +18,5 @@ object PreferencesModule {
         @ApplicationContext context: Context
     ): SharedPreferences {
         return context.getSharedPreferences("app_preferences", Context.MODE_PRIVATE)
-    }
-
-    @Provides
-    @Singleton
-    fun provideUserPreferences(preferences: SharedPreferences): UserPreferences {
-        return UserPreferences(preferences)
     }
 }

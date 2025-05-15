@@ -25,9 +25,10 @@ public class RestaurantDTO {
     private List<String> categories;
     private Long createdAt;
     private Integer durationInMinutes;
-
+    private Long orderCount; // Số lượng đơn hàng đã bán
+    
     public static RestaurantDTO fromEntity(Restaurant res, String address, double distanceInMeters, double durationInSeconds) {
-        return new RestaurantDTO(
+        RestaurantDTO dto = new RestaurantDTO(
                 res.getId(),
                 res.getName(),
                 res.getImageUrl(),
@@ -43,8 +44,9 @@ public class RestaurantDTO {
                 res.getReviewsCount(),
                 distanceInMeters / 1000.0,
                 res.getCategories(),
-                res.getCreatedAt(),
-                (int)durationInSeconds / 60
+                res.getCreatedAt(),                (int)durationInSeconds / 60,
+                null // orderCount will be set separately when needed
         );
+        return dto;
     }
 }

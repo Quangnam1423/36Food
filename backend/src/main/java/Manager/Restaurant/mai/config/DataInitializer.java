@@ -92,8 +92,7 @@ public class DataInitializer {
                                 21.033333,
                                 105.850000,
                                 new ArrayList<>()
-                        ),
-                        new Restaurant(
+                        ),                        new Restaurant(
                                 null,
                                 "Lẩu Thái Tomyum",
                                 "https://example.com/image3.jpg",
@@ -111,6 +110,145 @@ public class DataInitializer {
                                 System.currentTimeMillis(),
                                 21.030000,
                                 105.830000,
+                                new ArrayList<>()
+                        ),
+                        new Restaurant(
+                                null,
+                                "Bánh Mì Minh Nhật",
+                                "https://example.com/image4.jpg",
+                                4.8f,
+                                200,
+                                "20k-50k",
+                                "OPEN",
+                                "06:00-20:00",
+                                "TAKEAWAY",
+                                "0866666666",
+                                800,
+                                120,
+                                0.0,
+                                List.of("Vietnamese", "Breakfast", "Sandwich"),
+                                System.currentTimeMillis(),
+                                21.025000,
+                                105.840000,
+                                new ArrayList<>()
+                        ),                        new Restaurant(
+                                null,
+                                "Sushi Hokkaido",
+                                "https://example.com/image5.jpg",
+                                4.9f,
+                                180,
+                                "200k-500k",
+                                "OPEN",
+                                "11:00-22:00",
+                                "DINE_IN",
+                                "0877777777",
+                                1800,
+                                350,
+                                0.0,
+                                List.of("Japanese", "Sushi", "Seafood"),
+                                System.currentTimeMillis(),
+                                21.040000,
+                                105.845000,
+                                new ArrayList<>()
+                        ),
+                        new Restaurant(
+                                null,
+                                "Phở Thìn Bờ Hồ",
+                                "https://example.com/image6.jpg",
+                                4.6f,
+                                350,
+                                "50k-120k",
+                                "OPEN",
+                                "06:00-22:00",
+                                "DINE_IN",
+                                "0955555555",
+                                1200,
+                                180,
+                                0.0,
+                                List.of("Vietnamese", "Noodles", "Breakfast"),
+                                System.currentTimeMillis(),
+                                21.036389, 
+                                105.852222,  // Tọa độ gần Hồ Hoàn Kiếm
+                                new ArrayList<>()
+                        ),
+                        new Restaurant(
+                                null,
+                                "Cơm Tấm Sài Gòn",
+                                "https://example.com/image7.jpg",
+                                4.4f,
+                                280,
+                                "60k-150k",
+                                "OPEN",
+                                "10:00-21:00",
+                                "DINE_IN",
+                                "0933333333",
+                                950,
+                                160,
+                                0.0,
+                                List.of("Vietnamese", "Rice", "Southern"),
+                                System.currentTimeMillis(),
+                                21.022222, 
+                                105.831111,  // Tọa độ khu vực Ba Đình
+                                new ArrayList<>()
+                        ),
+                        new Restaurant(
+                                null,
+                                "Pizza Express",
+                                "https://example.com/image8.jpg",
+                                4.5f,
+                                210,
+                                "150k-350k",
+                                "OPEN",
+                                "10:00-22:30",
+                                "DELIVERY",
+                                "0944444444",
+                                1500,
+                                220,
+                                0.0,
+                                List.of("Italian", "Pizza", "Fast Food"),
+                                System.currentTimeMillis(),
+                                21.014444, 
+                                105.823889,  // Tọa độ khu vực Đống Đa
+                                new ArrayList<>()
+                        ),
+                        new Restaurant(
+                                null,
+                                "Quán Nướng Hàn Quốc",
+                                "https://example.com/image9.jpg",
+                                4.7f,
+                                180,
+                                "200k-500k",
+                                "OPEN",
+                                "16:00-23:00",
+                                "DINE_IN",
+                                "0911111111",
+                                1650,
+                                280,
+                                0.0,
+                                List.of("Korean", "BBQ", "Grill"),
+                                System.currentTimeMillis(),
+                                21.046111, 
+                                105.833333,  // Tọa độ khu vực Hai Bà Trưng
+                                new ArrayList<>()
+                        ),
+                        new Restaurant(
+                                null,
+                                "Bún Đậu Mắm Tôm Hà Nội",
+                                "https://example.com/image10.jpg",
+                                4.3f,
+                                320,
+                                "50k-120k",
+                                "OPEN",
+                                "10:00-20:00",
+                                "DINE_IN",
+                                "0922222222",
+                                850,
+                                150,
+                                0.0,
+                                List.of("Vietnamese", "Traditional", "Street Food"),
+                                System.currentTimeMillis(),
+                                21.029167, 
+                                105.847778,  // Tọa độ khu vực Hoàn Kiếm
                                 new ArrayList<>()
                         )
                 );
@@ -176,19 +314,51 @@ public class DataInitializer {
                     newOrder.setDeleted(false);
 
                     orders.add(newOrder);
-                }
-
-                orderRepo.saveAll(orders);
+                }                orderRepo.saveAll(orders);
 
 
                 // --- MENU ITEM ---
-            List<MenuItem> menuItems = List.of(
+                List<MenuItem> menuItems = List.of(
                     new MenuItem(restaurants.get(1), "Cơm gà xối mỡ", "Cơm gà giòn rụm với nước sốt đặc biệt", BigDecimal.valueOf(45000), "Món chính", "https://example.com/com-ga.jpg", LocalDateTime.now(), LocalDateTime.now()),
                     new MenuItem(restaurants.get(2), "Trà đào cam sả", "Trà đào tươi mát, thơm mùi sả và cam", BigDecimal.valueOf(30000), "Đồ uống", "https://example.com/tra-dao.jpg", LocalDateTime.now(), LocalDateTime.now()),
                     new MenuItem(restaurants.get(1), "Bún chả Hà Nội", "Thịt nướng kèm bún, rau sống", BigDecimal.valueOf(40000), "Món chính", "https://example.com/bun-cha.jpg", LocalDateTime.now(), LocalDateTime.now()),
                     new MenuItem(restaurants.get(2), "Matcha Latte", "Trà xanh Nhật Bản, thơm mùi trà xanh và sữa tươi", BigDecimal.valueOf(30000), "Đồ uống", "https://example.com/tra-dao.jpg", LocalDateTime.now(), LocalDateTime.now()),
                     new MenuItem(restaurants.get(0), "Phở bò tái", "Phở bò truyền thống, đậm đà", BigDecimal.valueOf(50000), "Món chính", "https://example.com/pho-bo.jpg", LocalDateTime.now(), LocalDateTime.now()),
-                    new MenuItem(restaurants.get(0), "Sinh tố bơ", "Sinh tố bơ tươi, ngọt mát", BigDecimal.valueOf(35000), "Đồ uống", "https://example.com/sinh-to-bo.jpg", LocalDateTime.now(), LocalDateTime.now())
+                    new MenuItem(restaurants.get(0), "Sinh tố bơ", "Sinh tố bơ tươi, ngọt mát", BigDecimal.valueOf(35000), "Đồ uống", "https://example.com/sinh-to-bo.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                    // Món ăn cho nhà hàng Bánh Mì Minh Nhật (restaurants.get(3))
+                    new MenuItem(restaurants.get(3), "Bánh mì thịt nguội", "Bánh mì với thịt nguội, pate, rau thơm", BigDecimal.valueOf(25000), "Món chính", "https://example.com/banh-mi-thit.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                    new MenuItem(restaurants.get(3), "Bánh mì gà", "Bánh mì với thịt gà xé, sốt mayonnaise", BigDecimal.valueOf(28000), "Món chính", "https://example.com/banh-mi-ga.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                    new MenuItem(restaurants.get(3), "Cà phê sữa đá", "Cà phê đen đá với sữa đặc", BigDecimal.valueOf(18000), "Đồ uống", "https://example.com/cafe-sua.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                    
+                    // Món ăn cho nhà hàng Sushi Hokkaido (restaurants.get(4))
+                    new MenuItem(restaurants.get(4), "Sushi cá hồi", "Cơm cuộn với cá hồi tươi", BigDecimal.valueOf(120000), "Món chính", "https://example.com/sushi-ca-hoi.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                    new MenuItem(restaurants.get(4), "Sashimi mix", "Đĩa sashimi tổng hợp gồm cá hồi, cá ngừ, bạch tuộc", BigDecimal.valueOf(250000), "Món chính", "https://example.com/sashimi.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                    new MenuItem(restaurants.get(4), "Sake nóng", "Rượu gạo Nhật Bản", BigDecimal.valueOf(80000), "Đồ uống", "https://example.com/sake.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                    
+                    // Món ăn cho nhà hàng Phở Thìn Bờ Hồ (restaurants.get(5))
+                    new MenuItem(restaurants.get(5), "Phở bò đặc biệt", "Phở với các loại thịt bò cao cấp", BigDecimal.valueOf(75000), "Món chính", "https://example.com/pho-dac-biet.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                    new MenuItem(restaurants.get(5), "Phở gà", "Phở nước dùng gà truyền thống", BigDecimal.valueOf(65000), "Món chính", "https://example.com/pho-ga.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                    new MenuItem(restaurants.get(5), "Chanh muối", "Nước chanh muối giải khát", BigDecimal.valueOf(20000), "Đồ uống", "https://example.com/chanh-muoi.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                    
+                    // Món ăn cho nhà hàng Cơm Tấm Sài Gòn (restaurants.get(6))
+                    new MenuItem(restaurants.get(6), "Cơm tấm sườn bì chả", "Cơm tấm với sườn nướng, bì heo và chả trứng", BigDecimal.valueOf(70000), "Món chính", "https://example.com/com-tam.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                    new MenuItem(restaurants.get(6), "Cơm tấm gà nướng", "Cơm tấm với gà nướng sốt đặc biệt", BigDecimal.valueOf(65000), "Món chính", "https://example.com/com-tam-ga.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                    new MenuItem(restaurants.get(6), "Trà đá", "Trà đá miễn phí", BigDecimal.valueOf(0), "Đồ uống", "https://example.com/tra-da.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                    
+                    // Món ăn cho nhà hàng Pizza Express (restaurants.get(7))
+                    new MenuItem(restaurants.get(7), "Pizza hải sản", "Pizza với tôm, mực, sò điệp", BigDecimal.valueOf(220000), "Món chính", "https://example.com/pizza-seafood.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                    new MenuItem(restaurants.get(7), "Pizza thịt nguội nấm", "Pizza với thịt nguội, nấm và phô mai", BigDecimal.valueOf(190000), "Món chính", "https://example.com/pizza-ham.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                    new MenuItem(restaurants.get(7), "Coca Cola", "Nước ngọt có gas", BigDecimal.valueOf(25000), "Đồ uống", "https://example.com/coca.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                    
+                    // Món ăn cho nhà hàng Quán Nướng Hàn Quốc (restaurants.get(8))
+                    new MenuItem(restaurants.get(8), "Set nướng 2 người", "Set nướng gồm thịt bò, thịt heo, kim chi, kèm rau và đồ ăn kèm", BigDecimal.valueOf(350000), "Món chính", "https://example.com/korean-bbq.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                    new MenuItem(restaurants.get(8), "Lẩu kim chi", "Lẩu cay kiểu Hàn Quốc với kim chi, thịt bò, hải sản", BigDecimal.valueOf(280000), "Món chính", "https://example.com/kimchi-hotpot.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                    new MenuItem(restaurants.get(8), "Soju", "Rượu gạo Hàn Quốc", BigDecimal.valueOf(100000), "Đồ uống", "https://example.com/soju.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                    
+                    // Món ăn cho nhà hàng Bún Đậu Mắm Tôm (restaurants.get(9))
+                    new MenuItem(restaurants.get(9), "Set bún đậu 2 người", "Bún, đậu hũ chiên, chả cốm, thịt luộc, kèm rau sống", BigDecimal.valueOf(120000), "Món chính", "https://example.com/bun-dau.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                    new MenuItem(restaurants.get(9), "Nem rán", "Nem rán giòn với nhân thịt, nấm, miến", BigDecimal.valueOf(40000), "Món khai vị", "https://example.com/nem-ran.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                    new MenuItem(restaurants.get(9), "Trà đá chanh", "Trà đá với chanh tươi", BigDecimal.valueOf(15000), "Đồ uống", "https://example.com/tra-chanh.jpg", LocalDateTime.now(), LocalDateTime.now())
             );
             menuItemRepo.saveAll(menuItems);
 

@@ -1,5 +1,9 @@
 package com.example.a36food.data.network
 
+import android.os.Build
+import android.util.Log
+import androidx.annotation.RequiresExtension
+import retrofit2.HttpException
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
@@ -20,22 +24,34 @@ class NetworkErrorHandler @Inject constructor(
 ) {
     suspend fun <T> safeApiCall(
         apiCall: suspend () -> T,
-        onNetworkError: () -> Unit
+        onNetworkError: () -> Unit = {}
     ): Result<T> {
         return try {
             Result.success(apiCall())
         } catch (e: Exception) {
-            // Only call onNetworkError for actual network issues
             when (e) {
+                is HttpException -> {
+                    val errorBody = e.response()?.errorBody()?.string()
+                    val errorMessage = try {
+                        errorBody ?: "Error ${e.code()}"
+                    } catch (exception: Exception) {
+                        "Error ${e.code()}"
+                    }
+                    Log.e("NetworkErrorHandler", "HTTP error: $errorMessage", e)
+                    Result.failure(Exception(errorMessage))
+                }
                 is NoConnectionException,
                 is SocketTimeoutException,
                 is UnknownHostException,
-                is ConnectException -> onNetworkError()
+                is ConnectException -> {
+                    onNetworkError()
+                    Result.failure(e)
+                }
                 else -> {
-                    android.util.Log.e("NetworkErrorHandler", "Non-network error: ${e.message}", e)
+                    Log.e("NetworkErrorHandler", "Non-network error: ${e.message}", e)
+                    Result.failure(e)
                 }
             }
-            Result.failure(e)
         }
     }
 }

@@ -47,7 +47,7 @@ class ProfileViewModel  @Inject constructor(
         viewModelScope.launch {
             _profileState.value = _profileState.value.copy(isLoading = true)
 
-            val token = sharedPreferences.getString("token", null)
+            val token = sharedPreferences.getString("access_token", null)
             if (token.isNullOrEmpty()) {
                 _profileState.value = _profileState.value.copy(
                     isLoading = false,
@@ -58,10 +58,8 @@ class ProfileViewModel  @Inject constructor(
             }
 
             val result = networkErrorHandler.safeApiCall(
-                apiCall = {userRepository.getCurrentUser(token)},
-                onNetworkError = {
-                    _onNetworkError?.invoke()
-                }
+                apiCall = { userRepository.getCurrentUser(token) },
+                onNetworkError = { _onNetworkError?.invoke() }
             )
 
             result.fold(

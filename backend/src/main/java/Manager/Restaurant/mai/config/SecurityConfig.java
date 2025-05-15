@@ -25,15 +25,16 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .authorizeHttpRequests(auth -> auth
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))            .authorizeHttpRequests(auth -> auth
                 // Public endpoints
                 .requestMatchers("/auth/**", "/restaurants/**", "/user/get-address").permitAll()
                 // Admin-only endpoints
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 // Restaurant owner endpoints
                 .requestMatchers("/restaurants/{id}/menu/**").hasAnyRole("ADMIN", "RESTAURANT_OWNER")
-                // Authenticated endpoints
+                // Specific authenticated user endpoints
+                .requestMatchers("/user/profile", "/user/update", "/user/delete", "/user/change-password", "/users/change-password").authenticated()
+                // Any other endpoints
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session

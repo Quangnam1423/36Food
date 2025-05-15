@@ -1,10 +1,12 @@
 package com.example.a36food.data.api
 
+import com.example.a36food.data.dto.ChangePasswordRequest
 import com.example.a36food.data.dto.LoginRequest
 import com.example.a36food.data.dto.LoginResponse
 import com.example.a36food.domain.model.User
 import com.example.a36food.data.dto.RegisterRequest
 import com.example.a36food.data.dto.RegisterResponse
+import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -30,4 +32,10 @@ interface UserApi {
         @Query("latitude") latitude: Double,
         @Query("longitude") longitude: Double
     ) : Response<String>
+
+    @POST("user/change-password")
+    suspend fun changePassword (
+        @Header("Authorization") token: String,
+        @Body request: ChangePasswordRequest
+    ) : ResponseBody
 }

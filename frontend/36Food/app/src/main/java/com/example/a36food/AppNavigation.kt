@@ -36,6 +36,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.a36food.presentation.screens.ChangePasswordScreen
 import com.example.a36food.presentation.screens.NoConnectionScreen
 import com.example.a36food.presentation.screens.foodscreen.FoodDetailScreen
 import com.example.a36food.presentation.screens.restaurantDetail.RestaurantDetailScreen
@@ -59,6 +60,7 @@ sealed class Screen(val route: String) {
     data object Home : Screen("home")
     data object Search : Screen("search")
     data object Favorite : Screen("favorite")
+    data object ChangePassword: Screen("change_password")
     data object History : Screen("history")
     data object Profile : Screen("profile")
     data object RestaurantDetail : Screen("restaurant_detail/{restaurantId}") {
@@ -212,11 +214,23 @@ fun AppNavigation() {
                         onNavigateToFavorite = { navController.navigate(Screen.Favorite.route) },
                         onNavigateToHistory = { navController.navigate(Screen.History.route) },
                         onEditClick = { /* TODO: Implement edit profile */ },
-                        onPasswordChange = { /* TODO: Implement password change */ },
-                        onLogout = {
+                        onPasswordChange = {navController.navigate(Screen.ChangePassword.route)},
+                        onNavigateToLogin = {
                             navController.navigate(Screen.Login.route) {
-                                popUpTo(navController.graph.id) { inclusive = true }
+                                popUpTo(Screen.Profile.route) { inclusive = true }
                             }
+                        },
+                        onNetworkError = {
+                            navController.navigate(Screen.NoConnection.route)
+                        }
+                    )
+                }
+
+                composable(Screen.ChangePassword.route) {
+                    ChangePasswordScreen(
+                        onNavigateBack = { navController.popBackStack()},
+                        onNetworkError = {
+                            navController.navigate(Screen.NoConnection.route)
                         }
                     )
                 }

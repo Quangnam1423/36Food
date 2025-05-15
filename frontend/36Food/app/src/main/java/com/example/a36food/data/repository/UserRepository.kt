@@ -1,6 +1,8 @@
 package com.example.a36food.data.repository
 
+import android.util.Log
 import com.example.a36food.data.api.UserApi
+import com.example.a36food.data.dto.ChangePasswordRequest
 import com.example.a36food.data.network.NoConnectionException
 import com.example.a36food.domain.model.User
 import retrofit2.HttpException
@@ -24,7 +26,10 @@ class UserRepository @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            android.util.Log.e("UserRepository", "Error fetching user profile", e)
+            android.util.Log.e("UserRepository",
+                "Error fetching user profile",
+                e
+            )
             throw e
         }
     }
@@ -52,5 +57,10 @@ class UserRepository @Inject constructor(
                 else -> throw e
             }
         }
+    }
+
+    suspend fun changePassword(token: String, request: ChangePasswordRequest): String {
+        val response = userApi.changePassword(token, request)
+        return response.string()
     }
 }

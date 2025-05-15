@@ -1,5 +1,6 @@
 package com.example.a36food.presentation.screens.homes
 
+import android.content.SharedPreferences
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -49,22 +50,43 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.a36food.Screen
+import com.example.a36food.presentation.viewmodel.ProfileViewModel
 import com.example.a36food.ui.components.BottomNavBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
+    viewModel: ProfileViewModel = hiltViewModel(),
     onNavigateToHome: () -> Unit = {},
     onNavigateToSearch: () -> Unit = {},
     onNavigateToFavorite: () -> Unit = {},
     onNavigateToHistory: () -> Unit = {},
     onEditClick: () -> Unit = {},
     onPasswordChange: () -> Unit = {},
-    onLogout: () -> Unit = {}
+    onNavigateToLogin: () -> Unit = {},
+    onNetworkError: () -> Unit = {}
 ) {
+    val profileState by viewModel.profileState.collectAsState()
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+
+    LaunchedEffect(Unit) {
+        viewModel.setNetworkErrorCallback {
+            onNetworkError()
+        }
+    }
+    LaunchedEffect(profileState.isLoggedOut) {
+        if (profileState.isLoggedOut) {
+            onNavigateToLogin()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -105,53 +127,73 @@ fun ProfileScreen(
             )
         }
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            item { ProfileHeader() }
-            item { ProfileDetails() }
-
-            item {
-                Column(
+        if (profileState.isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color(0xFFFF5722))
+            }
+        } else {
+            profileState.user?.let { user ->
+                LazyColumn(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                        .fillMaxSize()
+                        .padding(padding),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Button(
-                        onClick = onPasswordChange,
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFF5722)
+                    item { ProfileHeader(name = user.userName, avatar = user.userAvatar) }
+                    item {
+                        ProfileDetails(
+                            email = user.userEmail,
+                            phone = user.userPhone ?: "Not provided",
+                            address = user.userAddress ?: "Not provided",
+                            joinDate = viewModel.formatJoinDate(user.createdAt)
                         )
-                    ) {
-                        Icon(
-                            Icons.Default.Lock,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Đổi mật khẩu")
                     }
 
-                    OutlinedButton(
-                        onClick = onLogout,
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = Color(0xFFFF5722)
-                        ),
-                        border = BorderStroke(1.dp, Color(0xFFFF5722))
-                    ) {
-                        Icon(
-                            Icons.Default.ExitToApp,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Đăng xuất")
+                    item {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Button(
+                                onClick = onPasswordChange,
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFFF5722)
+                                )
+                            ) {
+                                Icon(
+                                    Icons.Default.Lock,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Đổi mật khẩu")
+                            }
+
+                            OutlinedButton(
+                                onClick = { viewModel.logout() },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    contentColor = Color(0xFFFF5722)
+                                ),
+                                border = BorderStroke(1.dp, Color(0xFFFF5722))
+                            ) {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.ExitToApp,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Đăng xuất")
+                            }
+                        }
                     }
                 }
             }
@@ -160,7 +202,7 @@ fun ProfileScreen(
 }
 
 @Composable
-private fun ProfileHeader() {
+private fun ProfileHeader(name: String, avatar: String?) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -174,7 +216,7 @@ private fun ProfileHeader() {
                 .background(Color.LightGray)
         ) {
             AsyncImage(
-                model = "https://example.com/default-avatar.jpg",
+                model = avatar ?: "https://example.com/default-avatar.jpg",
                 contentDescription = "Profile picture",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
@@ -182,16 +224,15 @@ private fun ProfileHeader() {
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-
         Text(
-            text = "Nguyễn Văn A",
+            text = name,
             style = MaterialTheme.typography.titleLarge
         )
     }
 }
 
 @Composable
-private fun ProfileDetails() {
+private fun ProfileDetails(email: String, phone: String, address: String, joinDate: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -200,25 +241,25 @@ private fun ProfileDetails() {
         ProfileItem(
             icon = Icons.Default.Email,
             title = "Email",
-            value = "example@email.com"
+            value = email
         )
 
         ProfileItem(
             icon = Icons.Default.Phone,
             title = "Số điện thoại",
-            value = "0123456789"
+            value = phone
         )
 
         ProfileItem(
             icon = Icons.Default.LocationOn,
             title = "Địa chỉ",
-            value = "123 Đường ABC, Quận XYZ, Thành phố HN"
+            value = address
         )
 
         ProfileItem(
             icon = Icons.Default.DateRange,
             title = "Ngày tham gia",
-            value = "01/01/2024"
+            value = joinDate
         )
     }
 }
@@ -272,5 +313,13 @@ private fun ProfileItem(
 @Preview(showBackground = true)
 @Composable
 fun ProfileScreenPreview() {
-    ProfileScreen()
+    ProfileScreen(
+        onNavigateToHome = {},
+        onNavigateToSearch = {},
+        onNavigateToFavorite = {},
+        onNavigateToHistory = {},
+        onEditClick = {},
+        onPasswordChange = {},
+        onNavigateToLogin = {}
+    )
 }

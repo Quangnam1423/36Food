@@ -1,16 +1,18 @@
 package com.example.a36food.domain.model
 
-import java.util.UUID
+import com.google.gson.annotations.SerializedName
 
 data class User(
-    val userId: String,
-    val userSlug: String,
-    val userName: String,
-    val userEmail: String,
-    val userPhone: String? = null,
-    val userGender: String? = null,
-    val userAvatar: String? = null,
-    val userDob: String? = null,
-    val userStatus: String? = null,
-    val roleName: String? = null
+    @SerializedName("userId") val userId: String,
+    @SerializedName("userSlug") val userSlug: String,
+    @SerializedName("userName") val userName: String,
+    @SerializedName("userEmail") val userEmail: String,
+    @SerializedName("userPhone") val userPhone: String? = null,
+    @SerializedName("userGender") val userGender: String? = null,
+    @SerializedName("userAvatar") val userAvatar: String? = null,
+    @SerializedName("userDob") val userDob: String? = null,
+    @SerializedName("userStatus") val userStatus: String? = null,
+    @SerializedName("roleName") val roleName: String? = null,
+    @SerializedName("userAddress") val userAddress: String? = null,
+    @SerializedName("createdAt") val createdAt: String? = null
 )

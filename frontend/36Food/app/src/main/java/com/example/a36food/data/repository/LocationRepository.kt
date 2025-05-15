@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.location.LocationManager
 import androidx.core.content.ContextCompat
+import com.example.a36food.data.api.LocationApi
 import com.example.a36food.domain.model.LocationData
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -21,6 +22,7 @@ import kotlin.coroutines.resume
 
 @Singleton
 class LocationRepository @Inject constructor(
+    private val locationApi: LocationApi,
     @ApplicationContext private val context: Context
 ) {
     private val fusedLocationClient: FusedLocationProviderClient =
@@ -102,5 +104,11 @@ class LocationRepository @Inject constructor(
         } catch (e: Exception) {
             _locationData.value = defaultLocation
         }
+    }
+
+    suspend fun getUserAddress(latitude: Double, longitude: Double) : String {
+        val response = locationApi.getUserAddress(latitude, longitude)
+
+        return response["address"] ?: "Không thể xác định địa chỉ"
     }
 }

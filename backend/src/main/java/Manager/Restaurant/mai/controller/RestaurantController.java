@@ -30,7 +30,7 @@ public class RestaurantController {
     private final OrderRepository orderRepo;
     private final ReviewRepository reviewRepo;
 
-    // GET /restaurants
+    // GET /restaurants lấy tất cả nhà hàng có trong hệ thốngthống
     @GetMapping
     public ResponseEntity<List<RestaurantDTO>> getAllRestaurants(
         @RequestParam(required = true) double userLat,
@@ -146,83 +146,6 @@ public class RestaurantController {
                 })
                 // Lọc nhà hàng trong bán kính quy định
                 .filter(dto -> dto.getDistance() <= radiusInMeters)
-                // Sắp xếp theo khoảng cách, gần nhất lên đầu
-                .sorted(Comparator.comparingDouble(RestaurantDTO::getDistance))
-                .toList();
-        
-        // Tính toán phân trang
-        int totalItems = nearbyRestaurants.size();
-        int totalPages = (int) Math.ceil((double) totalItems / size);
-        int startItem = page * size;
-        int endItem = Math.min(startItem + size, totalItems);
-        
-        // Trường hợp không còn dữ liệu để phân trang
-        if (startItem >= totalItems) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("restaurants", List.of());
-            response.put("currentPage", page);
-            response.put("totalItems", 0);
-            response.put("totalPages", 0);
-            response.put("hasMore", false);
-            
-            return ResponseEntity.ok(response);
-        }
-        
-        // Trả về phần dữ liệu cho trang hiện tại
-        List<RestaurantDTO> pagedResult = nearbyRestaurants.subList(startItem, endItem);
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("restaurants", pagedResult);
-        response.put("currentPage", page);
-        response.put("totalItems", totalItems);
-        response.put("totalPages", totalPages);
-        response.put("hasMore", page < totalPages - 1);
-        
-        return ResponseEntity.ok(response);
-    }
-
-    // API tối ưu hiệu suất - trả về nhà hàng gần mà không tính toán đường đi chính xác
-    @GetMapping("/nearby-simple")
-    public ResponseEntity<Map<String, Object>> getNearbyRestaurantsSimple(
-            @RequestParam double userLat,
-            @RequestParam double userLng,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "10") double radiusInKm
-    ) {
-        final double EARTH_RADIUS = 6371; // Bán kính của trái đất (km)
-        
-        List<RestaurantDTO> nearbyRestaurants = restaurantRepo.findAll().stream()
-                .map(restaurant -> {
-                    // Sử dụng công thức Haversine để tính khoảng cách
-                    double dLat = Math.toRadians(userLat - restaurant.getLatitude());
-                    double dLon = Math.toRadians(userLng - restaurant.getLongitude());
-                    
-                    double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                            Math.cos(Math.toRadians(restaurant.getLatitude())) * Math.cos(Math.toRadians(userLat)) *
-                            Math.sin(dLon / 2) * Math.sin(dLon / 2);
-                    
-                    double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-                    double distanceInKm = EARTH_RADIUS * c;
-                    double distanceInMeters = distanceInKm * 1000;
-                    
-                    // Thời gian ước tính (giả định trung bình 30km/h)
-                    int durationInSeconds = (int) (distanceInKm / 30 * 3600);
-                    
-                    String address = geocodingService.getAddressFromCoordinates(
-                        restaurant.getLatitude(),
-                        restaurant.getLongitude()
-                    );
-                    
-                    return RestaurantDTO.fromEntity(
-                            restaurant, 
-                            address,
-                            distanceInMeters, 
-                            durationInSeconds
-                    );
-                })
-                // Lọc nhà hàng trong bán kính quy định
-                .filter(dto -> dto.getDistance() <= radiusInKm * 1000)
                 // Sắp xếp theo khoảng cách, gần nhất lên đầu
                 .sorted(Comparator.comparingDouble(RestaurantDTO::getDistance))
                 .toList();

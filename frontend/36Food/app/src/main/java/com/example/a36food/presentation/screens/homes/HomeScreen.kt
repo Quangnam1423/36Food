@@ -94,7 +94,7 @@ fun HomeScreen(
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val state by viewModel.state.collectAsState()
-    val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = state.isLoading)
+    val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = state.isRefreshing)
 
 
     LaunchedEffect(Unit) {
@@ -107,7 +107,7 @@ fun HomeScreen(
         topBar = {
             HomeTopAppBar(
                 location = state.userAddress,
-                isLoading = state.isLoading,
+                isLoading = state.isLocationLoading,
                 scrollBehavior = scrollBehavior
             )
         },
@@ -128,7 +128,7 @@ fun HomeScreen(
         ) {
             RestaurantListLayout(
                 restaurants = state.restaurants,
-                isLoading = state.isLoading,
+                isInitialLoading = state.isInitialLoading,
                 isLoadingMore = state.isLoadingMore,
                 hasMore = state.hasMore,
                 selectedFilter = state.selectedFilter,
@@ -223,7 +223,7 @@ fun HomeTopAppBar(
 @Composable
 private fun RestaurantListLayout(
     restaurants: List<Restaurant>,
-    isLoading: Boolean,
+    isInitialLoading: Boolean,
     isLoadingMore: Boolean,
     hasMore: Boolean,
     selectedFilter: FilterOption,
@@ -238,7 +238,7 @@ private fun RestaurantListLayout(
     val shouldLoadMore by remember {
         derivedStateOf {
             val lastVisibleItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-            lastVisibleItem >= restaurants.size - 2 && hasMore && !isLoading && !isLoadingMore
+            lastVisibleItem >= restaurants.size - 2 && hasMore && !isInitialLoading && !isLoadingMore
         }
     }
 
@@ -341,6 +341,30 @@ private fun RestaurantListLayout(
             }
         }
 
+        // Initial loading indicator (when no restaurants are loaded yet)
+        if (isInitialLoading && restaurants.isEmpty()) {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        CircularProgressIndicator(color = Color(0xFFFF5722))
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Đang tải danh sách nhà hàng...",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            }
+        }
+
         // Restaurant List
         items(restaurants) { restaurant ->
             RestaurantCard(
@@ -350,7 +374,7 @@ private fun RestaurantListLayout(
             )
         }
 
-        // Loading indicator at the bottom
+        // Loading indicator at the bottom when loading more
         if (isLoadingMore) {
             item {
                 Box(
@@ -360,8 +384,9 @@ private fun RestaurantListLayout(
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator(
+                        modifier = Modifier.size(32.dp),
                         color = Color(0xFFFF5722),
-                        modifier = Modifier.size(32.dp)
+                        strokeWidth = 2.dp
                     )
                 }
             }

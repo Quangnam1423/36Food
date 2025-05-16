@@ -180,7 +180,7 @@ public class RestaurantController {
         
         return ResponseEntity.ok(response);
     }    
-    
+
     @GetMapping("/{id}")
     public ResponseEntity<?> getRestaurantById(
             @PathVariable Long id,
@@ -337,7 +337,6 @@ public class RestaurantController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        // Lấy tất cả đánh giá và tính trung bình rating cho mỗi nhà hàng
         Map<Restaurant, Double> restaurantRatings = reviewRepo.findAll().stream()
                 .filter(review -> !review.isDeleted() && review.getRestaurant() != null)
                 .collect(Collectors.groupingBy(
@@ -345,7 +344,6 @@ public class RestaurantController {
                         Collectors.averagingDouble(review -> review.getRating())
                 ));
         
-        // Chuyển đổi thành danh sách các RestaurantDTO và sắp xếp theo rating
         List<RestaurantDTO> topRatedRestaurants = restaurantRatings.entrySet().stream()
                 .map(entry -> {
                     Restaurant restaurant = entry.getKey();
@@ -375,13 +373,12 @@ public class RestaurantController {
                 .sorted(Comparator.comparing(RestaurantDTO::getRating, Comparator.reverseOrder()))
                 .collect(Collectors.toList());
         
-        // Tính toán phân trang
         int totalItems = topRatedRestaurants.size();
         int totalPages = (int) Math.ceil((double) totalItems / size);
         int startItem = page * size;
         int endItem = Math.min(startItem + size, totalItems);
         
-        // Trường hợp không còn dữ liệu để phân trang
+
         if (startItem >= totalItems) {
             Map<String, Object> response = new HashMap<>();
             response.put("restaurants", List.of());
@@ -393,7 +390,6 @@ public class RestaurantController {
             return ResponseEntity.ok(response);
         }
         
-        // Trả về phần dữ liệu cho trang hiện tại
         List<RestaurantDTO> pagedResult = topRatedRestaurants.subList(startItem, endItem);
         
         Map<String, Object> response = new HashMap<>();

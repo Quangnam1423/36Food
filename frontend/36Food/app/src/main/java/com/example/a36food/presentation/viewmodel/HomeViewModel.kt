@@ -1,6 +1,7 @@
 package com.example.a36food.presentation.viewmodel
 
 import android.content.SharedPreferences
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.a36food.data.network.NetworkErrorHandler
@@ -12,11 +13,13 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-data class HomeState (
+data class HomeState(
     val isLoading: Boolean = false,
+    val isLoadingMore: Boolean = false,
     val userAddress: String = "Đang lấy vị trí ...",
     val restaurants: List<Restaurant> = emptyList(),
     val currentPage: Int = 0,
@@ -45,6 +48,7 @@ class HomeViewModel @Inject constructor(
 
     init {
         getUserLocation()
+        fetchNearbyRestaurants(refresh  = true)
     }
 
     private fun getUserLocation() {
@@ -54,15 +58,13 @@ class HomeViewModel @Inject constructor(
                 val location = locationRepository.getCurrentLocation()
                 if (location != null) {
                     getUserAddress(location.latitude, location.longitude)
-                    //getNearbyRestaurants(location.latitude, location.longitude)
-                }
-                else {
+                } else {
                     _state.value = _state.value.copy(
                         userAddress = "Không thể lấy vị trí",
                         isLoading = false
                     )
                 }
-            } catch (e : Exception) {
+            } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     userAddress = "Không thể lấy vị trí",
                     isLoading = false,
@@ -78,55 +80,105 @@ class HomeViewModel @Inject constructor(
             onNetworkError = { _onNetworkError?.invoke() }
         )
 
-        result.fold (
-            onSuccess = {address ->
-                _state.value = _state.value.copy(userAddress = address)
+        result.fold(
+            onSuccess = { address ->
+                _state.value = _state.value.copy(
+                    userAddress = address,
+                    isLoading = false
+                )
             },
-            onFailure = {
+            onFailure = { error ->
                 _state.value = _state.value.copy(
                     userAddress = "Không thể lấy địa chỉ",
-                    errorMessage = it.message
+                    errorMessage = error.message,
+                    isLoading = false
                 )
             }
         )
     }
-    fun loadMore() {
-        if (_state.value.isLoading || !_state.value.hasMore) return
 
-        viewModelScope.launch {
-            val location = locationRepository.getCurrentLocation() ?: return@launch
-            getNearbyRestaurants(location.latitude, location.longitude, _state.value.currentPage + 1)
+    fun fetchNearbyRestaurants(refresh: Boolean = false) {
+        val nextPage = if (refresh) 0 else state.value.currentPage + 1
+
+        if (state.value.isLoadingMore || (!state.value.hasMore && !refresh && nextPage > 0)) {
+            return
         }
-    }
-
-    fun setFilterOption(option: FilterOption) {
-        if (_state.value.selectedFilter == option) return
-
-        _state.value = _state.value.copy(
-            selectedFilter = option,
-            restaurants = emptyList(),
-            currentPage = 0
-        )
 
         viewModelScope.launch {
-            val location = locationRepository.getCurrentLocation() ?: return@launch
-            when (option) {
-                FilterOption.NEAR_ME -> getNearbyRestaurants(location.latitude, location.longitude)
-                FilterOption.POPULAR -> getPopularRestaurants(location.latitude, location.longitude)
-                FilterOption.TOP_RATED -> getTopRatedRestaurants(location.latitude, location.longitude)
+            try {
+                _state.update {
+                    it.copy(
+                        isLoading = refresh,
+                        isLoadingMore = !refresh && nextPage > 0
+                    )
+                }
+                var currentLocation = locationRepository.getCurrentLocation()
+                // Check if we have location
+                if (currentLocation == null) {
+                    // Wait for location to be available
+                    currentLocation = locationRepository.getCurrentLocation()
+                    if (currentLocation == null) {
+                        _state.update {
+                            it.copy(
+                                errorMessage = "Vui lòng bật vị trí để tìm nhà hàng gần bạn",
+                                isLoading = false,
+                                isLoadingMore = false
+                            )
+                        }
+                        return@launch
+                    }
+                }
+
+                val result = restaurantRepository.getNearbyRestaurants(
+                    latitude = currentLocation!!.latitude,
+                    longitude = currentLocation!!.longitude,
+                    page = nextPage,
+                    size = 10
+                )
+
+                _state.update { currentState ->
+                    val updatedList = if (refresh) {
+                        result.data
+                    } else {
+                        currentState.restaurants + result.data
+                    }
+
+                    currentState.copy(
+                        restaurants = updatedList,
+                        currentPage = result.currentPage,
+                        totalPages = result.totalPages,
+                        hasMore = result.hasMore,
+                        isLoading = false,
+                        isLoadingMore = false,
+                        errorMessage = null
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e("HomeViewModel", "Error fetching restaurants", e)
+                _state.update {
+                    it.copy(
+                        errorMessage = "Không thể lấy danh sách nhà hàng: ${e.message}",
+                        isLoading = false,
+                        isLoadingMore = false
+                    )
+                }
             }
         }
     }
 
-    private suspend fun getPopularRestaurants(latitude: Double, longitude: Double, page: Int = 0) {
-        // Similar to getNearbyRestaurants but with different sorting parameter
-        // For now we'll use the same implementation
-        getNearbyRestaurants(latitude, longitude, page)
+    fun setSelectedFilter(filter: FilterOption) {
+        _state.update { it.copy(selectedFilter = filter) }
+        // Reload restaurants with the new filter
+        fetchNearbyRestaurants(refresh = true)
     }
 
-    private suspend fun getTopRatedRestaurants(latitude: Double, longitude: Double, page: Int = 0) {
-        // Similar to getNearbyRestaurants but with different sorting parameter
-        // For now we'll use the same implementation
-        getNearbyRestaurants(latitude, longitude, page)
+    fun loadMoreRestaurants() {
+        if (!state.value.isLoading && !state.value.isLoadingMore && state.value.hasMore) {
+            fetchNearbyRestaurants(refresh = false)
+        }
+    }
+
+    fun refreshData() {
+        fetchNearbyRestaurants(refresh = true)
     }
 }

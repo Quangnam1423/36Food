@@ -12,12 +12,11 @@ public class RestaurantDTO {
     private String name;
     private String imageUrl;
     private Float rating;
-    private Integer ratingCount;
+    private Integer ratingCount;    
     private String address;
     private String priceRange;
     private String openingStatus;
     private String businessHours;
-    private String serviceType;
     private String phoneNumber;
     private Integer likes;
     private Integer reviewsCount;
@@ -38,7 +37,6 @@ public class RestaurantDTO {
                 res.getPriceRange(),
                 res.getOpeningStatus(),
                 res.getBusinessHours(),
-                res.getServiceType(),
                 res.getPhoneNumber(),
                 res.getLikes(),
                 res.getReviewsCount(),

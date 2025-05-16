@@ -1,5 +1,7 @@
 package com.example.a36food.domain.model
 
+import com.google.gson.annotations.SerializedName
+
 
 enum class OpeningStatus {
     OPEN_24H,
@@ -20,13 +22,15 @@ data class Restaurant(
     val ratingCount: Int = 0,
     val address: String,
     val priceRange: String,
-    val openingStatus: OpeningStatus = OpeningStatus.SCHEDULED, // kiểu lịch mở cửa
-    val businessHours: BusinessHours? = null, // thời gian mở cửa
+    val openingStatus: OpeningStatus = OpeningStatus.SCHEDULED,
+    val businessHours: BusinessHours? = null,
     val serviceType: ServiceType,
     val phoneNumber: String = "",
     val likes: Int = 0,
     val reviewsCount: Int = 0,
     val distance: Double = 0.0,
     val categories: List<String> = emptyList(),
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val durationInMinutes: Int? = null,
+    val orderCount: Long? = null
 )

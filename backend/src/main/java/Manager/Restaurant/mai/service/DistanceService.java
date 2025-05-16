@@ -13,8 +13,8 @@ public class DistanceService {
 
     @Value("${openroute.api.key}")
     private String API_KEY;
-    private static final String BASE_URL = "https://api.openrouteservice.org/v2/directions/driving-car";
-
+    private static final String BASE_URL = "https://api.openrouteservice.org/v2/directions/driving-car";   
+     
     public RouteInfo getDistanceAndDuration(double startLng, double startLat, double endLng, double endLat) {
         RestTemplate restTemplate = new RestTemplate();
 
@@ -42,7 +42,27 @@ public class DistanceService {
             return new RouteInfo(distance, duration);
 
         } catch (Exception e) {
-            throw new RuntimeException("Failed to get route info", e);
+            // Sử dụng công thức Haversine để tính khoảng cách khi API bị lỗi
+            System.out.println("OpenRouteService API error: " + e.getMessage() + ". Using Haversine formula instead.");
+            
+            final double EARTH_RADIUS = 6371; // Bán kính của trái đất (km)
+            
+            // Chuyển đổi sang radian
+            double dLat = Math.toRadians(endLat - startLat);
+            double dLon = Math.toRadians(endLng - startLng);
+            
+            double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                    Math.cos(Math.toRadians(startLat)) * Math.cos(Math.toRadians(endLat)) *
+                    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            
+            double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            double distanceInKm = EARTH_RADIUS * c;
+            double distanceInMeters = distanceInKm * 1000;
+            
+            // Thời gian ước tính (giả định trung bình 30km/h)
+            double durationInSeconds = (distanceInKm / 30) * 3600;
+            
+            return new RouteInfo(distanceInMeters, durationInSeconds);
         }
     }
 

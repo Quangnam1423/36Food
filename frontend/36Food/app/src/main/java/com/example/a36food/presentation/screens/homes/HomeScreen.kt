@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -19,6 +20,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -27,6 +29,7 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,10 +40,11 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -56,36 +60,54 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.a36food.R
 import com.example.a36food.Screen
-import com.example.a36food.domain.model.BusinessHours
-import com.example.a36food.domain.model.OpeningStatus
 import com.example.a36food.domain.model.Restaurant
-import com.example.a36food.domain.model.ServiceType
+import com.example.a36food.presentation.viewmodel.HomeViewModel
 import com.example.a36food.ui.components.BottomNavBar
 import com.example.a36food.ui.components.CartIcon
 import com.example.a36food.ui.components.MessageIcon
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+
+enum class FilterOption(val title: String, val icon: ImageVector) {
+    NEAR_ME("Gần tôi", Icons.Default.LocationOn),
+    POPULAR("Bán chạy", Icons.Default.LocalFireDepartment),
+    TOP_RATED("Đánh giá", Icons.Default.Star)
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun HomeScreen(
+    viewModel: HomeViewModel = hiltViewModel(),
     onNavigateToSearch: () -> Unit = {},
     onNavigateToFavorite: () -> Unit = {},
     onNavigateToHistory: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
-    onRestaurantClick: (String) -> Unit = {}
+    onRestaurantClick: (String) -> Unit = {},
+    onNetworkError: () -> Unit = {}
 ) {
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    val state by viewModel.state.collectAsState()
+    val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = state.isLoading)
 
+
+    LaunchedEffect(Unit) {
+        viewModel.setNetworkErrorHandler {
+            onNetworkError()
+        }
+    }
 
     Scaffold (
         topBar = {
             HomeTopAppBar(
-                location = "ngách 120 Ng. 245 P.Định Công, Định Công, Quận Hoàng Mai, Hà Nội",
+                location = state.userAddress,
+                isLoading = state.isLoading,
                 scrollBehavior = scrollBehavior
             )
         },
@@ -100,10 +122,22 @@ fun HomeScreen(
         },
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
     ) { paddingValues ->
-        MenuLayout(
-            Modifier.padding(paddingValues),
-            onRestaurantClick = onRestaurantClick
-        )
+        SwipeRefresh(
+            state = swipeRefreshState,
+            onRefresh = {viewModel.refreshData()}
+        ) {
+            RestaurantListLayout(
+                restaurants = state.restaurants,
+                isLoading = state.isLoading,
+                isLoadingMore = state.isLoadingMore,
+                hasMore = state.hasMore,
+                selectedFilter = state.selectedFilter,
+                onFilterSelected = { viewModel.setSelectedFilter(it) },
+                onLoadMore = { viewModel.loadMoreRestaurants() },
+                onRestaurantClick = onRestaurantClick,
+                modifier = Modifier.padding(paddingValues)
+            )
+        }
     }
 }
 
@@ -112,6 +146,7 @@ fun HomeScreen(
 @Composable
 fun HomeTopAppBar(
     location: String,
+    isLoading: Boolean = false,
     scrollBehavior: TopAppBarScrollBehavior
 ) {
     TopAppBar(
@@ -129,16 +164,32 @@ fun HomeTopAppBar(
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = location,
-                    modifier = Modifier.weight(1f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontSize = 13.sp,
-                        lineHeight = 16.sp
+
+                // Display the address with a conditional for loading state
+                if (isLoading) {
+                    Text(
+                        text = "Đang lấy vị trí...",
+                        modifier = Modifier.weight(1f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontSize = 13.sp,
+                            lineHeight = 16.sp
+                        )
                     )
-                )
+                } else {
+                    Text(
+                        text = location,
+                        modifier = Modifier.weight(1f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontSize = 13.sp,
+                            lineHeight = 16.sp
+                        )
+                    )
+                }
+
                 Icon(
                     Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription = "fix location",
@@ -169,16 +220,37 @@ fun HomeTopAppBar(
     )
 }
 
-
 @Composable
-private fun MenuLayout(
-    modifier: Modifier = Modifier,
-    onRestaurantClick: (String) -> Unit = {}
+private fun RestaurantListLayout(
+    restaurants: List<Restaurant>,
+    isLoading: Boolean,
+    isLoadingMore: Boolean,
+    hasMore: Boolean,
+    selectedFilter: FilterOption,
+    onFilterSelected: (FilterOption) -> Unit,
+    onLoadMore: () -> Unit,
+    onRestaurantClick: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    var selectedFilter by remember { mutableStateOf(FilterOption.NEAR_ME) }
-    val restaurantList = createRestaurantList()
+    val listState = rememberLazyListState()
+
+    // Calculate when to load more items
+    val shouldLoadMore by remember {
+        derivedStateOf {
+            val lastVisibleItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+            lastVisibleItem >= restaurants.size - 2 && hasMore && !isLoading && !isLoadingMore
+        }
+    }
+
+    // Effect to trigger load more when close to the bottom
+    LaunchedEffect(shouldLoadMore) {
+        if (shouldLoadMore) {
+            onLoadMore()
+        }
+    }
 
     LazyColumn(
+        state = listState,
         modifier = modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
@@ -191,21 +263,14 @@ private fun MenuLayout(
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFFFFF3E0)
+                    containerColor = Color(0xFFFFF8E1)
                 ),
                 elevation = CardDefaults.cardElevation(0.dp)
             ) {
                 Text(
-                    text = "Chúc Bạn Ngon Miệng, Bình!",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontSize = 18.sp,
-                        lineHeight = 24.sp
-                    ),
-                    color = Color(0xFFFF9800),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
+                    text = "Chào mừng bạn đến với 36Food! Bạn đang đói bụng ư? Hãy để chúng tôi giúp bạn.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.padding(16.dp)
                 )
             }
         }
@@ -217,7 +282,7 @@ private fun MenuLayout(
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFFFAFAFA)
+                    containerColor = Color.White
                 ),
                 elevation = CardDefaults.cardElevation(1.dp)
             ) {
@@ -225,30 +290,33 @@ private fun MenuLayout(
                     modifier = Modifier.padding(16.dp)
                 ) {
                     Row(
+                        modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Danh Mục",
-                            style = MaterialTheme.typography.titleSmall.copy(
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Medium
-                            ),
-                            color = Color(0xFFFF5722)
+                            text = "Danh mục",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
                         )
-
-                        Text(
-                            "Tất cả >",
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                fontSize = 14.sp
-                            ),
-                            color = Color.Gray,
-                            modifier = Modifier.clickable { /* TODO */ }
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.clickable { /* TODO: Navigate to categories */ }
+                        ) {
+                            Text(
+                                text = "Xem tất cả",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color(0xFFFF5722)
+                            )
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = "View all",
+                                tint = Color(0xFFFF5722),
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
                     }
-
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     CategoryGrid(onCategoryClick = {})
                 }
             }
@@ -261,31 +329,42 @@ private fun MenuLayout(
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFFFAFAFA)
+                    containerColor = Color.White
                 ),
                 elevation = CardDefaults.cardElevation(1.dp)
             ) {
                 FilterBar(
                     selectedFilter = selectedFilter,
-                    onFilterSelected = { selectedFilter = it },
+                    onFilterSelected = onFilterSelected,
                     modifier = Modifier.padding(16.dp)
                 )
             }
         }
 
         // Restaurant List
-        val filteredRestaurants = when (selectedFilter) {
-            FilterOption.NEAR_ME -> restaurantList.sortedBy { it.distance }
-            FilterOption.POPULAR -> restaurantList.sortedByDescending { it.ratingCount }
-            FilterOption.TOP_RATED -> restaurantList.sortedByDescending { it.rating }
-        }
-
-        items(filteredRestaurants) { restaurant ->
+        items(restaurants) { restaurant ->
             RestaurantCard(
                 restaurant = restaurant,
                 modifier = Modifier.fillMaxWidth(),
                 onRestaurantClick = onRestaurantClick
             )
+        }
+
+        // Loading indicator at the bottom
+        if (isLoadingMore) {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        color = Color(0xFFFF5722),
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            }
         }
     }
 }
@@ -439,11 +518,6 @@ private fun RestaurantCard(
     }
 }
 
-enum class FilterOption(val title: String, val icon: ImageVector) {
-    NEAR_ME("Gần tôi", Icons.Default.LocationOn),
-    POPULAR("Bán chạy", Icons.Default.LocalFireDepartment),
-    TOP_RATED("Đánh giá", Icons.Default.Star)
-}
 
 @Composable
 private fun FilterBar(
@@ -494,83 +568,4 @@ private fun FilterBar(
             }
         }
     }
-}
-
-private fun createRestaurantList() : List<Restaurant>{
-    return listOf(
-        Restaurant(
-            id = "1",
-            name = "Phở Thìn Bờ Hồ",
-            imageUrl = "https://example.com/pho.jpg",
-            rating = 4.5f,
-            ratingCount = 234,
-            address = "13 Lò Đúc, Hai Bà Trưng, Hà Nội",
-            priceRange = "20000",
-            openingStatus = OpeningStatus.SCHEDULED,
-            businessHours = BusinessHours(
-                openTime = "07:00",
-                closeTime = "22:00"
-            ),
-            serviceType = ServiceType.FOOD,
-            phoneNumber = "0123456789",
-            likes = 156,
-            categories = listOf("Phở", "Món Việt", "Đặc sản")
-        ),
-        Restaurant(
-            id = "2",
-            name = "Pizza 4P's",
-            imageUrl = "https://example.com/pizza.jpg",
-            rating = 4.8f,
-            ratingCount = 543,
-            address = "8 Tông Đản, Hoàn Kiếm, Hà Nội",
-            priceRange = "100000",
-            openingStatus = OpeningStatus.OPEN_24H,
-            serviceType = ServiceType.FOOD,
-            phoneNumber = "0987654321",
-            likes = 324,
-            categories = listOf("Pizza", "Ý", "Nhật")
-        ),
-        Restaurant(
-            id = "3",
-            name = "King BBQ",
-            imageUrl = "https://example.com/bbq.jpg",
-            rating = 4.3f,
-            ratingCount = 876,
-            address = "Vincom Bà Triệu, Hai Bà Trưng, Hà Nội",
-            priceRange = "100000",
-            openingStatus = OpeningStatus.SCHEDULED,
-            businessHours = BusinessHours(
-                openTime = "10:00",
-                closeTime = "22:00"
-            ),
-            serviceType = ServiceType.FOOD,
-            phoneNumber = "0345678912",
-            likes = 234,
-            categories = listOf("Lẩu", "Nướng", "Hàn Quốc")
-        ),
-        Restaurant(
-            id = "4",
-            name = "Highlands Coffee",
-            imageUrl = "https://example.com/coffee.jpg",
-            rating = 4.0f,
-            ratingCount = 432,
-            address = "54 Lý Thường Kiệt, Hoàn Kiếm, Hà Nội",
-            priceRange = "100000",
-            openingStatus = OpeningStatus.SCHEDULED,
-            businessHours = BusinessHours(
-                openTime = "07:00",
-                closeTime = "23:00"
-            ),
-            serviceType = ServiceType.FOOD,
-            phoneNumber = "0567891234",
-            likes = 178,
-            categories = listOf("Cà phê", "Trà", "Bánh ngọt")
-        )
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun HomeScreenPreview() {
-    HomeScreen()
 }

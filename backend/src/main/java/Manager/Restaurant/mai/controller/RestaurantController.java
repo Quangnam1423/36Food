@@ -111,8 +111,8 @@ public class RestaurantController {
         List<RestaurantDTO> pagedResult = nearbyRestaurants.subList(startItem, endItem);
         
         return ResponseEntity.ok(pagedResult);
-    }
-
+    }    
+    
     // Trả về nhà hàng gần với pagination và metadata
     @GetMapping("/nearby-paged")
     public ResponseEntity<Map<String, Object>> getNearbyRestaurantsPaged(
@@ -179,14 +179,19 @@ public class RestaurantController {
         response.put("hasMore", page < totalPages - 1);
         
         return ResponseEntity.ok(response);
-    }
-
+    }    
+    
     @GetMapping("/{id}")
     public ResponseEntity<?> getRestaurantById(
             @PathVariable Long id,
             @RequestParam(required = true) double userLat,
             @RequestParam(required = true) double userLng
     ) {
+        // Check if id is not actually a number but a path intended for another endpoint
+        if (id.toString().contains("nearby") || id.toString().contains("popular") || id.toString().contains("top")) {
+            return ResponseEntity.badRequest().body("Invalid restaurant ID. Maybe you meant to use an endpoint like /nearby-paged instead of /" + id);
+        }
+        
         return restaurantRepo.findById(id)
                 .map(restaurant -> {
                     DistanceService.RouteInfo routeInfo = distanceService.getDistanceAndDuration(

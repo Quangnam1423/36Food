@@ -7,6 +7,6 @@ interface LocationApi {
     @GET("user/get-address")
     suspend fun getUserAddress(
         @Query("lat") latitude: Double,
-        @Query("lng") longitude: Double
+        @Query("lon") longitude: Double
     ) : Map<String, String>
 }

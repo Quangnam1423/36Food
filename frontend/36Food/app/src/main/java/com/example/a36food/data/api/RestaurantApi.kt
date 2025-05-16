@@ -1,5 +1,7 @@
 package com.example.a36food.data.api
 
+import com.example.a36food.data.dto.PaginatedRestaurantsResponse
+import com.example.a36food.data.dto.RestaurantDTO
 import com.example.a36food.domain.model.Restaurant
 import retrofit2.http.GET
 import retrofit2.http.Path
@@ -18,4 +20,29 @@ interface RestaurantApi {
         @Query("userLat") userLat: Double,
         @Query("userLng") userLng: Double
     ) : Restaurant
+
+    @GET("restaurants/nearby-paged")
+    suspend fun getNearbyRestaurantsPaged(
+        @Query("userLat") userLat: Double,
+        @Query("userLng") userLng: Double,
+        @Query("page") page: Int,
+        @Query("pageSize") pageSize: Int,
+        @Query("radiusInKm") radiusInKm: Int = 10,
+    ): PaginatedRestaurantsResponse
+
+    @GET("restaurants/popular")
+    suspend fun getPopularRestaurants(
+        @Query("userLat") userLat: Double,
+        @Query("userLng") userLng: Double,
+        @Query("page") page: Int,
+        @Query("size") pageSize: Int
+    ): PaginatedRestaurantsResponse
+
+    @GET("restaurants/top-rated")
+    suspend fun getTopRatedRestaurants(
+        @Query("userLat") userLat: Double,
+        @Query("userLng") userLng: Double,
+        @Query("page") page: Int,
+        @Query("size") pageSize: Int
+    ): PaginatedRestaurantsResponse
 }

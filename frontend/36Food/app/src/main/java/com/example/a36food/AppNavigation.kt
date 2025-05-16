@@ -49,7 +49,7 @@ import com.example.a36food.presentation.screens.introduce.IntroduceScreen
 import com.example.a36food.presentation.screens.login.LoginScreen
 import com.example.a36food.presentation.screens.register.RegisterScreen
 import com.example.a36food.presentation.viewmodel.NetworkViewModel
-import com.example.a36food.ui.viewmodel.LocationViewModel
+import com.example.a36food.presentation.viewmodel.LocationViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 
 sealed class Screen(val route: String) {
@@ -172,6 +172,9 @@ fun AppNavigation() {
                         onNavigateToProfile = { navController.navigate(Screen.Profile.route) },
                         onRestaurantClick = { restaurantId ->
                             navController.navigate(Screen.RestaurantDetail.createRoute(restaurantId))
+                        },
+                        onNetworkError = {
+                            navController.navigate(Screen.NoConnection.route)
                         }
                     )
                 }

@@ -1,4 +1,4 @@
-package com.example.a36food.ui.viewmodel
+package com.example.a36food.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

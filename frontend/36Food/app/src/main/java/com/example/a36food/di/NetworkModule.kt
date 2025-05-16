@@ -1,6 +1,8 @@
 package com.example.a36food.di
 
 import android.content.Context
+import com.example.a36food.data.api.LocationApi
+import com.example.a36food.data.api.RestaurantApi
 import com.example.a36food.data.api.UserApi
 import com.example.a36food.data.network.NetworkConnectionManager
 import com.example.a36food.data.network.interceptors.AuthInterceptor
@@ -32,7 +34,7 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideBaseUrl(): String {
-        return "http://192.168.2.101:8080/" // For Android emulator
+        return "http://192.168.2.102:8080/" // For Android emulator
     }
 
     @Provides
@@ -82,5 +84,17 @@ object NetworkModule {
     @Singleton
     fun provideUserApi(retrofit: Retrofit) : UserApi {
         return retrofit.create(UserApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideRestaurantApi(retrofit: Retrofit) : RestaurantApi {
+        return retrofit.create(RestaurantApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideLocationApi(retrofit: Retrofit) : LocationApi {
+        return retrofit.create(LocationApi::class.java)
     }
 }

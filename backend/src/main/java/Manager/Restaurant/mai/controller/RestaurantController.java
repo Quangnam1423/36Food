@@ -412,9 +412,8 @@ public class RestaurantController {    private final RestaurantRepository restau
     @GetMapping("/{id}/menu-items")
     public ResponseEntity<?> getMenuItemsByCategory(
             @PathVariable Long id,
-            @RequestParam(required = false) String categoryName,
-            @RequestParam(required = false) Double userLat,
-            @RequestParam(required = false) Double userLng) {
+            @RequestParam(required = false) String categoryName
+        ) {
         
         Optional<Restaurant> restaurantOpt = restaurantRepo.findById(id);
         if (restaurantOpt.isEmpty()) {
@@ -424,8 +423,6 @@ public class RestaurantController {    private final RestaurantRepository restau
         Restaurant restaurant = restaurantOpt.get();
         List<MenuItem> menuItems;
         
-        // Nếu không có categoryName hoặc userLat/userLng, trả về danh sách menu items theo format cũ
-        if ((categoryName != null && !categoryName.isEmpty()) || userLat == null || userLng == null) {
             if (categoryName != null && !categoryName.isEmpty()) {
                 // Vì chúng ta vẫn đang sử dụng cột category là String trong MenuItem
                 // Nên vẫn sử dụng find by category name
@@ -445,67 +442,5 @@ public class RestaurantController {    private final RestaurantRepository restau
                     .collect(Collectors.toList());
             
             return ResponseEntity.ok(result);
-        } else {
-            // Nếu có userLat/userLng, trả về RestaurantDTO đầy đủ với menu items đã phân nhóm
-            DistanceService.RouteInfo routeInfo = distanceService.getDistanceAndDuration(
-                    userLng, userLat,
-                    restaurant.getLongitude(), restaurant.getLatitude()
-            );
-            
-            String address = geocodingService.getAddressFromCoordinates(
-                restaurant.getLatitude(),
-                restaurant.getLongitude()
-            );
-            
-            // Fetch menu items for this restaurant and group by category
-            menuItems = menuItemRepo.findByRestaurant(restaurant);
-            Map<String, List<MenuItemDTO>> menuItemsByCategory = menuItems.stream()
-                .map(MenuItemDTO::fromEntity)
-                .collect(Collectors.groupingBy(MenuItemDTO::getCategory));
-            
-            // Create the DTO with categories and menu items
-            RestaurantDTO dto = RestaurantDTO.fromEntityWithMenuItems(
-                restaurant,
-                address,
-                routeInfo.distanceInMeters,
-                routeInfo.durationInSeconds,
-                menuItemsByCategory
-            );
-            
-            return ResponseEntity.ok(dto);
-        }
-    }
-
-    /**
-     * API để test tốc độ phản hồi của OpenRouteService
-     * @param startLat Vĩ độ điểm bắt đầu
-     * @param startLng Kinh độ điểm bắt đầu
-     * @param endLat Vĩ độ điểm kết thúc
-     * @param endLng Kinh độ điểm kết thúc
-     * @return Kết quả tính toán khoảng cách và thời gian phản hồi
-     */
-    @GetMapping("/test-route-service")
-    public ResponseEntity<Map<String, Object>> testRouteService(
-            @RequestParam(defaultValue = "21.028511") double startLat,
-            @RequestParam(defaultValue = "105.804817") double startLng,
-            @RequestParam(defaultValue = "21.033333") double endLat,
-            @RequestParam(defaultValue = "105.850000") double endLng
-    ) {
-        long startTime = System.currentTimeMillis();
-        
-        DistanceService.RouteInfo routeInfo = distanceService.getDistanceAndDuration(
-            startLng, startLat, endLng, endLat
-        );
-        
-        long endTime = System.currentTimeMillis();
-        long responseTime = endTime - startTime;
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("distance", routeInfo.distanceInMeters);
-        response.put("duration", routeInfo.durationInSeconds);
-        response.put("responseTimeMs", responseTime);
-        response.put("isFallback", responseTime < 100); // Khả năng cao đang sử dụng Haversine nếu quá nhanh
-        
-        return ResponseEntity.ok(response);
     }
 }

@@ -3,6 +3,7 @@ package Manager.Restaurant.mai.controller;
 import Manager.Restaurant.mai.repository.*;
 import Manager.Restaurant.mai.entity.*;
 import Manager.Restaurant.mai.dto.ReviewDTO;
+import Manager.Restaurant.mai.dto.ReviewDetailDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -69,13 +70,69 @@ public class ReviewController {
         List<Review> reviews = reviewRepo.findByRestaurant_IdAndIsDeletedFalse(restaurantId);
         List<ReviewDTO> result = reviews.stream().map(ReviewDTO::fromEntity).toList();
         return ResponseEntity.ok(result);
-    }
-
-    @GetMapping("/item/{itemId}")
+    }    @GetMapping("/item/{itemId}")
     public ResponseEntity<?> getReviewsByItem(@PathVariable Long itemId) {
         List<Review> reviews = reviewRepo.findByFood_ItemIdAndIsDeletedFalse(itemId);
         List<ReviewDTO> result = reviews.stream().map(ReviewDTO::fromEntity).toList();
         return ResponseEntity.ok(result);
+    }
+    
+    /**
+     * Lấy danh sách đánh giá chi tiết (bao gồm thông tin người dùng) của một món ăn
+     * @param itemId ID của món ăn
+     * @return Danh sách các đánh giá chi tiết
+     */
+    @GetMapping("/item/{itemId}/details")
+    public ResponseEntity<?> getDetailedReviewsByItem(
+            @PathVariable Long itemId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        // Kiểm tra xem món ăn có tồn tại không
+        if (!itemRepo.existsById(itemId)) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        List<Review> reviews = reviewRepo.findByFood_ItemIdAndIsDeletedFalse(itemId);
+        
+        // Sắp xếp theo thời gian mới nhất
+        reviews.sort((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
+        
+        // Tính toán phân trang
+        int totalItems = reviews.size();
+        int totalPages = (int) Math.ceil((double) totalItems / size);
+        int startIndex = page * size;
+        int endIndex = Math.min(startIndex + size, totalItems);
+        
+        // Lấy danh sách review theo phân trang
+        List<ReviewDetailDTO> pagedReviews;
+        if (startIndex < totalItems) {
+            pagedReviews = reviews.subList(startIndex, endIndex).stream()
+                    .map(ReviewDetailDTO::fromEntity)
+                    .toList();
+        } else {
+            pagedReviews = List.of();
+        }
+        
+        // Tính toán rating trung bình
+        float averageRating = 0;
+        if (!reviews.isEmpty()) {
+            averageRating = (float) reviews.stream()
+                    .mapToDouble(Review::getRating)
+                    .average()
+                    .orElse(0);
+        }
+        
+        Map<String, Object> response = Map.of(
+                "reviews", pagedReviews,
+                "totalItems", totalItems,
+                "totalPages", totalPages,
+                "currentPage", page,
+                "hasMore", page < totalPages - 1,
+                "averageRating", averageRating
+        );
+        
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")

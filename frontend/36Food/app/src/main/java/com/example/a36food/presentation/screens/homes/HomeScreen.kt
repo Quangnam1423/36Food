@@ -512,7 +512,7 @@ private fun RestaurantCard(
                         )
                     )
                     Text(
-                        text = " (${restaurant.ratingCount})",
+                        text = " (${restaurant.ratingCount} lượt đánh giá)",
                         style = MaterialTheme.typography.bodySmall.copy(
                             fontSize = 12.sp
                         ),

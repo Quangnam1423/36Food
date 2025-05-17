@@ -2,6 +2,7 @@ package com.example.a36food.data.repository
 
 import android.util.Log
 import com.example.a36food.data.api.RestaurantApi
+import com.example.a36food.data.dto.MenuItemDTO
 import com.example.a36food.data.dto.toDomainModels
 import com.example.a36food.data.network.NoConnectionException
 import com.example.a36food.domain.model.Restaurant
@@ -139,7 +140,7 @@ class RestaurantRepository @Inject constructor(
 
     suspend fun getRestaurantDetail(id: String, latitude: Double, longitude: Double): Restaurant {
         try {
-            return restaurantApi.getRestaurantDetail(id.toLong(), latitude, longitude)
+            return restaurantApi.getRestaurantDetail(id.toLong(), latitude, longitude).toDomainModel()
         } catch (e: Exception) {
             android.util.Log.e("RestaurantRepository", "Error fetching restaurant details", e)
             when (e) {
@@ -152,5 +153,12 @@ class RestaurantRepository @Inject constructor(
                 else -> throw e
             }
         }
+    }
+
+    suspend fun getMenuItems(
+        restaurantId: Long,
+        categoryName: String? = null
+    ): List<MenuItemDTO> {
+        return restaurantApi.getMenuItems(restaurantId, categoryName)
     }
 }

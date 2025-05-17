@@ -238,7 +238,6 @@ fun AppNavigation() {
                     )
                 }
 
-                // navController.navigate(Screen.RestaurantDetail.createRoute
                 composable(
                     route = Screen.RestaurantDetail.route,
                     arguments = listOf(
@@ -249,13 +248,8 @@ fun AppNavigation() {
                     requireNotNull(restaurantId) { "Restaurant ID is required" }
 
                     RestaurantDetailScreen(
-                        restaurantId = restaurantId,
                         onBackClick = { navController.popBackStack() },
-                        onShareClick = { /* TODO: Implement share functionality */ },
-                        onAddClick = {/*TO DO ADD FOOD TO CART*/},
-                        onFoodClick = { foodId ->
-                            navController.navigate(Screen.FoodDetail.createRoute(foodId))
-                        }
+                        onCartClick = { /* TODO: Implement cart functionality */ }
                     )
                 }
 

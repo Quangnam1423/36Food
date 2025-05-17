@@ -1,5 +1,6 @@
 package com.example.a36food.data.api
 
+import com.example.a36food.data.dto.MenuItemDTO
 import com.example.a36food.data.dto.PaginatedRestaurantsResponse
 import com.example.a36food.data.dto.RestaurantDTO
 import com.example.a36food.domain.model.Restaurant
@@ -19,7 +20,7 @@ interface RestaurantApi {
         @Path("id") id : Long,
         @Query("userLat") userLat: Double,
         @Query("userLng") userLng: Double
-    ) : Restaurant
+    ) : RestaurantDTO
 
     @GET("restaurants/nearby-paged")
     suspend fun getNearbyRestaurantsPaged(
@@ -45,4 +46,10 @@ interface RestaurantApi {
         @Query("page") page: Int,
         @Query("size") pageSize: Int
     ): PaginatedRestaurantsResponse
+
+    @GET("restaurants/{id}/menu-items")
+    suspend fun getMenuItems(
+        @Path("id") id: Long,
+        @Query("categoryName") categoryName: String? = null
+    ) : List<MenuItemDTO>
 }

@@ -3,6 +3,7 @@ package Manager.Restaurant.mai.config;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -24,14 +25,17 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))            .authorizeHttpRequests(auth -> auth
+            .csrf(csrf -> csrf.disable())              .cors(cors -> cors.configurationSource(corsConfigurationSource()))            
+            .authorizeHttpRequests(auth -> auth
                 // Public endpoints
-                .requestMatchers("/auth/**", "/restaurants/**", "/user/get-address").permitAll()
+                .requestMatchers("/auth/**", "/user/get-address").permitAll()
+                // Restaurant endpoints - all GET endpoints are public
+                .requestMatchers(HttpMethod.GET, "/restaurants/**").permitAll()
                 // Admin-only endpoints
                 .requestMatchers("/admin/**").hasRole("ADMIN")
-                // Restaurant owner endpoints
-                .requestMatchers("/restaurants/{id}/menu/**").hasAnyRole("ADMIN", "RESTAURANT_OWNER")
+                // Restaurant owner endpoints - for adding new items or categories (POST/PUT operations)
+                .requestMatchers(HttpMethod.POST, "/restaurants/{id}/menu/**", "/restaurants/{id}/categories/**").hasAnyRole("ADMIN", "RESTAURANT_OWNER")
+                .requestMatchers(HttpMethod.PUT, "/restaurants/{id}/menu/**", "/restaurants/{id}/categories/**").hasAnyRole("ADMIN", "RESTAURANT_OWNER")
                 // Specific authenticated user endpoints
                 .requestMatchers("/user/profile", "/user/update", "/user/delete", "/user/change-password", "/users/change-password").authenticated()
                 // Any other endpoints

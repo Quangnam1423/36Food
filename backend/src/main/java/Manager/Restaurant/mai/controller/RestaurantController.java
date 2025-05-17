@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -21,14 +22,14 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/restaurants")
 @RequiredArgsConstructor
-public class RestaurantController {
-
-    private final RestaurantRepository restaurantRepo;
+public class RestaurantController {    private final RestaurantRepository restaurantRepo;
     private final DistanceService distanceService;
     private final GeocodingService geocodingService;
     private final MenuItemRepository menuItemRepo;
     private final OrderRepository orderRepo;
     private final ReviewRepository reviewRepo;
+    private final CategoryRepository categoryRepo;  
+
 
     // GET /restaurants lấy tất cả nhà hàng có trong hệ thốngthống
     @GetMapping
@@ -48,6 +49,7 @@ public class RestaurantController {
                 restaurant.getLongitude()
             );
 
+            // Sử dụng phiên bản có categories để đảm bảo trả về đầy đủ thông tin
             return RestaurantDTO.fromEntity(
                     restaurant, 
                     address,
@@ -61,58 +63,6 @@ public class RestaurantController {
         return ResponseEntity.ok(result);
     }    
     
-    @GetMapping("/nearby")
-    public ResponseEntity<List<RestaurantDTO>> getNearbyRestaurants(
-            @RequestParam double userLat,
-            @RequestParam double userLng,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "10") double radiusInKm
-    ) {
-        // Chuyển đổi bán kính từ km sang mét
-        double radiusInMeters = radiusInKm * 1000;
-        
-        List<RestaurantDTO> nearbyRestaurants = restaurantRepo.findAll().stream()
-                .map(restaurant -> {
-                    DistanceService.RouteInfo routeInfo = distanceService.getDistanceAndDuration(
-                            userLng, userLat,
-                            restaurant.getLongitude(), restaurant.getLatitude()
-                    );
-
-                    String address = geocodingService.getAddressFromCoordinates(
-                        restaurant.getLatitude(),
-                        restaurant.getLongitude()
-                    );
-
-                    return RestaurantDTO.fromEntity(
-                            restaurant, 
-                            address,
-                            routeInfo.distanceInMeters, 
-                            routeInfo.durationInSeconds
-                    );
-                })
-                // Lọc nhà hàng trong bán kính quy định
-                .filter(dto -> dto.getDistance() <= radiusInMeters)
-                // Sắp xếp theo khoảng cách, gần nhất lên đầu
-                .sorted(Comparator.comparingDouble(RestaurantDTO::getDistance))
-                .toList();
-        
-        // Tính toán phân trang
-        int totalItems = nearbyRestaurants.size();
-        int startItem = page * size;
-        int endItem = Math.min(startItem + size, totalItems);
-        
-        // Trường hợp không còn dữ liệu để phân trang
-        if (startItem >= totalItems) {
-            return ResponseEntity.ok(List.of());
-        }
-        
-        // Trả về phần dữ liệu cho trang hiện tại
-        List<RestaurantDTO> pagedResult = nearbyRestaurants.subList(startItem, endItem);
-        
-        return ResponseEntity.ok(pagedResult);
-    }    
-    
     // Trả về nhà hàng gần với pagination và metadata
     @GetMapping("/nearby-paged")
     public ResponseEntity<Map<String, Object>> getNearbyRestaurantsPaged(
@@ -123,9 +73,7 @@ public class RestaurantController {
             @RequestParam(defaultValue = "10") double radiusInKm
     ) {
         // Chuyển đổi bán kính từ km sang mét
-        double radiusInMeters = radiusInKm * 1000;
-        
-        List<RestaurantDTO> nearbyRestaurants = restaurantRepo.findAll().stream()
+        double radiusInMeters = radiusInKm * 1000;          List<RestaurantDTO> nearbyRestaurants = restaurantRepo.findAll().stream()
                 .map(restaurant -> {
                     DistanceService.RouteInfo routeInfo = distanceService.getDistanceAndDuration(
                             userLng, userLat,
@@ -137,6 +85,7 @@ public class RestaurantController {
                         restaurant.getLongitude()
                     );
 
+                    // Sử dụng phiên bản có categories
                     return RestaurantDTO.fromEntity(
                             restaurant, 
                             address,
@@ -181,54 +130,6 @@ public class RestaurantController {
         return ResponseEntity.ok(response);
     }    
 
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getRestaurantById(
-            @PathVariable Long id,
-            @RequestParam(required = true) double userLat,
-            @RequestParam(required = true) double userLng
-    ) {
-        // Check if id is not actually a number but a path intended for another endpoint
-        if (id.toString().contains("nearby") || id.toString().contains("popular") || id.toString().contains("top")) {
-            return ResponseEntity.badRequest().body("Invalid restaurant ID. Maybe you meant to use an endpoint like /nearby-paged instead of /" + id);
-        }
-        
-        return restaurantRepo.findById(id)
-                .map(restaurant -> {
-                    DistanceService.RouteInfo routeInfo = distanceService.getDistanceAndDuration(
-                            userLng, userLat,
-                            restaurant.getLongitude(), restaurant.getLatitude()
-                    );
-            String address = geocodingService.getAddressFromCoordinates(
-                restaurant.getLatitude(),
-                restaurant.getLongitude()
-            );
-                    RestaurantDTO dto = RestaurantDTO.fromEntity(
-                            restaurant,
-                            address,
-                            routeInfo.distanceInMeters,
-                            routeInfo.durationInSeconds
-                    );
-                    return ResponseEntity.ok(dto);
-                })
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    // POST /restaurants/{id}/menu
-    @PostMapping("/{id}/menu")
-    public ResponseEntity<?> addMenuItem(@PathVariable Long id, @RequestBody MenuItem menuItem) {
-        Optional<Restaurant> restaurantOpt = restaurantRepo.findById(id);
-        if (restaurantOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        menuItem.setRestaurant(restaurantOpt.get());
-        menuItem.setCreatedAt(LocalDateTime.now());
-        menuItem.setUpdatedAt(LocalDateTime.now());
-
-        MenuItem saved = menuItemRepo.save(menuItem);
-        return ResponseEntity.ok(saved);
-    }    
-
     /**
      * API lấy danh sách nhà hàng bán chạy nhất (theo số lượng đơn hàng)
      * @param userLat Vĩ độ người dùng
@@ -260,9 +161,7 @@ public class RestaurantController {
             double orderProportion = (double)(restaurant.getId() % 5 + 1) / 15.0;
             Long orderCount = Math.round(totalOrders * orderProportion);
             restaurantOrderCount.put(restaurant, orderCount);
-        }
-        
-        // Chuyển đổi thành danh sách các RestaurantDTO và sắp xếp theo số lượng đơn hàng
+        }          // Chuyển đổi thành danh sách các RestaurantDTO và sắp xếp theo số lượng đơn hàng
         List<RestaurantDTO> popularRestaurants = restaurantOrderCount.entrySet().stream()
                 .map(entry -> {
                     Restaurant restaurant = entry.getKey();
@@ -277,6 +176,7 @@ public class RestaurantController {
                         restaurant.getLongitude()
                     );
                     
+                    // Sử dụng phiên bản có categories
                     RestaurantDTO dto = RestaurantDTO.fromEntity(
                             restaurant,
                             address,
@@ -342,9 +242,7 @@ public class RestaurantController {
                 .collect(Collectors.groupingBy(
                         review -> review.getRestaurant(),
                         Collectors.averagingDouble(review -> review.getRating())
-                ));
-        
-        List<RestaurantDTO> topRatedRestaurants = restaurantRatings.entrySet().stream()
+                ));          List<RestaurantDTO> topRatedRestaurants = restaurantRatings.entrySet().stream()
                 .map(entry -> {
                     Restaurant restaurant = entry.getKey();
                     
@@ -358,6 +256,7 @@ public class RestaurantController {
                         restaurant.getLongitude()
                     );
                     
+                    // Sử dụng phiên bản có categories
                     RestaurantDTO dto = RestaurantDTO.fromEntity(
                             restaurant,
                             address,
@@ -398,6 +297,214 @@ public class RestaurantController {
         response.put("totalItems", totalItems);
         response.put("totalPages", totalPages);
         response.put("hasMore", page < totalPages - 1);
+        
+        return ResponseEntity.ok(response);
+    }    
+    
+      // GET /restaurants/{id} lấy thông tin chi tiết của một nhà hàng
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getRestaurantById(
+            @PathVariable Long id,
+            @RequestParam(required = true) double userLat,
+            @RequestParam(required = true) double userLng
+    ) {
+        // Check if id is not actually a number but a path intended for another endpoint
+        if (id.toString().contains("nearby") || id.toString().contains("popular") || id.toString().contains("top")) {
+            return ResponseEntity.badRequest().body("Invalid restaurant ID. Maybe you meant to use an endpoint like /nearby-paged instead of /" + id);
+        }
+        
+        return restaurantRepo.findById(id)
+                .map(restaurant -> {
+                    DistanceService.RouteInfo routeInfo = distanceService.getDistanceAndDuration(
+                            userLng, userLat,
+                            restaurant.getLongitude(), restaurant.getLatitude()
+                    );
+                    
+                    String address = geocodingService.getAddressFromCoordinates(
+                        restaurant.getLatitude(),
+                        restaurant.getLongitude()
+                    );
+                    
+                    // Create the DTO with categories only
+                    RestaurantDTO dto = RestaurantDTO.fromEntity(
+                        restaurant,
+                        address,
+                        routeInfo.distanceInMeters,
+                        routeInfo.durationInSeconds
+                    );
+                    
+                    return ResponseEntity.ok(dto);
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    // POST /restaurants/{id}/menu
+    @PostMapping("/{id}/menu")
+    public ResponseEntity<?> addMenuItem(@PathVariable Long id, @RequestBody MenuItem menuItem) {
+        Optional<Restaurant> restaurantOpt = restaurantRepo.findById(id);
+        if (restaurantOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        menuItem.setRestaurant(restaurantOpt.get());
+        menuItem.setCreatedAt(LocalDateTime.now());
+        menuItem.setUpdatedAt(LocalDateTime.now());
+
+        MenuItem saved = menuItemRepo.save(menuItem);
+        return ResponseEntity.ok(saved);
+    }    
+
+      /**
+     * API để thêm category mới cho nhà hàng (dành cho Restaurant owner)
+     * @param id ID của nhà hàng
+     * @param requestBody Map chứa tên category
+     * @return Map chứa thông tin về category đã thêm
+     */
+    @PostMapping("/{id}/categories")
+    public ResponseEntity<?> addCategory(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> requestBody) {
+        
+        if (!requestBody.containsKey("name")) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Category name is required"));
+        }
+        
+        String categoryName = requestBody.get("name");
+        
+        Optional<Restaurant> restaurantOpt = restaurantRepo.findById(id);
+        if (restaurantOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        Restaurant restaurant = restaurantOpt.get();
+        
+        // Kiểm tra xem category đã tồn tại chưa
+        boolean categoryExists = restaurant.getCategories() != null && 
+                restaurant.getCategories().stream()
+                       .anyMatch(cat -> cat.equalsIgnoreCase(categoryName));
+        
+        if (categoryExists) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Category already exists for this restaurant"));
+        }
+        
+        // Thêm category mới vào danh sách
+        if (restaurant.getCategories() == null) {
+            restaurant.setCategories(new ArrayList<>());
+        }
+        restaurant.getCategories().add(categoryName);
+        restaurantRepo.save(restaurant);
+        
+        // Trả về thông tin category đã thêm
+        return ResponseEntity.ok(Map.of(
+            "id", restaurant.getId(),
+            "name", categoryName,
+            "restaurantId", restaurant.getId()));
+    }   
+    
+      /**
+     * API để lấy danh sách menu items của một nhà hàng theo category
+     * @param id ID của nhà hàng
+     * @param categoryName Tên category cần lọc
+     * @param userLat Vĩ độ người dùng (optional)
+     * @param userLng Kinh độ người dùng (optional)
+     * @return Danh sách menu items thuộc category đã chọn hoặc RestaurantDTO với menu items đã phân nhóm
+     */
+    @GetMapping("/{id}/menu-items")
+    public ResponseEntity<?> getMenuItemsByCategory(
+            @PathVariable Long id,
+            @RequestParam(required = false) String categoryName,
+            @RequestParam(required = false) Double userLat,
+            @RequestParam(required = false) Double userLng) {
+        
+        Optional<Restaurant> restaurantOpt = restaurantRepo.findById(id);
+        if (restaurantOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        Restaurant restaurant = restaurantOpt.get();
+        List<MenuItem> menuItems;
+        
+        // Nếu không có categoryName hoặc userLat/userLng, trả về danh sách menu items theo format cũ
+        if ((categoryName != null && !categoryName.isEmpty()) || userLat == null || userLng == null) {
+            if (categoryName != null && !categoryName.isEmpty()) {
+                // Vì chúng ta vẫn đang sử dụng cột category là String trong MenuItem
+                // Nên vẫn sử dụng find by category name
+                menuItems = menuItemRepo.findByRestaurantIdAndCategory(id, categoryName);
+            } else {
+                // Lấy tất cả menu items nếu không có parameter
+                menuItems = menuItemRepo.findByRestaurant(restaurant);
+            }
+            
+            // Kiểm tra nếu không tìm thấy menu items, trả về danh sách trống thay vì null
+            if (menuItems == null) {
+                menuItems = List.of();
+            }
+            
+            List<MenuItemDTO> result = menuItems.stream()
+                    .map(MenuItemDTO::fromEntity)
+                    .collect(Collectors.toList());
+            
+            return ResponseEntity.ok(result);
+        } else {
+            // Nếu có userLat/userLng, trả về RestaurantDTO đầy đủ với menu items đã phân nhóm
+            DistanceService.RouteInfo routeInfo = distanceService.getDistanceAndDuration(
+                    userLng, userLat,
+                    restaurant.getLongitude(), restaurant.getLatitude()
+            );
+            
+            String address = geocodingService.getAddressFromCoordinates(
+                restaurant.getLatitude(),
+                restaurant.getLongitude()
+            );
+            
+            // Fetch menu items for this restaurant and group by category
+            menuItems = menuItemRepo.findByRestaurant(restaurant);
+            Map<String, List<MenuItemDTO>> menuItemsByCategory = menuItems.stream()
+                .map(MenuItemDTO::fromEntity)
+                .collect(Collectors.groupingBy(MenuItemDTO::getCategory));
+            
+            // Create the DTO with categories and menu items
+            RestaurantDTO dto = RestaurantDTO.fromEntityWithMenuItems(
+                restaurant,
+                address,
+                routeInfo.distanceInMeters,
+                routeInfo.durationInSeconds,
+                menuItemsByCategory
+            );
+            
+            return ResponseEntity.ok(dto);
+        }
+    }
+
+    /**
+     * API để test tốc độ phản hồi của OpenRouteService
+     * @param startLat Vĩ độ điểm bắt đầu
+     * @param startLng Kinh độ điểm bắt đầu
+     * @param endLat Vĩ độ điểm kết thúc
+     * @param endLng Kinh độ điểm kết thúc
+     * @return Kết quả tính toán khoảng cách và thời gian phản hồi
+     */
+    @GetMapping("/test-route-service")
+    public ResponseEntity<Map<String, Object>> testRouteService(
+            @RequestParam(defaultValue = "21.028511") double startLat,
+            @RequestParam(defaultValue = "105.804817") double startLng,
+            @RequestParam(defaultValue = "21.033333") double endLat,
+            @RequestParam(defaultValue = "105.850000") double endLng
+    ) {
+        long startTime = System.currentTimeMillis();
+        
+        DistanceService.RouteInfo routeInfo = distanceService.getDistanceAndDuration(
+            startLng, startLat, endLng, endLat
+        );
+        
+        long endTime = System.currentTimeMillis();
+        long responseTime = endTime - startTime;
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("distance", routeInfo.distanceInMeters);
+        response.put("duration", routeInfo.durationInSeconds);
+        response.put("responseTimeMs", responseTime);
+        response.put("isFallback", responseTime < 100); // Khả năng cao đang sử dụng Haversine nếu quá nhanh
         
         return ResponseEntity.ok(response);
     }

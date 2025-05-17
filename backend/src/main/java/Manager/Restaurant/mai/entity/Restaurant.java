@@ -18,13 +18,16 @@ public class Restaurant {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String name;
     private String imageUrl;
     private Float rating;
-    private Integer ratingCount; 
+    private Integer ratingCount;
+    //private String address;
     private String priceRange;
     private String openingStatus; // e.g. "OPEN", "CLOSED", "SCHEDULED"
     private String businessHours; // e.g. "08:00-22:00" or null
+    private String serviceType;   // e.g. "DINE_IN", "DELIVERY", "TAKEAWAY"
     private String phoneNumber;
     private Integer likes;
     private Integer reviewsCount;

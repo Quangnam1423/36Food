@@ -16,8 +16,15 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Configuration
-public class DataInitializer {
-
+public class DataInitializer {    // Helper method to create categories for a restaurant
+    private void createCategoriesForRestaurant(Restaurant restaurant, List<String> categoryNames, CategoryRepository categoryRepo) {
+        // Add category names directly to the restaurant's categories collection
+        if (restaurant.getCategories() == null) {
+            restaurant.setCategories(new ArrayList<>());
+        }
+        restaurant.getCategories().addAll(categoryNames);
+    }
+    
     @Bean
     CommandLineRunner initDatabase(
             RoleRepository roleRepo,
@@ -31,7 +38,8 @@ public class DataInitializer {
             VoucherRepository voucherRepo,
             ReviewRepository reviewRepo,
             CartRepository cartRepo,
-            CartItemRepository itemRepo
+            CartItemRepository itemRepo,
+            CategoryRepository categoryRepo
     ) {
             return args -> {
                 // --- ROLE ---
@@ -49,199 +57,242 @@ public class DataInitializer {
                     new User("thu-hien", "Thu Hiền", "hien@example.com", "hashedpassword3", "salt3", "Nữ", "0911000099", "https://example.com/avatar3.jpg", LocalDateTime.of(2000, 1, 5, 0, 0), roles.get(1), "ACTIVE"),
                     new User("minh-tri", "Minh Trí", "tri@example.com", "hashedpassword4", "salt4", "Nam", "0999888777", "https://example.com/avatar4.jpg", LocalDateTime.of(1992, 12, 12, 0, 0), roles.get(1), "ACTIVE")
             );
-            userRepo.saveAll(users);
-
-            // --- RESTAURANT ---
-                List<Restaurant> restaurants = List.of(
-                        new Restaurant(
-                                null,
-                                "Quán Ăn Mai",
-                                "https://example.com/image1.jpg",
-                                4.5f,
-                                120,
-                                "50k-200k",
-                                "OPEN",
-                                "08:00-22:00",
-                                "0988888888",
-                                1200,
-                                200,
-                                0.0,
-                                List.of("Vietnamese", "Seafood"),
-                                System.currentTimeMillis(),
-                                21.028511,
-                                105.804817,
-                                new ArrayList<>()
-                        ),
-                        new Restaurant(
-                                null,
-                                "Bún Chả Hà Thành",
-                                "https://example.com/image2.jpg",
-                                4.2f,
-                                90,
-                                "40k-100k",
-                                "OPEN",
-                                "09:00-21:00",
-                                "0999999999",
-                                980,
-                                140,
-                                0.0,
-                                List.of("Vietnamese", "Grill"),
-                                System.currentTimeMillis(),
-                                21.033333,
-                                105.850000,
-                                new ArrayList<>()
-                        ),                        new Restaurant(
-                                null,
-                                "Lẩu Thái Tomyum",
-                                "https://example.com/image3.jpg",
-                                4.7f,
-                                150,
-                                "100k-300k",
-                                "OPEN",
-                                "10:00-23:00",
-                                "0888888888",
-                                1600,
-                                300,
-                                0.0,
-                                List.of("Thai", "Hotpot"),
-                                System.currentTimeMillis(),
-                                21.030000,
-                                105.830000,
-                                new ArrayList<>()
-                        ),
-                        new Restaurant(
-                                null,
-                                "Bánh Mì Minh Nhật",
-                                "https://example.com/image4.jpg",
-                                4.8f,
-                                200,
-                                "20k-50k",
-                                "OPEN",
-                                "06:00-20:00",
-                                "0866666666",
-                                800,
-                                120,
-                                0.0,
-                                List.of("Vietnamese", "Breakfast", "Sandwich"),
-                                System.currentTimeMillis(),
-                                21.025000,
-                                105.840000,
-                                new ArrayList<>()
-                        ),                        new Restaurant(
-                                null,
-                                "Sushi Hokkaido",
-                                "https://example.com/image5.jpg",
-                                4.9f,
-                                180,
-                                "200k-500k",
-                                "OPEN",
-                                "11:00-22:00",
-                                "0877777777",
-                                1800,
-                                350,
-                                0.0,
-                                List.of("Japanese", "Sushi", "Seafood"),
-                                System.currentTimeMillis(),
-                                21.040000,
-                                105.845000,
-                                new ArrayList<>()
-                        ),
-                        new Restaurant(
-                                null,
-                                "Phở Thìn Bờ Hồ",
-                                "https://example.com/image6.jpg",
-                                4.6f,
-                                350,
-                                "50k-120k",
-                                "OPEN",
-                                "06:00-22:00",
-                                "0955555555",
-                                1200,
-                                180,
-                                0.0,
-                                List.of("Vietnamese", "Noodles", "Breakfast"),
-                                System.currentTimeMillis(),
-                                21.036389, 
-                                105.852222,  // Tọa độ gần Hồ Hoàn Kiếm
-                                new ArrayList<>()
-                        ),
-                        new Restaurant(
-                                null,
-                                "Cơm Tấm Sài Gòn",
-                                "https://example.com/image7.jpg",
-                                4.4f,
-                                280,
-                                "60k-150k",
-                                "OPEN",
-                                "10:00-21:00",
-                                "0933333333",
-                                950,
-                                160,
-                                0.0,
-                                List.of("Vietnamese", "Rice", "Southern"),
-                                System.currentTimeMillis(),
-                                21.022222, 
-                                105.831111,  // Tọa độ khu vực Ba Đình
-                                new ArrayList<>()
-                        ),
-                        new Restaurant(
-                                null,
-                                "Pizza Express",
-                                "https://example.com/image8.jpg",
-                                4.5f,
-                                210,
-                                "150k-350k",
-                                "OPEN",
-                                "10:00-22:30",
-                                "0944444444",
-                                1500,
-                                220,
-                                0.0,
-                                List.of("Italian", "Pizza", "Fast Food"),
-                                System.currentTimeMillis(),
-                                21.014444, 
-                                105.823889,  // Tọa độ khu vực Đống Đa
-                                new ArrayList<>()
-                        ),
-                        new Restaurant(
-                                null,
-                                "Quán Nướng Hàn Quốc",
-                                "https://example.com/image9.jpg",
-                                4.7f,
-                                180,
-                                "200k-500k",
-                                "OPEN",
-                                "16:00-23:00",
-                                "0911111111",
-                                1650,
-                                280,
-                                0.0,
-                                List.of("Korean", "BBQ", "Grill"),
-                                System.currentTimeMillis(),
-                                21.046111, 
-                                105.833333,  // Tọa độ khu vực Hai Bà Trưng
-                                new ArrayList<>()
-                        ),
-                        new Restaurant(
-                                null,
-                                "Bún Đậu Mắm Tôm Hà Nội",
-                                "https://example.com/image10.jpg",
-                                4.3f,
-                                320,
-                                "50k-120k",
-                                "OPEN",
-                                "10:00-20:00",
-                                "0922222222",
-                                850,
-                                150,
-                                0.0,
-                                List.of("Vietnamese", "Traditional", "Street Food"),
-                                System.currentTimeMillis(),
-                                21.029167, 
-                                105.847778,  // Tọa độ khu vực Hoàn Kiếm
-                                new ArrayList<>()
-                        )
-                );
+            userRepo.saveAll(users);                // --- RESTAURANT ---
+                List<Restaurant> restaurants = new ArrayList<>();
+                
+                // Restaurant 1: Quán Ăn Mai
+                Restaurant restaurant1 = new Restaurant();
+                restaurant1.setName("Quán Ăn Mai");
+                restaurant1.setImageUrl("https://example.com/image1.jpg");
+                restaurant1.setRating(4.5f);
+                restaurant1.setRatingCount(120);
+                restaurant1.setPriceRange("50k-200k");
+                restaurant1.setOpeningStatus("OPEN");
+                restaurant1.setBusinessHours("08:00-22:00");
+                restaurant1.setPhoneNumber("0988888888");
+                restaurant1.setLikes(1200);
+                restaurant1.setReviewsCount(200);
+                restaurant1.setDistance(0.0);
+                restaurant1.setCreatedAt(System.currentTimeMillis());
+                restaurant1.setLatitude(21.028511);
+                restaurant1.setLongitude(105.804817);
+                restaurant1.setMenuItems(new ArrayList<>());
+                restaurant1.setCategories(new ArrayList<>());
+                restaurants.add(restaurant1);
+                
+                // Restaurant 2: Bún Chả Hà Thành
+                Restaurant restaurant2 = new Restaurant();
+                restaurant2.setName("Bún Chả Hà Thành");
+                restaurant2.setImageUrl("https://example.com/image2.jpg");
+                restaurant2.setRating(4.2f);
+                restaurant2.setRatingCount(90);
+                restaurant2.setPriceRange("40k-100k");
+                restaurant2.setOpeningStatus("OPEN");
+                restaurant2.setBusinessHours("09:00-21:00");
+                restaurant2.setPhoneNumber("0999999999");
+                restaurant2.setLikes(980);
+                restaurant2.setReviewsCount(140);
+                restaurant2.setDistance(0.0);
+                restaurant2.setCreatedAt(System.currentTimeMillis());
+                restaurant2.setLatitude(21.033333);
+                restaurant2.setLongitude(105.850000);
+                restaurant2.setMenuItems(new ArrayList<>());
+                restaurant2.setCategories(new ArrayList<>());
+                restaurants.add(restaurant2);
+                
+                // Restaurant 3: Lẩu Thái Tomyum
+                Restaurant restaurant3 = new Restaurant();
+                restaurant3.setName("Lẩu Thái Tomyum");
+                restaurant3.setImageUrl("https://example.com/image3.jpg");
+                restaurant3.setRating(4.7f);
+                restaurant3.setRatingCount(150);
+                restaurant3.setPriceRange("100k-300k");
+                restaurant3.setOpeningStatus("OPEN");
+                restaurant3.setBusinessHours("10:00-23:00");
+                restaurant3.setPhoneNumber("0888888888");
+                restaurant3.setLikes(1600);
+                restaurant3.setReviewsCount(300);
+                restaurant3.setDistance(0.0);
+                restaurant3.setCreatedAt(System.currentTimeMillis());
+                restaurant3.setLatitude(21.030000);
+                restaurant3.setLongitude(105.830000);
+                restaurant3.setMenuItems(new ArrayList<>());
+                restaurant3.setCategories(new ArrayList<>());
+                restaurants.add(restaurant3);
+                
+                // Restaurant 4: Bánh Mì Minh Nhật
+                Restaurant restaurant4 = new Restaurant();
+                restaurant4.setName("Bánh Mì Minh Nhật");
+                restaurant4.setImageUrl("https://example.com/image4.jpg");
+                restaurant4.setRating(4.8f);
+                restaurant4.setRatingCount(200);
+                restaurant4.setPriceRange("20k-50k");
+                restaurant4.setOpeningStatus("OPEN");
+                restaurant4.setBusinessHours("06:00-20:00");
+                restaurant4.setPhoneNumber("0866666666");
+                restaurant4.setLikes(800);
+                restaurant4.setReviewsCount(120);
+                restaurant4.setDistance(0.0);
+                restaurant4.setCreatedAt(System.currentTimeMillis());
+                restaurant4.setLatitude(21.025000);
+                restaurant4.setLongitude(105.840000);
+                restaurant4.setMenuItems(new ArrayList<>());
+                restaurant4.setCategories(new ArrayList<>());
+                restaurants.add(restaurant4);
+                
+                // Restaurant 5: Sushi Hokkaido
+                Restaurant restaurant5 = new Restaurant();
+                restaurant5.setName("Sushi Hokkaido");
+                restaurant5.setImageUrl("https://example.com/image5.jpg");
+                restaurant5.setRating(4.9f);
+                restaurant5.setRatingCount(180);
+                restaurant5.setPriceRange("200k-500k");
+                restaurant5.setOpeningStatus("OPEN");
+                restaurant5.setBusinessHours("11:00-22:00");
+                restaurant5.setPhoneNumber("0877777777");
+                restaurant5.setLikes(1800);
+                restaurant5.setReviewsCount(350);
+                restaurant5.setDistance(0.0);
+                restaurant5.setCreatedAt(System.currentTimeMillis());
+                restaurant5.setLatitude(21.040000);
+                restaurant5.setLongitude(105.845000);
+                restaurant5.setMenuItems(new ArrayList<>());
+                restaurant5.setCategories(new ArrayList<>());
+                restaurants.add(restaurant5);
+                
+                // Restaurant 6: Phở Thìn Bờ Hồ
+                Restaurant restaurant6 = new Restaurant();
+                restaurant6.setName("Phở Thìn Bờ Hồ");
+                restaurant6.setImageUrl("https://example.com/image6.jpg");
+                restaurant6.setRating(4.6f);
+                restaurant6.setRatingCount(350);
+                restaurant6.setPriceRange("50k-120k");
+                restaurant6.setOpeningStatus("OPEN");
+                restaurant6.setBusinessHours("06:00-22:00");
+                restaurant6.setPhoneNumber("0955555555");
+                restaurant6.setLikes(1200);
+                restaurant6.setReviewsCount(180);
+                restaurant6.setDistance(0.0);
+                restaurant6.setCreatedAt(System.currentTimeMillis());
+                restaurant6.setLatitude(21.036389);
+                restaurant6.setLongitude(105.852222);
+                restaurant6.setMenuItems(new ArrayList<>());
+                restaurant6.setCategories(new ArrayList<>());
+                restaurants.add(restaurant6);
+                
+                // Restaurant 7: Cơm Tấm Sài Gòn
+                Restaurant restaurant7 = new Restaurant();
+                restaurant7.setName("Cơm Tấm Sài Gòn");
+                restaurant7.setImageUrl("https://example.com/image7.jpg");
+                restaurant7.setRating(4.4f);
+                restaurant7.setRatingCount(280);
+                restaurant7.setPriceRange("60k-150k");
+                restaurant7.setOpeningStatus("OPEN");
+                restaurant7.setBusinessHours("10:00-21:00");
+                restaurant7.setPhoneNumber("0933333333");
+                restaurant7.setLikes(950);
+                restaurant7.setReviewsCount(160);
+                restaurant7.setDistance(0.0);
+                restaurant7.setCreatedAt(System.currentTimeMillis());
+                restaurant7.setLatitude(21.022222);
+                restaurant7.setLongitude(105.831111);
+                restaurant7.setMenuItems(new ArrayList<>());
+                restaurant7.setCategories(new ArrayList<>());
+                restaurants.add(restaurant7);
+                
+                // Restaurant 8: Pizza Express
+                Restaurant restaurant8 = new Restaurant();
+                restaurant8.setName("Pizza Express");
+                restaurant8.setImageUrl("https://example.com/image8.jpg");
+                restaurant8.setRating(4.5f);
+                restaurant8.setRatingCount(210);
+                restaurant8.setPriceRange("150k-350k");
+                restaurant8.setOpeningStatus("OPEN");
+                restaurant8.setBusinessHours("10:00-22:30");
+                restaurant8.setPhoneNumber("0944444444");
+                restaurant8.setLikes(1500);
+                restaurant8.setReviewsCount(220);
+                restaurant8.setDistance(0.0);
+                restaurant8.setCreatedAt(System.currentTimeMillis());
+                restaurant8.setLatitude(21.014444);
+                restaurant8.setLongitude(105.823889);
+                restaurant8.setMenuItems(new ArrayList<>());
+                restaurant8.setCategories(new ArrayList<>());
+                restaurants.add(restaurant8);
+                
+                // Restaurant 9: Quán Nướng Hàn Quốc
+                Restaurant restaurant9 = new Restaurant();
+                restaurant9.setName("Quán Nướng Hàn Quốc");
+                restaurant9.setImageUrl("https://example.com/image9.jpg");
+                restaurant9.setRating(4.7f);
+                restaurant9.setRatingCount(180);
+                restaurant9.setPriceRange("200k-500k");
+                restaurant9.setOpeningStatus("OPEN");
+                restaurant9.setBusinessHours("16:00-23:00");
+                restaurant9.setPhoneNumber("0911111111");
+                restaurant9.setLikes(1650);
+                restaurant9.setReviewsCount(280);
+                restaurant9.setDistance(0.0);
+                restaurant9.setCreatedAt(System.currentTimeMillis());
+                restaurant9.setLatitude(21.046111);
+                restaurant9.setLongitude(105.833333);
+                restaurant9.setMenuItems(new ArrayList<>());
+                restaurant9.setCategories(new ArrayList<>());
+                restaurants.add(restaurant9);
+                
+                // Restaurant 10: Bún Đậu Mắm Tôm Hà Nội
+                Restaurant restaurant10 = new Restaurant();
+                restaurant10.setName("Bún Đậu Mắm Tôm Hà Nội");
+                restaurant10.setImageUrl("https://example.com/image10.jpg");
+                restaurant10.setRating(4.3f);
+                restaurant10.setRatingCount(320);
+                restaurant10.setPriceRange("50k-120k");
+                restaurant10.setOpeningStatus("OPEN");
+                restaurant10.setBusinessHours("10:00-20:00");
+                restaurant10.setPhoneNumber("0922222222");
+                restaurant10.setLikes(850);
+                restaurant10.setReviewsCount(150);
+                restaurant10.setDistance(0.0);
+                restaurant10.setCreatedAt(System.currentTimeMillis());
+                restaurant10.setLatitude(21.029167);
+                restaurant10.setLongitude(105.847778);
+                restaurant10.setMenuItems(new ArrayList<>());
+                restaurant10.setCategories(new ArrayList<>());
+                restaurants.add(restaurant10);
+                
+                restaurantRepo.saveAll(restaurants);// --- CATEGORIES ---
+                // Create categories for each restaurant
+                // Restaurant 0: Quán Ăn Mai
+                createCategoriesForRestaurant(restaurants.get(0), List.of("Món chính", "Món phụ", "Đồ uống", "Tráng miệng"), categoryRepo);
+                
+                // Restaurant 1: Bún Chả Hà Thành  
+                createCategoriesForRestaurant(restaurants.get(1), List.of("Bún chả", "Món nướng", "Món nước", "Đồ uống"), categoryRepo);
+                
+                // Restaurant 2: Lẩu Thái Tomyum
+                createCategoriesForRestaurant(restaurants.get(2), List.of("Lẩu", "Món hấp", "Đồ uống", "Ăn vặt"), categoryRepo);
+                
+                // Restaurant 3: Bánh Mì Minh Nhật
+                createCategoriesForRestaurant(restaurants.get(3), List.of("Bánh mì", "Đồ uống", "Bánh ngọt"), categoryRepo);
+                
+                // Restaurant 4: Sushi Hokkaido
+                createCategoriesForRestaurant(restaurants.get(4), List.of("Sushi", "Sashimi", "Món nướng", "Đồ uống"), categoryRepo);
+                
+                // Restaurant 5: Phở Thìn Bờ Hồ
+                createCategoriesForRestaurant(restaurants.get(5), List.of("Phở bò", "Phở gà", "Món thêm", "Đồ uống"), categoryRepo);
+                
+                // Restaurant 6: Cơm Tấm Sài Gòn
+                createCategoriesForRestaurant(restaurants.get(6), List.of("Cơm tấm", "Món thêm", "Đồ uống", "Tráng miệng"), categoryRepo);
+                
+                // Restaurant 7: Pizza Express
+                createCategoriesForRestaurant(restaurants.get(7), List.of("Pizza", "Mỳ Ý", "Salad", "Đồ uống"), categoryRepo);
+                
+                // Restaurant 8: Quán Nướng Hàn Quốc
+                createCategoriesForRestaurant(restaurants.get(8), List.of("Món nướng", "Lẩu", "Món ăn kèm", "Đồ uống"), categoryRepo);
+                
+                // Restaurant 9: Bún Đậu Mắm Tôm
+                createCategoriesForRestaurant(restaurants.get(9), List.of("Bún đậu", "Nem rán", "Đồ nguội", "Đồ uống"), categoryRepo);
+                
+                // Save the restaurants with their categories
                 restaurantRepo.saveAll(restaurants);
 
 

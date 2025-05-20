@@ -11,7 +11,6 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @Builder
 public class OrderRequestDTO {
-    private Long userId;
     private Long addressId;
     private Long voucherId;
     private String note; // Ghi chú của người dùng về đơn hàng

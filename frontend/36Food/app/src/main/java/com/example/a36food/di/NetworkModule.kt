@@ -35,7 +35,7 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideBaseUrl(): String {
-        return "http://192.168.1.91:8080/" // For Android emulator
+        return "http://192.168.86.81:8080/" // For Android emulator
     }
 
     @Provides

@@ -7,6 +7,7 @@ import Manager.Restaurant.mai.entity.*;
 import Manager.Restaurant.mai.repository.*;
 import Manager.Restaurant.mai.service.CartService;
 import Manager.Restaurant.mai.service.OrderService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,9 +33,18 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping("/create")
-    public ResponseEntity<?> createOrder(@RequestBody OrderRequestDTO dto) {
+    public ResponseEntity<?> createOrder(HttpServletRequest request, @RequestBody OrderRequestDTO dto) {
         try {
-            Order order = orderService.placeOrder(dto.getUserId(), dto.getAddressId(), dto.getNote());
+            // Lấy userId từ token JWT (được thiết lập trong JwtAuthenticationFilter)
+            Long userId = (Long) request.getAttribute("userId");
+            
+            if (userId == null) {
+                return ResponseEntity.status(401).body(Map.of(
+                    "error", "Không tìm thấy thông tin người dùng trong token"
+                ));
+            }
+            
+            Order order = orderService.placeOrder(userId, dto.getAddressId(), dto.getNote());
             
             OrderResponseDTO response = OrderResponseDTO.builder()
                     .orderId(order.getOrderId())
@@ -51,12 +61,21 @@ public class OrderController {
         }
     }
 
-    @GetMapping("/user/{userId}")
+    @GetMapping("/user")
     public ResponseEntity<?> getUserOrders(
-            @PathVariable Long userId,
+            HttpServletRequest request,
             @RequestParam(required = false) String status
     ) {
         try {
+            // Lấy userId từ token JWT (được thiết lập trong JwtAuthenticationFilter)
+            Long userId = (Long) request.getAttribute("userId");
+            
+            if (userId == null) {
+                return ResponseEntity.status(401).body(Map.of(
+                    "error", "Không tìm thấy thông tin người dùng trong token"
+                ));
+            }
+            
             List<Order> orders = orderService.getUserOrders(userId, status);
             
             List<OrderResponseDTO> responses = orders.stream()
@@ -88,8 +107,17 @@ public class OrderController {
     }
     
     @GetMapping("/{id}/details")
-    public ResponseEntity<?> getOrderDetails(@PathVariable Long id, @RequestParam Long userId) {
+    public ResponseEntity<?> getOrderDetails(@PathVariable Long id, HttpServletRequest request) {
         try {
+            // Lấy userId từ token JWT (được thiết lập trong JwtAuthenticationFilter)
+            Long userId = (Long) request.getAttribute("userId");
+            
+            if (userId == null) {
+                return ResponseEntity.status(401).body(Map.of(
+                    "error", "Không tìm thấy thông tin người dùng trong token"
+                ));
+            }
+            
             Order order = orderService.getOrderWithDetails(id, userId);
             // Chuyển đổi thành DTO phù hợp với frontend
             Map<String, Object> response = new HashMap<>();
@@ -124,8 +152,17 @@ public class OrderController {
     }
 
     @PutMapping("/{id}/cancel")
-    public ResponseEntity<?> cancelOrder(@PathVariable Long id, @RequestParam Long userId) {
+    public ResponseEntity<?> cancelOrder(@PathVariable Long id, HttpServletRequest request) {
         try {
+            // Lấy userId từ token JWT (được thiết lập trong JwtAuthenticationFilter)
+            Long userId = (Long) request.getAttribute("userId");
+            
+            if (userId == null) {
+                return ResponseEntity.status(401).body(Map.of(
+                    "error", "Không tìm thấy thông tin người dùng trong token"
+                ));
+            }
+            
             Order cancelledOrder = orderService.cancelOrder(id, userId);
             
             OrderResponseDTO response = OrderResponseDTO.builder()
@@ -165,8 +202,17 @@ public class OrderController {
     }
 
     @PostMapping("/draft")
-    public ResponseEntity<?> createDraftOrder(@RequestParam Long userId) {
+    public ResponseEntity<?> createDraftOrder(HttpServletRequest request) {
         try {
+            // Lấy userId từ token JWT (được thiết lập trong JwtAuthenticationFilter)
+            Long userId = (Long) request.getAttribute("userId");
+            
+            if (userId == null) {
+                return ResponseEntity.status(401).body(Map.of(
+                    "error", "Không tìm thấy thông tin người dùng trong token"
+                ));
+            }
+            
             Order draftOrder = orderService.createDraftOrder(userId);
             
             OrderResponseDTO response = OrderResponseDTO.builder()

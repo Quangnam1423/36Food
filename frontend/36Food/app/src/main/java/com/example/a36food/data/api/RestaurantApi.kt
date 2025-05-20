@@ -3,6 +3,7 @@ package com.example.a36food.data.api
 import com.example.a36food.data.dto.MenuItemDTO
 import com.example.a36food.data.dto.PaginatedRestaurantsResponse
 import com.example.a36food.data.dto.RestaurantDTO
+import com.example.a36food.data.dto.SearchResponse
 import com.example.a36food.domain.model.Restaurant
 import retrofit2.http.GET
 import retrofit2.http.Path
@@ -52,4 +53,12 @@ interface RestaurantApi {
         @Path("id") id: Long,
         @Query("categoryName") categoryName: String? = null
     ) : List<MenuItemDTO>
+
+    @GET("restaurants/search")
+    suspend fun searchRestaurants(
+        @Query("keyword") keyword: String,
+        @Query("userLat") userLat: Double,
+        @Query("userLng") userLng: Double,
+        @Query("searchBy") searchBy: String = "all"
+    ): SearchResponse
 }

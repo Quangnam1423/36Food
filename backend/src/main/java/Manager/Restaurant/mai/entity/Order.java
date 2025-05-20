@@ -5,6 +5,8 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "orders")
@@ -12,6 +14,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Order {
 
     @Id
@@ -28,11 +31,20 @@ public class Order {
 
     private LocalDateTime orderDate;
     private BigDecimal totalAmount;
-    private String orderStatus;
+    private String orderStatus; // DRAFT, PENDING, PREPARING, DELIVERING, COMPLETED, CANCELLED
+    
+    private String note; // Ghi chú của người dùng về đơn hàng
+    private String restaurantId; // ID của nhà hàng đặt món
+    private BigDecimal itemsTotal; // Tổng giá trị các món
+    private BigDecimal deliveryFee; // Phí giao hàng
 
     @ManyToOne
     @JoinColumn(name = "order_shipping_address", nullable = false)
     private Address shippingAddress;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderItem> orderItems = new ArrayList<>();
 
     private LocalDateTime orderCreatedAt;
     private LocalDateTime orderUpdatedAt;
@@ -42,5 +54,18 @@ public class Order {
     private Voucher voucher;
 
     @Column(name = "is_deleted", nullable = false)
+    @Builder.Default
     private boolean isDeleted = false;
+    
+    // Helper method to add item
+    public void addOrderItem(OrderItem item) {
+        orderItems.add(item);
+        item.setOrder(this);
+    }
+    
+    // Helper method to remove item
+    public void removeOrderItem(OrderItem item) {
+        orderItems.remove(item);
+        item.setOrder(null);
+    }
 }

@@ -22,7 +22,8 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/restaurants")
 @RequiredArgsConstructor
-public class RestaurantController {    private final RestaurantRepository restaurantRepo;
+public class RestaurantController {    
+    private final RestaurantRepository restaurantRepo;
     private final DistanceService distanceService;
     private final GeocodingService geocodingService;
     private final MenuItemRepository menuItemRepo;
@@ -30,8 +31,7 @@ public class RestaurantController {    private final RestaurantRepository restau
     private final ReviewRepository reviewRepo;
     private final CategoryRepository categoryRepo;  
 
-
-    // GET /restaurants lấy tất cả nhà hàng có trong hệ thốngthống
+    // GET /restaurants lấy tất cả nhà hàng có trong hệ thống
     @GetMapping
     public ResponseEntity<List<RestaurantDTO>> getAllRestaurants(
         @RequestParam(required = true) double userLat,
@@ -73,7 +73,8 @@ public class RestaurantController {    private final RestaurantRepository restau
             @RequestParam(defaultValue = "10") double radiusInKm
     ) {
         // Chuyển đổi bán kính từ km sang mét
-        double radiusInMeters = radiusInKm * 1000;          List<RestaurantDTO> nearbyRestaurants = restaurantRepo.findAll().stream()
+        double radiusInMeters = radiusInKm * 1000;          
+        List<RestaurantDTO> nearbyRestaurants = restaurantRepo.findAll().stream()
                 .map(restaurant -> {
                     DistanceService.RouteInfo routeInfo = distanceService.getDistanceAndDuration(
                             userLng, userLat,
@@ -144,7 +145,8 @@ public class RestaurantController {    private final RestaurantRepository restau
             @RequestParam double userLng,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
-    ) {        // Lấy danh sách nhà hàng và số lượng đơn hàng tương ứng
+    ) {        
+        // Lấy danh sách nhà hàng và số lượng đơn hàng tương ứng
         Map<Restaurant, Long> restaurantOrderCount = new HashMap<>();
         
         // Since there's no direct relationship between orders and restaurants,
@@ -161,7 +163,8 @@ public class RestaurantController {    private final RestaurantRepository restau
             double orderProportion = (double)(restaurant.getId() % 5 + 1) / 15.0;
             Long orderCount = Math.round(totalOrders * orderProportion);
             restaurantOrderCount.put(restaurant, orderCount);
-        }          // Chuyển đổi thành danh sách các RestaurantDTO và sắp xếp theo số lượng đơn hàng
+        }          
+        // Chuyển đổi thành danh sách các RestaurantDTO và sắp xếp theo số lượng đơn hàng
         List<RestaurantDTO> popularRestaurants = restaurantOrderCount.entrySet().stream()
                 .map(entry -> {
                     Restaurant restaurant = entry.getKey();
@@ -216,7 +219,8 @@ public class RestaurantController {    private final RestaurantRepository restau
         Map<String, Object> response = new HashMap<>();
         response.put("restaurants", pagedResult);
         response.put("currentPage", page);
-        response.put("totalItems", totalItems);        response.put("totalPages", totalPages);
+        response.put("totalItems", totalItems);        
+        response.put("totalPages", totalPages);
         response.put("hasMore", page < totalPages - 1);
           
         return ResponseEntity.ok(response);
@@ -242,7 +246,8 @@ public class RestaurantController {    private final RestaurantRepository restau
                 .collect(Collectors.groupingBy(
                         review -> review.getRestaurant(),
                         Collectors.averagingDouble(review -> review.getRating())
-                ));          List<RestaurantDTO> topRatedRestaurants = restaurantRatings.entrySet().stream()
+                ));          
+        List<RestaurantDTO> topRatedRestaurants = restaurantRatings.entrySet().stream()
                 .map(entry -> {
                     Restaurant restaurant = entry.getKey();
                     
@@ -301,7 +306,7 @@ public class RestaurantController {    private final RestaurantRepository restau
         return ResponseEntity.ok(response);
     }    
     
-      // GET /restaurants/{id} lấy thông tin chi tiết của một nhà hàng
+    // GET /restaurants/{id} lấy thông tin chi tiết của một nhà hàng
     @GetMapping("/{id}")
     public ResponseEntity<?> getRestaurantById(
             @PathVariable Long id,
@@ -354,7 +359,7 @@ public class RestaurantController {    private final RestaurantRepository restau
         return ResponseEntity.ok(saved);
     }    
 
-      /**
+    /**
      * API để thêm category mới cho nhà hàng (dành cho Restaurant owner)
      * @param id ID của nhà hàng
      * @param requestBody Map chứa tên category
@@ -401,7 +406,7 @@ public class RestaurantController {    private final RestaurantRepository restau
             "restaurantId", restaurant.getId()));
     }   
     
-      /**
+    /**
      * API để lấy danh sách menu items của một nhà hàng theo category
      * @param id ID của nhà hàng
      * @param categoryName Tên category cần lọc
@@ -423,24 +428,94 @@ public class RestaurantController {    private final RestaurantRepository restau
         Restaurant restaurant = restaurantOpt.get();
         List<MenuItem> menuItems;
         
-            if (categoryName != null && !categoryName.isEmpty()) {
-                // Vì chúng ta vẫn đang sử dụng cột category là String trong MenuItem
-                // Nên vẫn sử dụng find by category name
-                menuItems = menuItemRepo.findByRestaurantIdAndCategory(id, categoryName);
-            } else {
-                // Lấy tất cả menu items nếu không có parameter
-                menuItems = menuItemRepo.findByRestaurant(restaurant);
-            }
-            
-            // Kiểm tra nếu không tìm thấy menu items, trả về danh sách trống thay vì null
-            if (menuItems == null) {
-                menuItems = List.of();
-            }
-            
-            List<MenuItemDTO> result = menuItems.stream()
-                    .map(MenuItemDTO::fromEntity)
-                    .collect(Collectors.toList());
-            
-            return ResponseEntity.ok(result);
+        if (categoryName != null && !categoryName.isEmpty()) {
+            // Vì chúng ta vẫn đang sử dụng cột category là String trong MenuItem
+            // Nên vẫn sử dụng find by category name
+            menuItems = menuItemRepo.findByRestaurantIdAndCategory(id, categoryName);
+        } else {
+            // Lấy tất cả menu items nếu không có parameter
+            menuItems = menuItemRepo.findByRestaurant(restaurant);
+        }
+        
+        // Kiểm tra nếu không tìm thấy menu items, trả về danh sách trống thay vì null
+        if (menuItems == null) {
+            menuItems = List.of();
+        }
+        
+        List<MenuItemDTO> result = menuItems.stream()
+                .map(MenuItemDTO::fromEntity)
+                .collect(Collectors.toList());
+        
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * Tìm kiếm nhà hàng theo categories hoặc tên nhà hàng
+     * 
+     * @param keyword Từ khóa tìm kiếm trong categories hoặc tên nhà hàng
+     * @param userLat Vĩ độ người dùng
+     * @param userLng Kinh độ người dùng
+     * @param searchBy Tìm theo "category" hoặc "name" hoặc "all"
+     * @return Danh sách các nhà hàng phù hợp với từ khóa tìm kiếm
+     */
+    @GetMapping("/search")
+    public ResponseEntity<?> searchRestaurants(
+            @RequestParam String keyword,
+            @RequestParam double userLat,
+            @RequestParam double userLng,
+            @RequestParam(defaultValue = "all") String searchBy
+    ) {
+        List<Restaurant> restaurants = new ArrayList<>();
+        
+        if ("category".equals(searchBy) || "all".equals(searchBy)) {
+            // Tìm nhà hàng theo category
+            restaurants.addAll(restaurantRepo.findByCategoryContainingIgnoreCase(keyword));
+        }
+        
+        if ("name".equals(searchBy) || "all".equals(searchBy)) {
+            // Tìm nhà hàng theo tên
+            restaurants.addAll(restaurantRepo.findByNameContainingIgnoreCase(keyword));
+        }
+        
+        // Loại bỏ các nhà hàng trùng lặp nếu tìm cả "name" và "category"
+        List<Restaurant> distinctRestaurants = restaurants.stream()
+                .distinct()
+                .collect(Collectors.toList());
+        
+        // Chuyển đổi danh sách nhà hàng thành DTO để trả về
+        List<RestaurantDTO> result = distinctRestaurants.stream()
+                .map(restaurant -> {
+                    // Tính khoảng cách và thời gian đi từ vị trí người dùng đến nhà hàng
+                    DistanceService.RouteInfo routeInfo = distanceService.getDistanceAndDuration(
+                            userLng, userLat,
+                            restaurant.getLongitude(), restaurant.getLatitude()
+                    );
+                    
+                    // Lấy địa chỉ của nhà hàng từ tọa độ
+                    String address = geocodingService.getAddressFromCoordinates(
+                            restaurant.getLatitude(),
+                            restaurant.getLongitude()
+                    );
+                    
+                    // Tạo DTO với thông tin cần thiết
+                    return RestaurantDTO.fromEntity(
+                            restaurant,
+                            address,
+                            routeInfo.distanceInMeters,
+                            routeInfo.durationInSeconds
+                    );
+                })
+                // Sắp xếp kết quả theo khoảng cách, gần nhất lên đầu
+                .sorted(Comparator.comparingDouble(RestaurantDTO::getDistance))
+                .collect(Collectors.toList());
+        
+        // Thêm metadata cho response
+        Map<String, Object> response = new HashMap<>();
+        response.put("restaurants", result);
+        response.put("totalCount", result.size());
+        response.put("keyword", keyword);
+        response.put("searchBy", searchBy);
+        
+        return ResponseEntity.ok(response);
     }
 }

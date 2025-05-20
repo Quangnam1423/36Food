@@ -161,4 +161,46 @@ class RestaurantRepository @Inject constructor(
     ): List<MenuItemDTO> {
         return restaurantApi.getMenuItems(restaurantId, categoryName)
     }
+
+
+    suspend fun searchRestaurants(
+        keyword: String,
+        latitude: Double,
+        longitude: Double,
+        searchBy: String = "all"
+    ): PaginatedResult<Restaurant> {
+        try {
+            Log.d(
+                "RestaurantRepository",
+                "Searching restaurants: keyword=$keyword, searchBy=$searchBy"
+            )
+            val response = restaurantApi.searchRestaurants(
+                keyword = keyword,
+                userLat = latitude,
+                userLng = longitude,
+                searchBy = searchBy
+            )
+
+            val restaurants = response.restaurants.toDomainModels()
+
+            return PaginatedResult(
+                data = restaurants,
+                currentPage = 0, // API doesn't support pagination for search yet
+                totalPages = 1,   // Assuming all results are returned at once
+                hasMore = false   // No pagination for search results
+            )
+        } catch (e: Exception) {
+            Log.e("RestaurantRepository", "Error searching restaurants", e)
+            when (e) {
+                is HttpException -> {
+                    throw Exception("Failed to search restaurants: ${e.message()}")
+                }
+
+                is java.net.SocketTimeoutException,
+                is IOException -> throw NoConnectionException()
+
+                else -> throw e
+            }
+        }
+    }
 }

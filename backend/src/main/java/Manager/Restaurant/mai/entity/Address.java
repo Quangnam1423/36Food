@@ -16,6 +16,9 @@ public class Address {
     private Long adrId;
 
     private String adr;
+    
+    private Double latitude;
+    private Double longitude;
 
     @ManyToOne
     @JoinColumn(name = "adr_user_id")

@@ -77,6 +77,48 @@ public class CartService {
     public Cart removeItem(Long userId, String itemId) {
         Cart cart = getCartByUser(userId);
         cart.getItems().removeIf(item -> item.getId().equals(itemId));
+        
+        // Nếu xóa tất cả món thì reset restaurantId
+        if (cart.getItems().isEmpty()) {
+            cart.setRestaurantId(null);
+        }
+        
         return cartRepository.save(cart);
+    }
+    
+    public Cart updateItemQuantity(Long userId, String itemId, int quantity) {
+        if (quantity <= 0) {
+            return removeItem(userId, itemId);
+        }
+        
+        Cart cart = getCartByUser(userId);
+        
+        for (CartItem item : cart.getItems()) {
+            if (item.getId().equals(itemId)) {
+                item.setQuantity(quantity);
+                break;
+            }
+        }
+        
+        return cartRepository.save(cart);
+    }
+
+    public void resetCartIfRestaurantDifferent(Long userId, String newRestaurantId) {
+        Cart cart = getCartByUser(userId);
+        
+        // Nếu giỏ hàng trống hoặc nhà hàng trùng khớp, không cần reset
+        if (cart.getItems().isEmpty() || 
+            (cart.getRestaurantId() != null && cart.getRestaurantId().equals(newRestaurantId))) {
+            return;
+        }
+        
+        // Reset giỏ hàng nếu thêm món từ nhà hàng khác
+        clearCart(userId);
+    }
+    
+    // Kiểm tra xem cart có sẵn sàng để đặt hàng không
+    public boolean isCartReadyForOrder(Long userId) {
+        Cart cart = getCartByUser(userId);
+        return !cart.getItems().isEmpty() && cart.getRestaurantId() != null;
     }
 }

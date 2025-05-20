@@ -8,6 +8,8 @@ import java.util.List;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByUserUserIdAndIsDeletedFalse(Long userId);
+    List<Order> findByUser_UserIdAndOrderStatusOrderByOrderDateDesc(Long userId, String status);
+    List<Order> findByUser_UserIdOrderByOrderDateDesc(Long userId);
 }
 
 

@@ -6,14 +6,18 @@ import Manager.Restaurant.mai.dto.PaymentDTO;
 import Manager.Restaurant.mai.entity.*;
 import Manager.Restaurant.mai.repository.*;
 import Manager.Restaurant.mai.service.CartService;
+import Manager.Restaurant.mai.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/orders")
@@ -25,64 +29,51 @@ public class OrderController {
     private final AddressRepository addressRepo;
     private final VoucherRepository voucherRepo;
     private final CartService cartService;
-
+    private final OrderService orderService;
 
     @PostMapping("/create")
     public ResponseEntity<?> createOrder(@RequestBody OrderRequestDTO dto) {
-        Optional<User> userOpt = userRepo.findById(dto.getUserId());
-        Optional<Address> addressOpt = addressRepo.findById(dto.getAddressId());
+        try {
+            Order order = orderService.placeOrder(dto.getUserId(), dto.getAddressId(), dto.getNote());
+            
+            OrderResponseDTO response = OrderResponseDTO.builder()
+                    .orderId(order.getOrderId())
+                    .orderStatus(order.getOrderStatus())
+                    .orderDate(order.getOrderDate())
+                    .totalAmount(order.getTotalAmount())
+                    .build();
 
-        if (userOpt.isEmpty() || addressOpt.isEmpty()) {
-            return ResponseEntity.badRequest().body("Thông tin người dùng hoặc địa chỉ không hợp lệ!");
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Đã xảy ra lỗi khi tạo đơn hàng: " + e.getMessage());
         }
-
-        User user = userOpt.get();
-        Address address = addressOpt.get();
-
-        if (user.isDeleted() || address.isDeleted()) {
-            return ResponseEntity.badRequest().body("Người dùng hoặc địa chỉ đã bị xoá!");
-        }
-
-        // Lấy giỏ hàng hiện tại
-        Cart cart = cartService.getCartByUser(user.getUserId());
-        if (cart.getItems().isEmpty()) {
-            return ResponseEntity.badRequest().body("Giỏ hàng đang trống, không thể tạo đơn hàng!");
-        }
-
-        // Tính tổng tiền từ giỏ hàng
-        double totalPrice = cart.getTotalPrice();
-
-        // Tạo đơn hàng mới
-        Order order = new Order();
-        order.setUser(user);
-        order.setShippingAddress(address);
-        order.setTotalAmount(BigDecimal.valueOf(totalPrice));
-        order.setOrderStatus("PENDING");
-        order.setOrderDate(LocalDateTime.now());
-        order.setOrderCreatedAt(LocalDateTime.now());
-        order.setOrderUpdatedAt(LocalDateTime.now());
-        order.setDeleted(false);
-        order.setPayment(null);
-
-        if (dto.getVoucherId() != null) {
-            voucherRepo.findById(dto.getVoucherId()).ifPresent(order::setVoucher);
-        }
-
-        Order savedOrder = orderRepo.save(order);
-
-        // Xoá giỏ hàng sau khi đặt đơn
-        cartService.clearCart(user.getUserId());
-
-        OrderResponseDTO response = OrderResponseDTO.builder()
-                .orderId(savedOrder.getOrderId())
-                .orderStatus(savedOrder.getOrderStatus())
-                .orderDate(savedOrder.getOrderDate())
-                .totalAmount(savedOrder.getTotalAmount())
-                .build();
-
-        return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<?> getUserOrders(
+            @PathVariable Long userId,
+            @RequestParam(required = false) String status
+    ) {
+        try {
+            List<Order> orders = orderService.getUserOrders(userId, status);
+            
+            List<OrderResponseDTO> responses = orders.stream()
+                    .map(order -> OrderResponseDTO.builder()
+                            .orderId(order.getOrderId())
+                            .orderStatus(order.getOrderStatus())
+                            .orderDate(order.getOrderDate())
+                            .updatedAt(order.getOrderUpdatedAt())
+                            .totalAmount(order.getTotalAmount())
+                            .build())
+                    .collect(Collectors.toList());
+            
+            return ResponseEntity.ok(responses);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Đã xảy ra lỗi khi lấy danh sách đơn hàng: " + e.getMessage());
+        }
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getOrderStatus(@PathVariable Long id) {
@@ -95,35 +86,62 @@ public class OrderController {
                 )))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
+    
+    @GetMapping("/{id}/details")
+    public ResponseEntity<?> getOrderDetails(@PathVariable Long id, @RequestParam Long userId) {
+        try {
+            Order order = orderService.getOrderWithDetails(id, userId);
+            // Chuyển đổi thành DTO phù hợp với frontend
+            Map<String, Object> response = new HashMap<>();
+            response.put("orderId", order.getOrderId());
+            response.put("status", order.getOrderStatus());
+            response.put("orderDate", order.getOrderDate());
+            response.put("updatedAt", order.getOrderUpdatedAt());
+            response.put("totalAmount", order.getTotalAmount());
+            response.put("itemsTotal", order.getItemsTotal());
+            response.put("deliveryFee", order.getDeliveryFee());
+            response.put("note", order.getNote() != null ? order.getNote() : "");
+            response.put("restaurantId", order.getRestaurantId());
+            response.put("shippingAddress", order.getShippingAddress().getAdr());
+            response.put("items", order.getOrderItems().stream().map(item -> {
+                Map<String, Object> itemMap = new HashMap<>();
+                itemMap.put("id", item.getId());
+                itemMap.put("name", item.getName());
+                itemMap.put("price", item.getPrice());
+                itemMap.put("quantity", item.getQuantity());
+                itemMap.put("imageUrl", item.getImageUrl());
+                itemMap.put("note", item.getNote() != null ? item.getNote() : "");
+                return itemMap;
+            }).collect(Collectors.toList())
+        );
+            
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Đã xảy ra lỗi khi lấy chi tiết đơn hàng: " + e.getMessage());
+        }
+    }
 
     @PutMapping("/{id}/cancel")
-    public ResponseEntity<?> cancelOrder(@PathVariable Long id) {
-        return orderRepo.findById(id)
-                .filter(order -> !order.isDeleted())
-                .map(order -> {
-                    if ("CANCELLED".equalsIgnoreCase(order.getOrderStatus())) {
-                        return ResponseEntity.badRequest().body("Đơn hàng đã bị hủy trước đó.");
-                    }
-                    if (order.getPayment() != null &&
-                            "PAID".equalsIgnoreCase(order.getPayment().getPaymentStatus())) {
-                        return ResponseEntity.badRequest().body("Không thể hủy đơn đã thanh toán.");
-                    }
+    public ResponseEntity<?> cancelOrder(@PathVariable Long id, @RequestParam Long userId) {
+        try {
+            Order cancelledOrder = orderService.cancelOrder(id, userId);
+            
+            OrderResponseDTO response = OrderResponseDTO.builder()
+                    .orderId(cancelledOrder.getOrderId())
+                    .orderStatus(cancelledOrder.getOrderStatus())
+                    .orderDate(cancelledOrder.getOrderDate())
+                    .updatedAt(cancelledOrder.getOrderUpdatedAt())
+                    .totalAmount(cancelledOrder.getTotalAmount())
+                    .build();
 
-                    order.setOrderStatus("CANCELLED");
-                    order.setOrderUpdatedAt(LocalDateTime.now());
-                    Order cancelledOrder = orderRepo.save(order);
-
-                    OrderResponseDTO response = OrderResponseDTO.builder()
-                            .orderId(cancelledOrder.getOrderId())
-                            .orderStatus(cancelledOrder.getOrderStatus())
-                            .orderDate(cancelledOrder.getOrderDate())
-                            .updatedAt(cancelledOrder.getOrderUpdatedAt())
-                            .totalAmount(cancelledOrder.getTotalAmount())
-                            .build();
-
-                    return ResponseEntity.ok(response);
-                })
-                .orElseGet(() -> ResponseEntity.notFound().build());
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Đã xảy ra lỗi khi hủy đơn hàng: " + e.getMessage());
+        }
     }
 
     //Cập nhật trạng thái đơn hàng//
@@ -146,5 +164,23 @@ public class OrderController {
         return ResponseEntity.ok("Cập nhật trạng thái đơn hàng thành công.");
     }
 
+    @PostMapping("/draft")
+    public ResponseEntity<?> createDraftOrder(@RequestParam Long userId) {
+        try {
+            Order draftOrder = orderService.createDraftOrder(userId);
+            
+            OrderResponseDTO response = OrderResponseDTO.builder()
+                    .orderId(draftOrder.getOrderId())
+                    .orderStatus(draftOrder.getOrderStatus())
+                    .orderDate(draftOrder.getOrderDate())
+                    .totalAmount(draftOrder.getItemsTotal())
+                    .build();
 
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Đã xảy ra lỗi khi tạo đơn hàng nháp: " + e.getMessage());
+        }
+    }
 }

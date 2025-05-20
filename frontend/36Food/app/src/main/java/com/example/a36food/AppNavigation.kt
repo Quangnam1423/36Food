@@ -181,11 +181,15 @@ fun AppNavigation() {
 
                 composable(Screen.Search.route) {
                     SearchingScreen(
-                        onNavigateToHome = { navController.navigate(Screen.Home.route) },
-                        onNavigateToSearch = { /* Already on search */ },
+                        onNavigateToHome = { navController.navigate(Screen.Home.route) { popUpTo(0) } },
                         onNavigateToFavorite = { navController.navigate(Screen.Favorite.route) },
                         onNavigateToHistory = { navController.navigate(Screen.History.route) },
-                        onNavigateToProfile = { navController.navigate(Screen.Profile.route) }
+                        onNavigateToProfile = { navController.navigate(Screen.Profile.route) },
+                        onRestaurantClick = { restaurantId ->
+                            navController.navigate(Screen.RestaurantDetail.createRoute(restaurantId))
+                        },
+                        onCartClick = { /* No cart screen yet */ },
+                        onNetworkError = { navController.navigate(Screen.NoConnection.route) }
                     )
                 }
 

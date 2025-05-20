@@ -1,6 +1,7 @@
 package com.example.a36food.di
 
 import android.content.Context
+import com.example.a36food.data.api.CartApi
 import com.example.a36food.data.api.LocationApi
 import com.example.a36food.data.api.RestaurantApi
 import com.example.a36food.data.api.UserApi
@@ -96,5 +97,11 @@ object NetworkModule {
     @Singleton
     fun provideLocationApi(retrofit: Retrofit) : LocationApi {
         return retrofit.create(LocationApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCartApi(retrofit: Retrofit) : CartApi {
+        return retrofit.create(CartApi::class.java)
     }
 }

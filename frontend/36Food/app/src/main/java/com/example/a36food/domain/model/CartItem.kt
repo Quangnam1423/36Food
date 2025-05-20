@@ -1,10 +1,13 @@
 package com.example.a36food.domain.model
 
 data class CartItem(
-    override val id: String,
-    override val name: String,
-    override val price: Double,
-    override val quantity: Int,
-    override val imageUrl: String,
-    override val note: String = ""
-) : IOrderable
+    val id: String,
+    val name: String,
+    val price: Double,
+    val quantity: Int,
+    val imageUrl: String,
+    val note: String? = null
+) {
+    val totalPrice: Double
+        get() = price * quantity
+}

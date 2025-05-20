@@ -16,8 +16,10 @@ import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,31 +46,61 @@ import com.example.a36food.presentation.viewmodel.RestaurantDetailViewModel
 fun RestaurantDetailScreen(
     viewModel: RestaurantDetailViewModel = hiltViewModel(),
     onBackClick: () -> Unit,
+    onNetWorkError: () -> Unit = {},
     onCartClick: () -> Unit = {}
 ) {
     val state by viewModel.state.collectAsState()
+    val cartState by viewModel.cartState.collectAsState()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+
+    val snackbarHostState = remember { SnackbarHostState() }
     val pullRefreshState = rememberPullRefreshState(
         refreshing = state.isLoading,
         onRefresh = { viewModel.refreshData() }
     )
 
-    Box(
+    LaunchedEffect(Unit) {
+        viewModel.setNetworkErrorHandler{
+            onNetWorkError()
+        }
+    }
+
+    LaunchedEffect(cartState.success) {
+        cartState.success?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearCartMessage()
+        }
+    }
+
+    LaunchedEffect(cartState.error) {
+        cartState.error?.let {
+            snackbarHostState.showSnackbar(
+                message = it,
+                actionLabel = "OK"
+            )
+            viewModel.clearCartMessage()
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            RestaurantDetailTopBar(
+                title = state.restaurant?.name ?: "",
+                onBackClick = onBackClick,
+                onCartClick = onCartClick,
+                scrollBehavior = scrollBehavior
+            )
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         modifier = Modifier
             .fillMaxSize()
-            .pullRefresh(pullRefreshState)
-    ) {
-        Scaffold(
-            topBar = {
-                RestaurantDetailTopBar(
-                    title = state.restaurant?.name ?: "",
-                    onBackClick = onBackClick,
-                    onCartClick = onCartClick,
-                    scrollBehavior = scrollBehavior
-                )
-            },
-            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
-        ) { innerPadding ->
+            .nestedScroll(scrollBehavior.nestedScrollConnection)
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .pullRefresh(pullRefreshState)
+        ) {
             if (state.isLoading && state.restaurant == null) {
                 LoadingScreen()
             } else if (state.restaurant != null) {
@@ -79,6 +111,7 @@ fun RestaurantDetailScreen(
                     menuCategories = state.menuCategories,
                     selectedCategory = state.selectedCategory,
                     onCategorySelected = { viewModel.selectCategory(it) },
+                    onAddToCart = { foodItem -> viewModel.showAddToCartDialog(foodItem) },
                     modifier = Modifier.padding(innerPadding)
                 )
             }
@@ -86,17 +119,185 @@ fun RestaurantDetailScreen(
             state.errorMessage?.let { message ->
                 ErrorMessage(
                     message = message,
-                    onDismiss = { /* TODO: Add error dismiss action */ }
+                    onDismiss = { viewModel.clearErrorMessage() }
+                )
+            }
+
+            PullRefreshIndicator(
+                refreshing = state.isLoading,
+                state = pullRefreshState,
+                modifier = Modifier.align(Alignment.TopCenter)
+            )
+
+            if (state.showAddToCartDiaLog && state.selectedFoodItem != null) {
+                AddToCartDialog(
+                    foodItem = state.selectedFoodItem!!,
+                    quantity = state.itemQuantity,
+                    note = state.itemNote,
+                    onQuantityChange = { viewModel.updateItemQuantity(it) },
+                    onNoteChange = { viewModel.updateItemNote(it) },
+                    onDismiss = { viewModel.hideAddToCartDialog() },
+                    onConfirm = { viewModel.addToCartWithDetails() },
+                    isLoading = cartState.isLoading
                 )
             }
         }
-
-        PullRefreshIndicator(
-            refreshing = state.isLoading,
-            state = pullRefreshState,
-            modifier = Modifier.align(Alignment.TopCenter)
-        )
     }
+}
+
+@Composable
+fun AddToCartDialog(
+    foodItem: FoodItem,
+    quantity: Int,
+    note: String,
+    onQuantityChange: (Int) -> Unit,
+    onNoteChange: (String) -> Unit,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+    isLoading: Boolean
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Thêm vào giỏ hàng",
+                style = MaterialTheme.typography.titleLarge
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+            ) {
+                // Food name
+                Text(
+                    text = foodItem.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Medium
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Price
+                Text(
+                    text = "${formatPrice(foodItem.price)}đ",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Quantity selector
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Số lượng:",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        IconButton(
+                            onClick = { onQuantityChange(quantity - 1) },
+                            enabled = quantity > 1
+                        ) {
+                            Icon(
+                                Icons.Default.Remove,
+                                contentDescription = "Decrease quantity",
+                                tint = if (quantity > 1)
+                                    MaterialTheme.colorScheme.primary
+                                else
+                                    Color.Gray
+                            )
+                        }
+
+                        Text(
+                            text = quantity.toString(),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+
+                        IconButton(
+                            onClick = { onQuantityChange(quantity + 1) }
+                        ) {
+                            Icon(
+                                Icons.Default.Add,
+                                contentDescription = "Increase quantity",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Note input
+                OutlinedTextField(
+                    value = note,
+                    onValueChange = onNoteChange,
+                    label = { Text("Ghi chú (tùy chọn)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("Ví dụ: ít đá, không đường...") },
+                    maxLines = 3
+                )
+
+                // Total price
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Tổng cộng:",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Text(
+                        text = "${formatPrice(foodItem.price * quantity)}đ",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                ),
+                enabled = !isLoading
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+                Text("Thêm vào giỏ")
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                enabled = !isLoading
+            ) {
+                Text("Hủy")
+            }
+        }
+    )
 }
 
 @Composable
@@ -107,6 +308,7 @@ fun RestaurantDetailContent(
     menuCategories: List<String>,
     selectedCategory: String?,
     onCategorySelected: (String?) -> Unit,
+    onAddToCart: (FoodItem) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -136,14 +338,16 @@ fun RestaurantDetailContent(
                 }
             }
         }
-        // Menu Items
         else if (menuItems.isEmpty()) {
             item {
                 EmptyMenuMessage()
             }
         } else {
             items(menuItems) { foodItem ->
-                MenuItemCard(foodItem)
+                MenuItemCard(
+                    foodItem = foodItem,
+                    onAddToCart = onAddToCart
+                )
             }
         }
     }
@@ -378,9 +582,13 @@ fun CategoryFilterSection(
 }
 
 @Composable
-fun MenuItemCard(foodItem: FoodItem) {
+fun MenuItemCard(
+    foodItem: FoodItem,
+    onAddToCart: (FoodItem) -> Unit,
+    modifier: Modifier = Modifier
+) {
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
         colors = CardDefaults.cardColors(
@@ -394,7 +602,7 @@ fun MenuItemCard(foodItem: FoodItem) {
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Food image - using Box with background color as fallback
+            // Food image
             Box(
                 modifier = Modifier
                     .size(80.dp)
@@ -408,7 +616,6 @@ fun MenuItemCard(foodItem: FoodItem) {
                         .build(),
                     contentDescription = "Food image",
                     contentScale = ContentScale.Crop,
-                    // Remove problematic placeholder and use a fallback icon instead
                     error = painterResource(R.drawable.ic_broken_image),
                     modifier = Modifier.fillMaxSize()
                 )
@@ -445,9 +652,9 @@ fun MenuItemCard(foodItem: FoodItem) {
                 )
             }
 
-            // Add to cart button
+            // Add to cart button - now shows dialog instead of direct add
             IconButton(
-                onClick = { /* TODO: Add to cart functionality */ },
+                onClick = { onAddToCart(foodItem) },
                 modifier = Modifier
                     .size(36.dp)
                     .background(

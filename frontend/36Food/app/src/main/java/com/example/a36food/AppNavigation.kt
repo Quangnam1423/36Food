@@ -36,6 +36,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.a36food.presentation.screens.CartScreen
 import com.example.a36food.presentation.screens.ChangePasswordScreen
 import com.example.a36food.presentation.screens.NoConnectionScreen
 import com.example.a36food.presentation.screens.foodscreen.FoodDetailScreen
@@ -55,6 +56,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 sealed class Screen(val route: String) {
     data object Introduce : Screen("introduce")
     data object NoConnection : Screen("no_connection")
+    data object Cart: Screen("cart")
     data object Login : Screen("login")
     data object Register : Screen("register")
     data object Home : Screen("home")
@@ -93,6 +95,19 @@ fun AppNavigation() {
                 navController = navController,
                 startDestination = Screen.Introduce.route
             ) {
+                composable(Screen.Cart.route) {
+                    CartScreen(
+                        onBackClick = { navController.popBackStack() },
+                        onNetworkError = {
+                            navController.navigate(Screen.NoConnection.route)
+                        },
+                        onCheckoutClick = {
+
+                        }
+                    )
+                }
+
+
                 composable(Screen.Introduce.route) {
                     IntroduceScreen(
                         onNavigateToHome = {
@@ -175,6 +190,9 @@ fun AppNavigation() {
                         },
                         onNetworkError = {
                             navController.navigate(Screen.NoConnection.route)
+                        },
+                        onCartClick = {
+                            navController.navigate(Screen.Cart.route)
                         }
                     )
                 }
@@ -253,7 +271,10 @@ fun AppNavigation() {
 
                     RestaurantDetailScreen(
                         onBackClick = { navController.popBackStack() },
-                        onCartClick = { /* TODO: Implement cart functionality */ }
+                        onNetWorkError = {
+                            navController.navigate(Screen.NoConnection.route)
+                        },
+                        onCartClick = { navController.navigate(Screen.Cart.route) },
                     )
                 }
 

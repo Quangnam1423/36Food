@@ -34,8 +34,9 @@ public class SecurityConfig {
                 // Admin-only endpoints
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 // Restaurant owner endpoints - for adding new items or categories (POST/PUT operations)
-                .requestMatchers(HttpMethod.POST, "/restaurants/{id}/menu/**", "/restaurants/{id}/categories/**").hasAnyRole("ADMIN", "RESTAURANT_OWNER")
-                .requestMatchers(HttpMethod.PUT, "/restaurants/{id}/menu/**", "/restaurants/{id}/categories/**").hasAnyRole("ADMIN", "RESTAURANT_OWNER")
+                .requestMatchers(HttpMethod.POST, "/restaurants/{id}/menu/**", "/restaurants/{id}/categories/**").hasAnyRole("ADMIN", "RESTAURANT_OWNER")                .requestMatchers(HttpMethod.PUT, "/restaurants/{id}/menu/**", "/restaurants/{id}/categories/**").hasAnyRole("ADMIN", "RESTAURANT_OWNER")
+                // Cart endpoints - all require authentication
+                .requestMatchers("/api/cart/**").authenticated()
                 // Specific authenticated user endpoints
                 .requestMatchers("/user/profile", "/user/update", "/user/delete", "/user/change-password", "/users/change-password").authenticated()
                 // Any other endpoints

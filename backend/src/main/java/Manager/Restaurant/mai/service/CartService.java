@@ -11,16 +11,16 @@ import lombok.*;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class CartService {
-
-    private final CartRepository cartRepository;
+public class CartService {private final CartRepository cartRepository;
     private final UserRepository userRepository;
-    private final CartItemRepository cartItemRepository;
-
+    private final CartItemRepository cartItemRepository;    
+    
     public Cart getCartByUser(Long userId) {
         // Tìm giỏ hàng của user hoặc tạo mới nếu không có
         return cartRepository.findByUser_UserId(userId).orElseGet(() -> {
@@ -32,21 +32,22 @@ public class CartService {
                     .build();
             return cartRepository.save(cart);
         });
-    }
-
-    public Cart addItemToCart(Long userId, CartItemRequest request) {
+    }    
+    
+    public Map<String, Object> addItemToCart(Long userId, CartItemRequest request) {
         // Tìm giỏ hàng của người dùng
         Cart cart = getCartByUser(userId);
 
-        // Kiểm tra nếu giỏ hàng đã có nhà hàng khác, throw exception nếu có
+        // Flag để theo dõi nếu giỏ hàng đã được reset
+        boolean wasReset = false;
+        
+        // Kiểm tra nếu giỏ hàng đã có nhà hàng khác, tự động reset giỏ hàng
         if (cart.getRestaurantId() != null && !cart.getRestaurantId().equals(request.getRestaurantId())) {
-            throw new IllegalStateException("Chỉ được đặt món từ một nhà hàng tại một thời điểm.");
-        }
-
-        // Nếu giỏ hàng chưa có nhà hàng, set restaurantId mới
-        if (cart.getRestaurantId() == null) {
-            cart.setRestaurantId(request.getRestaurantId());
-        }
+            // Xóa tất cả các mục trong giỏ hàng hiện tại
+            cart.getItems().clear();
+            wasReset = true;
+        }        // Set restaurantId cho giỏ hàng
+        cart.setRestaurantId(request.getRestaurantId());
 
         // Tạo món mới trong giỏ hàng
         CartItem item = CartItem.builder()
@@ -63,7 +64,14 @@ public class CartService {
         cart.getItems().add(item);
 
         // Lưu giỏ hàng với các món mới
-        return cartRepository.save(cart); // Cascade sẽ lưu CartItem
+        Cart savedCart = cartRepository.save(cart); // Cascade sẽ lưu CartItem
+        
+        // Trả về Map chứa thông tin cart và trạng thái reset
+        Map<String, Object> result = new HashMap<>();
+        result.put("cart", savedCart);
+        result.put("wasReset", wasReset);
+        
+        return result;
     }
 
 
@@ -85,8 +93,7 @@ public class CartService {
         
         return cartRepository.save(cart);
     }
-    
-    public Cart updateItemQuantity(Long userId, String itemId, int quantity) {
+      public Cart updateItemQuantity(Long userId, String itemId, int quantity) {
         if (quantity <= 0) {
             return removeItem(userId, itemId);
         }
@@ -101,19 +108,6 @@ public class CartService {
         }
         
         return cartRepository.save(cart);
-    }
-
-    public void resetCartIfRestaurantDifferent(Long userId, String newRestaurantId) {
-        Cart cart = getCartByUser(userId);
-        
-        // Nếu giỏ hàng trống hoặc nhà hàng trùng khớp, không cần reset
-        if (cart.getItems().isEmpty() || 
-            (cart.getRestaurantId() != null && cart.getRestaurantId().equals(newRestaurantId))) {
-            return;
-        }
-        
-        // Reset giỏ hàng nếu thêm món từ nhà hàng khác
-        clearCart(userId);
     }
     
     // Kiểm tra xem cart có sẵn sàng để đặt hàng không

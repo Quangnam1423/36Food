@@ -89,7 +89,8 @@ fun HomeScreen(
     onNavigateToHistory: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
     onRestaurantClick: (String) -> Unit = {},
-    onNetworkError: () -> Unit = {}
+    onNetworkError: () -> Unit = {},
+    onCartClick: () -> Unit = {},
 ) {
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -108,7 +109,8 @@ fun HomeScreen(
             HomeTopAppBar(
                 location = state.userAddress,
                 isLoading = state.isLocationLoading,
-                scrollBehavior = scrollBehavior
+                scrollBehavior = scrollBehavior,
+                onCartClick = onCartClick
             )
         },
         bottomBar = {
@@ -145,6 +147,7 @@ fun HomeScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeTopAppBar(
+    onCartClick: () -> Unit = {},
     location: String,
     isLoading: Boolean = false,
     scrollBehavior: TopAppBarScrollBehavior
@@ -200,17 +203,8 @@ fun HomeTopAppBar(
         actions = {
             CartIcon(
                 cartCount = 3,
-                onClick = {},
+                onClick = {onCartClick()},
             )
-            IconButton(
-                onClick = {},
-                modifier = Modifier.size(40.dp)
-            ) {
-                MessageIcon(
-                    messageCount = 3,
-                    onClick = {}
-                )
-            }
         },
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = Color(0xFFFF5722),

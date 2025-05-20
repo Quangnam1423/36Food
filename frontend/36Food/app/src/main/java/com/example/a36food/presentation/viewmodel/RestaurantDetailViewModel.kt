@@ -1,12 +1,16 @@
 package com.example.a36food.presentation.viewmodel
 
+import android.content.SharedPreferences
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.a36food.data.dto.MenuItemDTO
+import com.example.a36food.data.dto.CartItemRequest
+import com.example.a36food.data.network.NetworkErrorHandler
+import com.example.a36food.data.repository.CartRepository
 import com.example.a36food.data.repository.LocationRepository
 import com.example.a36food.data.repository.RestaurantRepository
+import com.example.a36food.domain.model.CartItem
 import com.example.a36food.domain.model.FoodItem
 import com.example.a36food.domain.model.Restaurant
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,24 +28,206 @@ data class RestaurantDetailState(
     val menuItems: List<FoodItem> = emptyList(),
     val menuCategories: List<String> = emptyList(),
     val selectedCategory: String? = null,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val showAddToCartDiaLog: Boolean = false,
+    val selectedFoodItem: FoodItem? = null,
+    val itemQuantity: Int = 1,
+    val itemNote: String = ""
+)
+
+data class CartOperationState(
+    val isLoading: Boolean = false,
+    val success: String? = null,
+    val error: String? = null,
+    val cart: Unit? = null,
+    val lastAddedItemId: String? = null
 )
 
 @HiltViewModel
 class RestaurantDetailViewModel @Inject constructor(
     private val restaurantRepository: RestaurantRepository,
+    private val cartRepository: CartRepository,
+    private val sharedPreferences: SharedPreferences,
     private val locationRepository: LocationRepository,
+    private val networkErrorHandler: NetworkErrorHandler,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(RestaurantDetailState())
     val state: StateFlow<RestaurantDetailState> = _state.asStateFlow()
 
+    private val _cartState = MutableStateFlow(CartOperationState())
+    val cartState: StateFlow<CartOperationState> = _cartState.asStateFlow()
+
+    private var _onNetworkError: (() -> Unit)? = null
+
+    fun setNetworkErrorHandler(handler: () -> Unit) {
+        _onNetworkError = handler
+    }
+
     init {
         // Extract restaurant ID from navigation arguments
         savedStateHandle.get<String>("restaurantId")?.let { id ->
             loadRestaurantDetails(id.toLong())
         }
+    }
+
+    fun showAddToCartDialog(food: FoodItem) {
+        _state.update {
+            it.copy(
+                showAddToCartDiaLog = true,
+                selectedFoodItem = food,
+                itemQuantity = 1,
+                itemNote = ""
+            )
+        }
+    }
+
+    fun hideAddToCartDialog() {
+        _state.update{
+            it.copy(showAddToCartDiaLog = false,
+                selectedFoodItem = null
+            )
+        }
+    }
+
+    fun updateItemQuantity(quantity: Int) {
+        if(quantity >= 1) {
+            _state.update{it.copy(itemQuantity = quantity)}
+        }
+    }
+
+    fun updateItemNote(note: String) {
+        _state.update { it.copy(itemNote = note) }
+    }
+
+    fun addToCartWithDetails() {
+        state.value.selectedFoodItem?.let { food ->
+            viewModelScope.launch {
+                _cartState.update { it.copy(isLoading = true, error = null) }
+
+                val token = sharedPreferences.getString("access_token", null)
+                if (token.isNullOrEmpty()) {
+                    _cartState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = "Vui lòng đăng nhập để thêm món ăn vào giỏ hàng"
+                        )
+                    }
+                    return@launch
+                }
+
+                val restaurantId = state.value.restaurant?.id
+
+                val cartItem = restaurantId?.let {
+                    CartItemRequest(
+                        id = food.id,
+                        name = food.name,
+                        price = food.price,
+                        quantity = state.value.itemQuantity,
+                        imageUrl = food.imageUrl,
+                        note = if (state.value.itemNote.isBlank()) null else state.value.itemNote,
+                        restaurantId = it
+                    )
+                }
+
+                val result = networkErrorHandler.safeApiCall(
+                    apiCall = {
+                        if (cartItem != null) {
+                            cartRepository.addItemToCart(token, cartItem)
+                        }
+                    },
+                    onNetworkError = { _onNetworkError?.invoke() }
+                )
+
+                result.fold(
+                    onSuccess = { cart ->
+                        _cartState.update {
+                            it.copy(
+                                isLoading = false,
+                                success = "Đã thêm ${food.name} vào giỏ hàng",
+                                cart = cart,
+                                lastAddedItemId = food.id
+                            )
+                        }
+                        hideAddToCartDialog()
+                    },
+                    onFailure = { error ->
+                        _cartState.update {
+                            it.copy(
+                                isLoading = false,
+                                error = error.message ?: "Không thể thêm món ăn vào giỏ hàng"
+                            )
+                        }
+                    }
+                )
+            }
+        }
+    }
+
+    fun addToCart(food: FoodItem) {
+        viewModelScope.launch {
+            _cartState.update { it.copy(isLoading = true, error = null) }
+
+            val token = sharedPreferences.getString("access_token", null)
+            if (token.isNullOrEmpty()) {
+                _cartState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = "Vui lòng đăng nhập để thêm món ăn vào giỏ hàng"
+                    )
+                }
+                return@launch
+            }
+
+            val restaurantId = state.value.restaurant?.id
+
+            val cartItem = restaurantId?.let {
+                CartItemRequest(
+                    id = food.id,
+                    name = food.name,
+                    price = food.price,
+                    quantity = state.value.itemQuantity,
+                    imageUrl = food.imageUrl,
+                    note = if (state.value.itemNote.isBlank()) null else state.value.itemNote,
+                    restaurantId = it
+                )
+            }
+
+            val result = networkErrorHandler.safeApiCall(
+                apiCall = {
+                    if (cartItem != null) {
+                        cartRepository.addItemToCart(token, cartItem)
+                    }
+                },
+                onNetworkError = { _onNetworkError?.invoke() }
+            )
+
+            result.fold(
+                onSuccess = { cart ->
+                    _cartState.update {
+                        it.copy(
+                            isLoading = false,
+                            success = "Đã thêm ${food.name} vào giỏ hàng",
+                            cart = cart,
+                            lastAddedItemId = food.id
+                        )
+                    }
+                },
+                onFailure = { error ->
+                    _cartState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = error.message ?: "Không thể thêm món ăn vào giỏ hàng"
+                        )
+                    }
+                }
+            )
+        }
+    }
+
+    fun clearCartMessage() {
+        _cartState.update { it.copy(success = null, error = null, lastAddedItemId = null) }
     }
 
     private fun loadRestaurantDetails(restaurantId: Long) {
@@ -125,6 +311,12 @@ class RestaurantDetailViewModel @Inject constructor(
                     )
                 }
             }
+        }
+    }
+
+    fun clearErrorMessage() {
+        _state.update { currentState ->
+            currentState.copy(errorMessage = null)
         }
     }
 

@@ -14,4 +14,7 @@ public class OrderResponseDTO {
     private LocalDateTime orderDate;
     private LocalDateTime updatedAt;
     private BigDecimal totalAmount;
+    private BigDecimal deliveryFee;
+    private String restaurantAddress; // Địa chỉ nhà hàng (nơi giao)
+    private String customerAddress; // Địa chỉ khách hàng (nơi nhận)
 }

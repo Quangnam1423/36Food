@@ -26,12 +26,12 @@ import java.util.stream.Collectors;
 public class OrderController {
 
     private final OrderRepository orderRepo;
-    private final UserRepository userRepo;
+    private final UserRepository userRepo;    
     private final AddressRepository addressRepo;
     private final VoucherRepository voucherRepo;
     private final CartService cartService;
     private final OrderService orderService;
-
+    
     @PostMapping("/create")
     public ResponseEntity<?> createOrder(HttpServletRequest request, @RequestBody OrderRequestDTO dto) {
         try {
@@ -44,13 +44,21 @@ public class OrderController {
                 ));
             }
             
-            Order order = orderService.placeOrder(userId, dto.getAddressId(), dto.getNote());
+            if (dto.getLatitude() == null || dto.getLongitude() == null) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Vui lòng cung cấp kinh độ và vĩ độ"
+                ));
+            }              // Gọi phương thức đặt hàng mới trong service
+            Order order = orderService.placeOrderFromCart(userId, dto.getLatitude(), dto.getLongitude());
             
             OrderResponseDTO response = OrderResponseDTO.builder()
                     .orderId(order.getOrderId())
                     .orderStatus(order.getOrderStatus())
                     .orderDate(order.getOrderDate())
                     .totalAmount(order.getTotalAmount())
+                    .deliveryFee(order.getDeliveryFee())
+                    .restaurantAddress(order.getRestaurantAddress())
+                    .customerAddress(order.getCustomerAddress())
                     .build();
 
             return ResponseEntity.ok(response);
@@ -77,14 +85,16 @@ public class OrderController {
             }
             
             List<Order> orders = orderService.getUserOrders(userId, status);
-            
-            List<OrderResponseDTO> responses = orders.stream()
+              List<OrderResponseDTO> responses = orders.stream()
                     .map(order -> OrderResponseDTO.builder()
                             .orderId(order.getOrderId())
                             .orderStatus(order.getOrderStatus())
                             .orderDate(order.getOrderDate())
                             .updatedAt(order.getOrderUpdatedAt())
                             .totalAmount(order.getTotalAmount())
+                            .deliveryFee(order.getDeliveryFee())
+                            .restaurantAddress(order.getRestaurantAddress())
+                            .customerAddress(order.getCustomerAddress())
                             .build())
                     .collect(Collectors.toList());
             
@@ -130,6 +140,8 @@ public class OrderController {
             response.put("deliveryFee", order.getDeliveryFee());
             response.put("note", order.getNote() != null ? order.getNote() : "");
             response.put("restaurantId", order.getRestaurantId());
+            response.put("restaurantAddress", order.getRestaurantAddress()); // Địa chỉ nhà hàng
+            response.put("customerAddress", order.getCustomerAddress()); // Địa chỉ khách hàng
             response.put("shippingAddress", order.getShippingAddress().getAdr());
             response.put("items", order.getOrderItems().stream().map(item -> {
                 Map<String, Object> itemMap = new HashMap<>();
@@ -164,13 +176,15 @@ public class OrderController {
             }
             
             Order cancelledOrder = orderService.cancelOrder(id, userId);
-            
-            OrderResponseDTO response = OrderResponseDTO.builder()
+              OrderResponseDTO response = OrderResponseDTO.builder()
                     .orderId(cancelledOrder.getOrderId())
                     .orderStatus(cancelledOrder.getOrderStatus())
                     .orderDate(cancelledOrder.getOrderDate())
                     .updatedAt(cancelledOrder.getOrderUpdatedAt())
                     .totalAmount(cancelledOrder.getTotalAmount())
+                    .deliveryFee(cancelledOrder.getDeliveryFee())
+                    .restaurantAddress(cancelledOrder.getRestaurantAddress())
+                    .customerAddress(cancelledOrder.getCustomerAddress())
                     .build();
 
             return ResponseEntity.ok(response);
@@ -214,8 +228,7 @@ public class OrderController {
             }
             
             Order draftOrder = orderService.createDraftOrder(userId);
-            
-            OrderResponseDTO response = OrderResponseDTO.builder()
+              OrderResponseDTO response = OrderResponseDTO.builder()
                     .orderId(draftOrder.getOrderId())
                     .orderStatus(draftOrder.getOrderStatus())
                     .orderDate(draftOrder.getOrderDate())

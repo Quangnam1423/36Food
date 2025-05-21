@@ -37,6 +37,12 @@ public class Order {
     private String restaurantId; // ID của nhà hàng đặt món
     private BigDecimal itemsTotal; // Tổng giá trị các món
     private BigDecimal deliveryFee; // Phí giao hàng
+    
+    @Column(length = 500)
+    private String restaurantAddress; // Địa chỉ nhà hàng (nơi giao)
+    
+    @Column(length = 500)
+    private String customerAddress; // Địa chỉ khách hàng (nơi nhận)
 
     @ManyToOne
     @JoinColumn(name = "order_shipping_address", nullable = false)

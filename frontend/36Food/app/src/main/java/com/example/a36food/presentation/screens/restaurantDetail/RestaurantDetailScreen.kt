@@ -771,7 +771,7 @@ fun RestaurantDetailTopBar(
     scrollBehavior: TopAppBarScrollBehavior
 ) {
     TopAppBar(
-        title = { Text(title) },
+        title = { Text(title,style = MaterialTheme.typography.headlineMedium, color = Color.Black,) },
         navigationIcon = {
             IconButton(onClick = onBackClick) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")

@@ -92,7 +92,7 @@ fun CartScreen(
             if (cart != null && cart.items.isNotEmpty()) {
                 CartBottomBar(
                     cart = cart,
-                    onCheckoutClick = onCheckoutClick
+                    onCheckoutClick = {viewModel.createOrder()}
                 )
             }
         }

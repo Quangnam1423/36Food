@@ -3,8 +3,11 @@ package com.example.a36food.presentation.viewmodel
 import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.a36food.data.dto.OrderRequestDTO
 import com.example.a36food.data.network.NetworkErrorHandler
 import com.example.a36food.data.repository.CartRepository
+import com.example.a36food.data.repository.LocationRepository
+import com.example.a36food.data.repository.OrderRepository
 import com.example.a36food.domain.model.Cart
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,6 +28,8 @@ data class CartState(
 class CartViewModel @Inject constructor(
     private val cartRepository: CartRepository,
     private val sharedPreferences: SharedPreferences,
+    private val orderRepository: OrderRepository,
+    private val locationRepository: LocationRepository,
     private val networkErrorHandler: NetworkErrorHandler
 ) : ViewModel() {
     private val _state = MutableStateFlow(CartState())
@@ -138,6 +143,66 @@ class CartViewModel @Inject constructor(
             )
         }
         loadCart()
+    }
+
+    fun createOrder() {
+        viewModelScope.launch {
+            _state.update { it.copy(isLoading = true, error = null) }
+
+            val token = sharedPreferences.getString("access_token", null)
+            if (token.isNullOrEmpty()) {
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        error = "Vui lòng đăng nhập để đặt hàng"
+                    )
+                }
+                return@launch
+            }
+            val location = locationRepository.getCurrentLocation()
+
+            val cart = _state.value.cart?.getOrNull()
+            if (cart == null || cart.items.isEmpty()) {
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        error = "Giỏ hàng trống, vui lòng thêm món ăn"
+                    )
+                }
+                return@launch
+            }
+
+            // Create order request from cart
+            val orderRequest = OrderRequestDTO(
+                location.latitude,
+                location.longitude
+            )
+
+            val result = networkErrorHandler.safeApiCall(
+                apiCall = { orderRepository.createOrder(token, orderRequest) },
+                onNetworkError = { _onNetworkError?.invoke() }
+            )
+
+            result.fold(
+                onSuccess = { order ->
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            error = "Đặt hàng thành công",
+                        )
+                    }
+                    loadCart()
+                },
+                onFailure = { error ->
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            error = error.message ?: "Không thể tạo đơn hàng"
+                        )
+                    }
+                }
+            )
+        }
     }
 
     fun clearError() {

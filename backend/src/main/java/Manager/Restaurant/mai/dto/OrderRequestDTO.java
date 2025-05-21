@@ -2,8 +2,6 @@ package Manager.Restaurant.mai.dto;
 
 import lombok.*;
 
-import java.math.BigDecimal;
-
 @Data
 @Getter
 @Setter
@@ -11,7 +9,6 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @Builder
 public class OrderRequestDTO {
-    private Long addressId;
-    private Long voucherId;
-    private String note; // Ghi chú của người dùng về đơn hàng
+    private Double latitude;    // Vĩ độ của người dùng
+    private Double longitude;   // Kinh độ của người dùng
 }

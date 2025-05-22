@@ -1,14 +1,16 @@
 package com.example.a36food.domain.model
 
+import java.util.Date
+
 data class Review(
     val id: String,
     val userId: String,
     val content: String,
-    val rating: Float, // 1-5 stars
+    val rating: Float,
     val imageUrls: List<String> = emptyList(),
-    val createdAt: Long = System.currentTimeMillis(),
-    val isAnonymous: Boolean = false, // Đánh giá ẩn danh hay không
+    val createdAt: Date,
+    val isAnonymous: Boolean,
     val foodId: String,
     val restaurantId: String,
-    val orderId: String? = null // Link tới đơn hàng nếu là verified purchase
+    val orderId: String? = null
 )

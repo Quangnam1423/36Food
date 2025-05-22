@@ -32,8 +32,7 @@ public class FavoriteRestaurantService {    private final FavoriteRestaurantRepo
     public List<FavoriteRestaurant> getFavoriteRestaurants(Long userId) {
         return favoriteRestaurantRepository.findByUser_UserIdOrderByCreatedAtDesc(userId);
     }
-    
-    /**
+      /**
      * Lấy danh sách nhà hàng yêu thích của người dùng với phân trang
      * và tùy chọn bao gồm chi tiết nhà hàng
      */
@@ -68,61 +67,64 @@ public class FavoriteRestaurantService {    private final FavoriteRestaurantRepo
             // Chuyển đổi sang DTO với chi tiết nhà hàng
             List<FavoriteRestaurantDTO> favoriteDTOs = pagedFavorites.stream()
                 .map(favorite -> {
-                    FavoriteRestaurantDTO dto = new FavoriteRestaurantDTO();
-                    dto.setId(favorite.getId());
-                    dto.setRestaurantId(favorite.getRestaurantId());
-                    dto.setCreatedAt(favorite.getCreatedAt());
-                    dto.setUpdatedAt(favorite.getUpdatedAt());
-                    
                     // Lấy thông tin chi tiết nhà hàng
+                    RestaurantDTO restaurantDTO = null;
                     try {
-                        // Chuyển String restaurantId sang Long nếu cần
                         Long restaurantId = Long.parseLong(favorite.getRestaurantId());
-                        dto.setRestaurant(getRestaurantDetails(restaurantId));
-                    } catch (IllegalArgumentException e) {
-                        // Log lỗi nhưng vẫn trả về thông tin cơ bản
+                        restaurantDTO = getRestaurantDetails(restaurantId);
+                    } catch (Exception e) {
+                        // Log lỗi và tiếp tục với nhà hàng tiếp theo
                     }
                     
-                    return dto;
+                    // Sử dụng phương thức tạo DTO từ entity
+                    return FavoriteRestaurantDTO.fromEntityWithRestaurant(favorite, restaurantDTO);
                 })
+                .filter(dto -> dto.getRestaurant() != null) // Lọc bỏ các nhà hàng không tìm thấy
                 .collect(Collectors.toList());
             
             response.put("favorites", favoriteDTOs);
         } else {
-            // Chỉ trả về danh sách ID nhà hàng
-            List<String> restaurantIds = pagedFavorites.stream()
-                .map(FavoriteRestaurant::getRestaurantId)
+            // Chỉ trả về danh sách cơ bản
+            List<FavoriteRestaurantDTO> basicDTOs = pagedFavorites.stream()
+                .map(FavoriteRestaurantDTO::fromEntity)
                 .collect(Collectors.toList());
             
-            response.put("favoriteRestaurantIds", restaurantIds);
+            response.put("favorites", basicDTOs);
         }
         
         // Thêm thông tin phân trang
         response.put("currentPage", page);
         response.put("totalItems", totalItems);
         response.put("totalPages", totalPages);
+        response.put("pageSize", size);
         response.put("hasMore", page < totalPages - 1);
         
         return response;
     }
-    
-    /**
+      /**
      * Lấy thông tin chi tiết của nhà hàng
      */
     private RestaurantDTO getRestaurantDetails(Long restaurantId) {
         // Lấy thông tin nhà hàng từ service
         try {
-            // Nếu cần lấy thông tin chi tiết với địa chỉ và khoảng cách, cần truyền thêm vị trí người dùng
-            // Ở đây chỉ lấy thông tin cơ bản
+            // Lấy thông tin nhà hàng từ repository
             Restaurant restaurant = restaurantService.getRestaurantById(restaurantId);
             
-            // Xây dựng đối tượng DTO chỉ với thông tin cơ bản
-            return RestaurantDTO.builder()
+            if (restaurant == null) {
+                throw new IllegalArgumentException("Không tìm thấy nhà hàng với ID: " + restaurantId);
+            }
+            
+            // Chuyển đổi tọa độ sang địa chỉ (sử dụng GeocodingService nếu có)
+            String address = "Chưa có thông tin"; // Mặc định
+            
+            // Xây dựng DTO với đầy đủ thông tin cần thiết
+            RestaurantDTO dto = RestaurantDTO.builder()
                     .id(restaurant.getId())
                     .name(restaurant.getName())
                     .imageUrl(restaurant.getImageUrl())
                     .rating(restaurant.getRating())
                     .ratingCount(restaurant.getRatingCount())
+                    .address(address)
                     .priceRange(restaurant.getPriceRange())
                     .openingStatus(restaurant.getOpeningStatus())
                     .businessHours(restaurant.getBusinessHours())
@@ -131,7 +133,10 @@ public class FavoriteRestaurantService {    private final FavoriteRestaurantRepo
                     .reviewsCount(restaurant.getReviewsCount())
                     .categories(restaurant.getCategories())
                     .createdAt(restaurant.getCreatedAt())
+                    .isFavorite(true) // Vì đây là danh sách yêu thích nên luôn là true
                     .build();
+            
+            return dto;
         } catch (Exception e) {
             throw new IllegalArgumentException("Không thể lấy thông tin nhà hàng: " + e.getMessage());
         }

@@ -1,12 +1,13 @@
 package com.example.a36food.data.dto
 
 data class OrderItemDTO(
-    val id: Long,
+    val id: String,      // Changed from Long to String to match API
     val name: String,
     val price: Double,
     val quantity: Int,
     val imageUrl: String?,
-    val note: String
+    val note: String?,   // Made nullable to match API
+    val subtotal: Double // Added subtotal field from API
 )
 
 data class ErrorResponse(

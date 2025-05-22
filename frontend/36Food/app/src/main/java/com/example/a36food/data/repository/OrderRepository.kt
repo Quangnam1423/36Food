@@ -5,8 +5,9 @@ import android.content.SharedPreferences
 import com.example.a36food.data.api.OrderApi
 import com.example.a36food.data.dto.OrderRequestDTO
 import com.example.a36food.data.dto.OrderResponseDTO
+import com.example.a36food.data.dto.ReorderRequestDTO
+import com.example.a36food.data.dto.ReorderResponseDTO
 import com.example.a36food.domain.model.Order
-import com.example.a36food.domain.model.OrderItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -24,7 +25,34 @@ class OrderRepository @Inject constructor(
         if (response.isSuccessful) {
             return response.body() ?: throw Exception("Empty response body")
         } else {
-            throw Exception("Failed to create order: ${response.code()} - ${response.message()}")
+            // Đọc nội dung lỗi từ body của response
+            val errorBody = response.errorBody()?.string()
+            throw Exception("Failed to create order: ${response.code()} - ${if (!errorBody.isNullOrEmpty()) errorBody else response.message()}")
+        }
+    }
+
+    suspend fun getUserOrders(token: String, status: String? = null): List<OrderResponseDTO> {
+        val response = orderApi.getUserOrders("Bearer $token", status)
+
+        if (response.isSuccessful) {
+            return response.body() ?: throw Exception("Empty response body")
+        } else {
+            throw Exception("Failed to get user orders: ${response.code()} - ${response.message()}")
+        }
+    }
+
+    suspend fun getUserOrdersWithFilter(
+        token: String,
+        status: String? = null,
+        startDate: String? = null,
+        endDate: String? = null
+    ): List<OrderResponseDTO> {
+        val response = orderApi.getUserOrdersWithFilter("Bearer $token", status, startDate, endDate)
+
+        if (response.isSuccessful) {
+            return response.body() ?: throw Exception("Empty response body")
+        } else {
+            throw Exception("Failed to get filtered orders: ${response.code()} - ${response.message()}")
         }
     }
 
@@ -55,6 +83,28 @@ class OrderRepository @Inject constructor(
             return response.body() ?: throw Exception("Empty response body")
         } else {
             throw Exception("Failed to create draft order: ${response.code()} - ${response.message()}")
+        }
+    }
+
+    suspend fun getUserProcessingOrders(token: String): List<OrderResponseDTO> {
+        val response = orderApi.getUserProcessingOrders("Bearer $token")
+
+        if (response.isSuccessful) {
+            return response.body() ?: throw Exception("Empty response body")
+        } else {
+            throw Exception("Failed to get processing orders: ${response.code()} - ${response.message()}")
+        }
+    }
+
+    suspend fun reorderOrder(token: String, orderId: Long, latitude: Double, longitude: Double): ReorderResponseDTO {
+        val reorderRequest = ReorderRequestDTO(orderId, latitude, longitude)
+        val response = orderApi.reorderOrder("Bearer $token", reorderRequest)
+
+        if (response.isSuccessful) {
+            return response.body() ?: throw Exception("Empty response body")
+        } else {
+            val errorBody = response.errorBody()?.string()
+            throw Exception("Failed to reorder: ${response.code()} - ${if (!errorBody.isNullOrEmpty()) errorBody else response.message()}")
         }
     }
 }

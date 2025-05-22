@@ -19,6 +19,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -57,6 +58,17 @@ fun CartScreen(
             snackbarHostState.showSnackbar(it)
             viewModel.clearError()
         }
+    }
+
+    // Show success dialog when order is successful
+    if (state.successMessage != null) {
+        OrderSuccessDialog(
+            message = state.successMessage!!,
+            onDismiss = {
+                viewModel.clearSuccessMessage()
+                onBackClick() // Navigate back after successful order
+            }
+        )
     }
 
     val cart = state.cart?.getOrNull()
@@ -379,6 +391,70 @@ fun EmptyCartMessage(modifier: Modifier = Modifier) {
     }
 }
 
+@Composable
+fun OrderSuccessDialog(
+    message: String,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Icon(
+                Icons.Default.CheckCircle,
+                contentDescription = "Success",
+                modifier = Modifier.size(48.dp),
+                tint = Color(0xFF4CAF50) // Green color for success
+            )
+        },
+        title = {
+            Text(
+                text = "Thành công!",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi!",
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    color = Color.Gray
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFFF5722) // Orange color to match app theme
+                ),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Đã hiểu")
+            }
+        },
+        containerColor = MaterialTheme.colorScheme.surface,
+        tonalElevation = 8.dp
+    )
+}
+
 fun formatPrice(price: Double): String {
     return "%,.0f".format(price)
 }
+

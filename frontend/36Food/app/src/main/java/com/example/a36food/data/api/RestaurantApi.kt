@@ -4,8 +4,10 @@ import com.example.a36food.data.dto.MenuItemDTO
 import com.example.a36food.data.dto.PaginatedRestaurantsResponse
 import com.example.a36food.data.dto.RestaurantDTO
 import com.example.a36food.data.dto.SearchResponse
+import com.example.a36food.data.dto.FavoriteRestaurantsResponse
 import com.example.a36food.domain.model.Restaurant
 import retrofit2.http.GET
+import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -61,4 +63,15 @@ interface RestaurantApi {
         @Query("userLng") userLng: Double,
         @Query("searchBy") searchBy: String = "all"
     ): SearchResponse
+
+    @GET("favorites/all")
+    suspend fun getFavoriteRestaurants(
+        @Query("latitude") latitude: Double,
+        @Query("longitude") longitude: Double
+    ): FavoriteRestaurantsResponse
+
+    @POST("favorites/toggle/{restaurantId}")
+    suspend fun toggleFavoriteRestaurant(
+        @Path("restaurantId") restaurantId: String
+    ): Map<String, Any>
 }

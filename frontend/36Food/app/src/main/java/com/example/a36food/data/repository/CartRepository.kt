@@ -58,10 +58,7 @@ class CartRepository @Inject constructor(
 
     suspend fun addItemToCart(token: String, item: CartItemRequest): Result<Cart> {
         return try {
-            if (item != null) {
-                Log.d("CartRepository", "Adding item to cart: ${item.name}")
-            }
-
+            Log.d("CartRepository", "Adding item to cart: ${item.name}")
 
             val response = cartApi.addItemToCart(token = "Bearer $token", item)
 
@@ -71,7 +68,7 @@ class CartRepository @Inject constructor(
                     val cart = Cart(
                         id = cartDTO.id,
                         restaurantId = cartDTO.restaurantId,
-                        items = cartDTO.items.map { dto ->
+                        items = cartDTO.items?.map { dto ->
                             CartItem(
                                 id = dto.id,
                                 name = dto.name,
@@ -80,7 +77,7 @@ class CartRepository @Inject constructor(
                                 imageUrl = dto.imageUrl,
                                 note = dto.note
                             )
-                        }
+                        } ?: listOf()
                     )
                     Result.success(cart)
                 } else {
@@ -98,8 +95,6 @@ class CartRepository @Inject constructor(
             }
         }
     }
-
-
 
     suspend fun removeCartItem(token: String, itemId: String): Result<Cart> {
         return try {

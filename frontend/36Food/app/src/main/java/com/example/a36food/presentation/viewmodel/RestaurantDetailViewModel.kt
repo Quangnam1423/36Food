@@ -333,4 +333,42 @@ class RestaurantDetailViewModel @Inject constructor(
             loadRestaurantDetails(restaurantId.toLong())
         }
     }
+
+    /**
+     * Toggle the favorite status of the restaurant
+     */
+    fun toggleFavorite() {
+        val restaurantId = state.value.restaurant?.id ?: return
+
+        viewModelScope.launch {
+            try {
+                val result = restaurantRepository.toggleFavoriteRestaurant(restaurantId)
+
+                result.fold(
+                    onSuccess = { (isFavorite, message) ->
+                        // Update the restaurant in state with the new favorite status
+                        _state.update { currentState ->
+                            val updatedRestaurant = currentState.restaurant?.copy(isFavorite = isFavorite)
+                            currentState.copy(restaurant = updatedRestaurant)
+                        }
+
+                        // Show success message
+                        _cartState.update {
+                            it.copy(success = message)
+                        }
+                    },
+                    onFailure = { error ->
+                        _cartState.update {
+                            it.copy(error = error.message ?: "Không thể cập nhật trạng thái yêu thích")
+                        }
+                    }
+                )
+            } catch (e: Exception) {
+                _cartState.update {
+                    it.copy(error = e.message ?: "Đã xảy ra lỗi khi cập nhật trạng thái yêu thích")
+                }
+            }
+        }
+    }
 }
+

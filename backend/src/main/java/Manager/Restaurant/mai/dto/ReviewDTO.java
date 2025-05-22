@@ -4,7 +4,7 @@ import Manager.Restaurant.mai.entity.Review;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -16,7 +16,7 @@ public class ReviewDTO {
     private String content;
     private float rating;
     private List<String> imageUrls;
-    private Instant createdAt;
+    private LocalDateTime createdAt;
     private boolean isAnonymous;
     private Long foodId;
     private Long restaurantId;

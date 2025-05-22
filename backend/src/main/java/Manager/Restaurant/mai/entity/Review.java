@@ -2,11 +2,7 @@ package Manager.Restaurant.mai.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.time.LocalDateTime;
-
-
-import java.time.Instant;
 import java.util.List;
 
 @Entity
@@ -42,11 +38,10 @@ public class Review {
 
     @ElementCollection
     @CollectionTable(name = "review_images", joinColumns = @JoinColumn(name = "review_id"))
-    @Column(name = "image_url")
-    private List<String> imageUrls;
+    @Column(name = "image_url")    private List<String> imageUrls;
 
     @Column(nullable = false)
-    private Instant createdAt;
+    private LocalDateTime createdAt;
 
     @Column(nullable = false)
     private boolean isAnonymous;

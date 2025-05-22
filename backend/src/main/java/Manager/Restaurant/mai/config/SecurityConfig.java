@@ -25,12 +25,15 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())              .cors(cors -> cors.configurationSource(corsConfigurationSource()))            
-            .authorizeHttpRequests(auth -> auth
+            .csrf(csrf -> csrf.disable())              .cors(cors -> cors.configurationSource(corsConfigurationSource()))            .authorizeHttpRequests(auth -> auth
                 // Public endpoints
                 .requestMatchers("/auth/**", "/user/get-address").permitAll()
                 // Restaurant endpoints - all GET endpoints are public
                 .requestMatchers(HttpMethod.GET, "/restaurants/**").permitAll()
+                // Review endpoints - make GET reviews for items and restaurants public
+                .requestMatchers(HttpMethod.GET, "/reviews/restaurant/**", "/reviews/item/**").permitAll()
+                // User-specific review endpoints - require authentication
+                .requestMatchers(HttpMethod.GET, "/reviews/user/**", "/reviews/me").authenticated()
                 // Admin-only endpoints
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 // Restaurant owner endpoints - for adding new items or categories (POST/PUT operations)

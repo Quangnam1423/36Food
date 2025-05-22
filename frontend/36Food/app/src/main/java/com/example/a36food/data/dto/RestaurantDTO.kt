@@ -24,7 +24,8 @@ data class RestaurantDTO(
     val categories: List<String>,
     val createdAt: Long,
     val durationInMinutes: Int?,
-    val orderCount: Long?
+    val orderCount: Long?,
+    val isFavorite: Boolean = false
 ) {
     fun toDomainModel(): Restaurant {
         // Parse opening status
@@ -65,7 +66,8 @@ data class RestaurantDTO(
             categories = categories,
             createdAt = createdAt,
             durationInMinutes = durationInMinutes,
-            orderCount = orderCount
+            orderCount = orderCount,
+            isFavorite = isFavorite
         )
     }
 

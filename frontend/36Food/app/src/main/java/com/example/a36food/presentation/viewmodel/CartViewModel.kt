@@ -21,7 +21,8 @@ import javax.inject.Inject
 data class CartState(
     val isLoading: Boolean = false,
     val cart: Result<Cart>? = null,
-    val error: String? = null
+    val error: String? = null,
+    val successMessage: String? = null
 )
 
 @HiltViewModel
@@ -188,7 +189,7 @@ class CartViewModel @Inject constructor(
                     _state.update {
                         it.copy(
                             isLoading = false,
-                            error = "Đặt hàng thành công",
+                            successMessage = "Đặt hàng thành công",
                         )
                     }
                     loadCart()
@@ -207,5 +208,9 @@ class CartViewModel @Inject constructor(
 
     fun clearError() {
         _state.update { it.copy(error = null) }
+    }
+
+    fun clearSuccessMessage() {
+        _state.update { it.copy(successMessage = null) }
     }
 }

@@ -25,8 +25,11 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -36,10 +39,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.a36food.domain.model.FoodItem
 import com.example.a36food.presentation.screens.CartScreen
 import com.example.a36food.presentation.screens.ChangePasswordScreen
 import com.example.a36food.presentation.screens.NoConnectionScreen
-import com.example.a36food.presentation.screens.foodscreen.FoodDetailScreen
+import com.example.a36food.presentation.screens.food.FoodScreen
 import com.example.a36food.presentation.screens.restaurantDetail.RestaurantDetailScreen
 import com.example.a36food.presentation.screens.homes.FavoriteScreen
 import com.example.a36food.presentation.screens.homes.HistoryScreen
@@ -48,10 +52,13 @@ import com.example.a36food.presentation.screens.homes.ProfileScreen
 import com.example.a36food.presentation.screens.homes.SearchingScreen
 import com.example.a36food.presentation.screens.introduce.IntroduceScreen
 import com.example.a36food.presentation.screens.login.LoginScreen
+import com.example.a36food.presentation.screens.orderdetail.OrderDetailScreen
 import com.example.a36food.presentation.screens.register.RegisterScreen
 import com.example.a36food.presentation.viewmodel.NetworkViewModel
 import com.example.a36food.presentation.viewmodel.LocationViewModel
+import com.example.a36food.presentation.viewmodel.FoodViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.gson.Gson
 
 sealed class Screen(val route: String) {
     data object Introduce : Screen("introduce")
@@ -68,11 +75,13 @@ sealed class Screen(val route: String) {
     data object RestaurantDetail : Screen("restaurant_detail/{restaurantId}") {
         fun createRoute(restaurantId: String) = "restaurant_detail/$restaurantId"
     }
-    data object FoodDetail : Screen("food_detail/{foodId}") {
-        fun createRoute(foodId: String) = "food_detail/$foodId"
+    data object FoodDetail : Screen("food_detail/{foodJson}") {
+        fun createRoute(foodJson: String) = "food_detail/$foodJson"
+    }
+    data object OrderDetail : Screen("order_detail/{orderId}") {
+        fun createRoute(orderId: Long) = "order_detail/$orderId"
     }
 }
-
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -206,7 +215,7 @@ fun AppNavigation() {
                         onRestaurantClick = { restaurantId ->
                             navController.navigate(Screen.RestaurantDetail.createRoute(restaurantId))
                         },
-                        onCartClick = { /* No cart screen yet */ },
+                        onCartClick = { navController.navigate((Screen.Cart.route))},
                         onNetworkError = { navController.navigate(Screen.NoConnection.route) }
                     )
                 }
@@ -228,7 +237,13 @@ fun AppNavigation() {
                         onNavigateToHome = { navController.navigate(Screen.Home.route) },
                         onNavigateToSearch = { navController.navigate(Screen.Search.route) },
                         onNavigateToFavorite = { navController.navigate(Screen.Favorite.route) },
-                        onNavigateToProfile = { navController.navigate(Screen.Profile.route) }
+                        onNavigateToProfile = { navController.navigate(Screen.Profile.route) },
+                        onNavigateToOrderDetail = { orderId ->
+                            navController.navigate(Screen.OrderDetail.createRoute(orderId))
+                        },
+                        onNetworkError = {
+                            navController.navigate(Screen.NoConnection.route)
+                        }
                     )
                 }
 
@@ -275,20 +290,53 @@ fun AppNavigation() {
                             navController.navigate(Screen.NoConnection.route)
                         },
                         onCartClick = { navController.navigate(Screen.Cart.route) },
+                        onFoodClick = { foodItem ->
+                            val gson = Gson()
+                            val foodJson = Uri.encode(gson.toJson(foodItem))
+                            navController.navigate(Screen.FoodDetail.createRoute(foodJson))
+                        }
                     )
                 }
 
                 composable(
                     route = Screen.FoodDetail.route,
                     arguments = listOf(
-                        navArgument("foodId") { type = NavType.StringType }
+                        navArgument("foodJson") {
+                            type = NavType.StringType
+                        }
                     )
-                ) {
-                    FoodDetailScreen(
-                        foodId = it.arguments?.getString("foodId") ?: "",
+                ) { backStackEntry ->
+                    val foodJson = backStackEntry.arguments?.getString("foodJson")
+                    requireNotNull(foodJson) { "Food JSON is required" }
+
+                    // Convert JSON string back to FoodItem using Gson
+                    val gson = Gson()
+                    val foodItem = gson.fromJson(foodJson, FoodItem::class.java)
+
+                    FoodScreen(
+                        foodItem = foodItem,
                         onBackClick = { navController.popBackStack() },
-                        onAddToCartClick = {},
-                        onShareClick = {},
+                        onAddToCart = { item, quantity, note ->
+                            // Handle add to cart logic here
+                            navController.popBackStack()
+                        },
+                        onNetworkError = {
+                            navController.navigate(Screen.NoConnection.route)
+                        }
+                    )
+                }
+
+                composable(
+                    route = Screen.OrderDetail.route,
+                    arguments = listOf(
+                        navArgument("orderId") { type = NavType.LongType }
+                    )
+                ) { backStackEntry ->
+                    val orderId = backStackEntry.arguments?.getLong("orderId") ?: 0L
+
+                    OrderDetailScreen(
+                        orderId = orderId,
+                        onBackClick = { navController.popBackStack() }
                     )
                 }
             }

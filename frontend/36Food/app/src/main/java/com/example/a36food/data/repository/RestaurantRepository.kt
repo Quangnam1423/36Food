@@ -203,4 +203,67 @@ class RestaurantRepository @Inject constructor(
             }
         }
     }
+
+    suspend fun getFavoriteRestaurants(
+        latitude: Double,
+        longitude: Double,
+        page: Int = 0,
+        pageSize: Int = 10
+    ): PaginatedResult<Restaurant> {
+        try {
+            Log.d("RestaurantRepository", "Fetching favorite restaurants: lat=$latitude, lng=$longitude")
+            val response = restaurantApi.getFavoriteRestaurants(
+                latitude = latitude,
+                longitude = longitude
+            )
+
+            val restaurants = response.restaurants.toDomainModels()
+
+            // Since the new API doesn't provide pagination details, we need to simulate them
+            // We'll treat the entire response as a single page
+            return PaginatedResult(
+                data = restaurants,
+                currentPage = 0,
+                totalPages = 1,
+                hasMore = false
+            )
+        } catch (e: Exception) {
+            Log.e("RestaurantRepository", "Error fetching favorite restaurants", e)
+            when (e) {
+                is HttpException -> {
+                    throw Exception("Failed to fetch favorite restaurants: ${e.message()}")
+                }
+                is java.net.SocketTimeoutException,
+                is IOException -> throw NoConnectionException()
+                else -> throw e
+            }
+        }
+    }
+
+    /**
+     * Toggle a restaurant's favorite status
+     * @param restaurantId The ID of the restaurant to toggle
+     * @return A Pair containing the new favorite status (true if added, false if removed) and a message
+     */
+    suspend fun toggleFavoriteRestaurant(restaurantId: String): Result<Pair<Boolean, String>> {
+        return try {
+            Log.d("RestaurantRepository", "Toggling favorite status for restaurant: $restaurantId")
+            val response = restaurantApi.toggleFavoriteRestaurant(restaurantId)
+
+            val isFavorite = response["isFavorite"] as Boolean
+            val message = response["message"] as String
+
+            Result.success(Pair(isFavorite, message))
+        } catch (e: Exception) {
+            Log.e("RestaurantRepository", "Error toggling favorite status", e)
+            when (e) {
+                is HttpException -> {
+                    Result.failure(Exception("Failed to toggle favorite status: ${e.message()}"))
+                }
+                is java.net.SocketTimeoutException,
+                is IOException -> Result.failure(NoConnectionException())
+                else -> Result.failure(e)
+            }
+        }
+    }
 }

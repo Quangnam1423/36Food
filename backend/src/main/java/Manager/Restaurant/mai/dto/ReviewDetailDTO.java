@@ -7,7 +7,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -17,11 +17,10 @@ import java.util.List;
 public class ReviewDetailDTO {
 
     private Long id;
-    private UserProfileDTO user;
-    private String content;
+    private UserProfileDTO user;    private String content;
     private float rating;
     private List<String> imageUrls;
-    private Instant createdAt;
+    private LocalDateTime createdAt;
     private boolean isAnonymous;
     private Long foodId;
     private Long restaurantId;

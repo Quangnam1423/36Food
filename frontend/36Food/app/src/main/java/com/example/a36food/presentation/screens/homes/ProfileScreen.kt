@@ -95,7 +95,7 @@ fun ProfileScreen(
                     Text(
                         "Thông tin cá nhân",
                         style = MaterialTheme.typography.titleMedium.copy(
-                            fontSize = 18.sp,
+                            fontSize = 16.sp,
                             fontWeight = FontWeight.Medium
                         )
                     )
@@ -226,7 +226,10 @@ private fun ProfileHeader(name: String, avatar: String?) {
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = name,
-            style = MaterialTheme.typography.titleLarge
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontSize = 16.sp,
+                color = Color(0xFFFF5722),
+            )
         )
     }
 }

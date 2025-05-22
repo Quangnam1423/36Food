@@ -1,6 +1,8 @@
 package com.example.a36food.domain.model
 
 
+import java.util.Date
+
 enum class ServiceType {
 
    DRINK,
@@ -29,15 +31,28 @@ enum class ServiceType {
 }
 
 
+
+
 data class Order(
     val id: String,
-    val userId: String,
     val restaurantId: String,
-    val items: List<OrderItem>,
-    val status: OrderStatus,
-    val totalPrice: Double,
-    val address: String,
-    val phoneNumber: String,
-    val note: String = "",
-    val createdAt: Long = System.currentTimeMillis()
+    val restaurantName: String,
+    val restaurantImageUrl: String,
+    val status: String,
+    val orderDate: Date?,
+    val totalAmount: Double,
+    val items: List<OrderItem> = emptyList(),
+    val serviceType: String = "Đồ uống", // Default value, should be set from API
+    val isReviewed: Boolean = false,
+    val deliveryAddress: String = "",
+    val note: String? = null
+)
+
+data class OrderItem(
+    val id: String,
+    val name: String,
+    val price: Double,
+    val quantity: Int,
+    val imageUrl: String?,
+    val note: String? = null
 )

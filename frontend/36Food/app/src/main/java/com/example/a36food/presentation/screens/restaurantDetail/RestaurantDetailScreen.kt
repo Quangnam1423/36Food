@@ -40,6 +40,9 @@ import com.example.a36food.domain.model.FoodItem
 import com.example.a36food.domain.model.OpeningStatus
 import com.example.a36food.domain.model.Restaurant
 import com.example.a36food.presentation.viewmodel.RestaurantDetailViewModel
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
@@ -47,7 +50,8 @@ fun RestaurantDetailScreen(
     viewModel: RestaurantDetailViewModel = hiltViewModel(),
     onBackClick: () -> Unit,
     onNetWorkError: () -> Unit = {},
-    onCartClick: () -> Unit = {}
+    onCartClick: () -> Unit = {},
+    onFoodClick: (FoodItem) -> Unit = {} // Thêm tham số này
 ) {
     val state by viewModel.state.collectAsState()
     val cartState by viewModel.cartState.collectAsState()
@@ -88,7 +92,9 @@ fun RestaurantDetailScreen(
                 title = state.restaurant?.name ?: "",
                 onBackClick = onBackClick,
                 onCartClick = onCartClick,
-                scrollBehavior = scrollBehavior
+                onFavoriteClick = { viewModel.toggleFavorite() },
+                scrollBehavior = scrollBehavior,
+                isFavorite = state.restaurant?.isFavorite ?: false
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -112,6 +118,7 @@ fun RestaurantDetailScreen(
                     selectedCategory = state.selectedCategory,
                     onCategorySelected = { viewModel.selectCategory(it) },
                     onAddToCart = { foodItem -> viewModel.showAddToCartDialog(foodItem) },
+                    onFoodClick = onFoodClick, // Truyền tham số onFoodClick từ RestaurantDetailScreen
                     modifier = Modifier.padding(innerPadding)
                 )
             }
@@ -309,6 +316,7 @@ fun RestaurantDetailContent(
     selectedCategory: String?,
     onCategorySelected: (String?) -> Unit,
     onAddToCart: (FoodItem) -> Unit,
+    onFoodClick: (FoodItem) -> Unit = {}, 
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -326,28 +334,32 @@ fun RestaurantDetailContent(
             )
         }
 
-        if (isMenuLoading) {
-            item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+        when {
+            isMenuLoading -> {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                    }
                 }
             }
-        }
-        else if (menuItems.isEmpty()) {
-            item {
-                EmptyMenuMessage()
+            menuItems.isEmpty() -> {
+                item {
+                    EmptyMenuMessage()
+                }
             }
-        } else {
-            items(menuItems) { foodItem ->
-                MenuItemCard(
-                    foodItem = foodItem,
-                    onAddToCart = onAddToCart
-                )
+            else -> {
+                items(menuItems) { foodItem ->
+                    MenuItemCard(
+                        foodItem = foodItem,
+                        onAddToCart = onAddToCart,
+                        onFoodClick = onFoodClick
+                    )
+                }
             }
         }
     }
@@ -585,12 +597,14 @@ fun CategoryFilterSection(
 fun MenuItemCard(
     foodItem: FoodItem,
     onAddToCart: (FoodItem) -> Unit,
+    onFoodClick: (FoodItem) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clickable { onFoodClick(foodItem) },
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
@@ -768,7 +782,9 @@ fun RestaurantDetailTopBar(
     title: String,
     onBackClick: () -> Unit,
     onCartClick: () -> Unit,
-    scrollBehavior: TopAppBarScrollBehavior
+    onFavoriteClick: () -> Unit,
+    scrollBehavior: TopAppBarScrollBehavior,
+    isFavorite: Boolean = false
 ) {
     TopAppBar(
         title = { Text(title,style = MaterialTheme.typography.headlineMedium, color = Color.Black,) },
@@ -778,6 +794,15 @@ fun RestaurantDetailTopBar(
             }
         },
         actions = {
+            // Favorite heart icon
+            IconButton(onClick = onFavoriteClick) {
+                Icon(
+                    imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Default.FavoriteBorder,
+                    contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+                    tint = if (isFavorite) Color.Red else Color.Black
+                )
+            }
+
             IconButton(onClick = onCartClick) {
                 Icon(Icons.Default.ShoppingCart, contentDescription = "Cart")
             }

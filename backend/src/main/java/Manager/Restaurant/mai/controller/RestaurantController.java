@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/restaurants")
@@ -499,17 +498,16 @@ public class RestaurantController {      private final RestaurantRepository rest
                 .collect(Collectors.toList());
         
         return ResponseEntity.ok(result);
-    }
-
-    /**
-     * Tìm kiếm nhà hàng theo categories hoặc tên nhà hàng
+    }    /**
+     * Tìm kiếm nhà hàng theo categories, tên nhà hàng hoặc món ăn
      * 
-     * @param keyword Từ khóa tìm kiếm trong categories hoặc tên nhà hàng
+     * @param keyword Từ khóa tìm kiếm trong categories, tên nhà hàng hoặc tên món ăn
      * @param userLat Vĩ độ người dùng
      * @param userLng Kinh độ người dùng
-     * @param searchBy Tìm theo "category" hoặc "name" hoặc "all"
+     * @param searchBy Tìm theo "category", "name", "menuItem" hoặc "all"
      * @return Danh sách các nhà hàng phù hợp với từ khóa tìm kiếm
-     */    @GetMapping("/search")
+     */    
+    @GetMapping("/search")
     public ResponseEntity<?> searchRestaurants(
             @RequestParam String keyword,
             @RequestParam double userLat,
@@ -529,7 +527,13 @@ public class RestaurantController {      private final RestaurantRepository rest
             restaurants.addAll(restaurantRepo.findByNameContainingIgnoreCase(keyword));
         }
         
-        // Loại bỏ các nhà hàng trùng lặp nếu tìm cả "name" và "category"
+        if ("menuItem".equals(searchBy) || "all".equals(searchBy)) {
+            // Tìm nhà hàng có món ăn chứa từ khóa
+            List<Restaurant> restaurantsWithMenuItem = menuItemRepo.findRestaurantsByMenuItemNameContaining(keyword);
+            restaurants.addAll(restaurantsWithMenuItem);
+        }
+        
+        // Loại bỏ các nhà hàng trùng lặp nếu tìm cả "name", "category" và "menuItem"
         List<Restaurant> distinctRestaurants = restaurants.stream()
                 .distinct()
                 .collect(Collectors.toList());
@@ -580,5 +584,160 @@ public class RestaurantController {      private final RestaurantRepository rest
         response.put("searchBy", searchBy);
         
         return ResponseEntity.ok(response);
+    }
+
+    // Lấy danh sách nhà hàng theo IDs - sử dụng cho tính năng danh sách yêu thích
+    @GetMapping("/by-ids")
+    public ResponseEntity<Map<String, Object>> getRestaurantsByIds(
+            HttpServletRequest request,
+            @RequestParam List<Long> ids,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false, defaultValue = "0") double userLat,
+            @RequestParam(required = false, defaultValue = "0") double userLng
+    ) {
+        try {
+            // Lấy userId từ token JWT (được thiết lập trong JwtAuthenticationFilter)
+            Long userId = (Long) request.getAttribute("userId");
+            
+            // Lấy tất cả nhà hàng từ danh sách ID
+            List<Restaurant> allRestaurants = restaurantRepo.findAllById(ids);
+            
+            // Áp dụng phân trang
+            int totalItems = allRestaurants.size();
+            int totalPages = (int) Math.ceil((double) totalItems / size);
+            
+            // Giới hạn page trong phạm vi hợp lệ
+            if (page < 0) page = 0;
+            if (page >= totalPages && totalPages > 0) page = totalPages - 1;
+            
+            // Tính vị trí bắt đầu và kết thúc cho phân trang
+            int startItem = page * size;
+            int endItem = Math.min(startItem + size, totalItems);
+            
+            List<Restaurant> pagedRestaurants;
+            if (startItem < totalItems) {
+                pagedRestaurants = allRestaurants.subList(startItem, endItem);
+            } else {
+                pagedRestaurants = List.of();
+            }
+            
+            // Chuyển đổi sang DTO
+            List<RestaurantDTO> restaurantDTOs = pagedRestaurants.stream()
+                .map(restaurant -> {
+                    // Tính khoảng cách và thời gian
+                    DistanceService.RouteInfo routeInfo;
+                    if (userLat != 0 && userLng != 0) {
+                        routeInfo = distanceService.getDistanceAndDuration(
+                                userLng, userLat,
+                                restaurant.getLongitude(), restaurant.getLatitude()
+                        );
+                    } else {
+                        // Giá trị mặc định nếu không có vị trí người dùng
+                        routeInfo = new DistanceService.RouteInfo(0, 0);
+                    }
+                    
+                    // Lấy địa chỉ từ tọa độ
+                    String address = geocodingService.getAddressFromCoordinates(
+                        restaurant.getLatitude(),
+                        restaurant.getLongitude()
+                    );
+                    
+                    // Tạo DTO
+                    RestaurantDTO dto = RestaurantDTO.fromEntity(
+                            restaurant, 
+                            address,
+                            routeInfo.distanceInMeters, 
+                            routeInfo.durationInSeconds
+                    );
+                    
+                    // Đánh dấu là yêu thích (vì danh sách này được lấy từ danh sách yêu thích)
+                    dto.setIsFavorite(true);
+                    
+                    return dto;
+                })
+                .sorted(Comparator.comparingDouble(RestaurantDTO::getDistance))
+                .collect(Collectors.toList());
+            
+            // Tạo response với metadata phân trang
+            Map<String, Object> response = new HashMap<>();
+            response.put("restaurants", restaurantDTOs);
+            response.put("currentPage", page);
+            response.put("totalItems", totalItems);
+            response.put("totalPages", totalPages);
+            response.put("pageSize", size);
+            response.put("hasMore", page < totalPages - 1);
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of(
+                "error", "Đã xảy ra lỗi khi lấy danh sách nhà hàng: " + e.getMessage()
+            ));
+        }
+    }
+
+    // Lấy tất cả nhà hàng theo IDs không phân trang - sử dụng cho tính năng lấy tất cả danh sách yêu thích
+    @GetMapping("/all-by-ids")
+    public ResponseEntity<Map<String, Object>> getAllRestaurantsByIds(
+            HttpServletRequest request,
+            @RequestParam List<Long> ids,
+            @RequestParam(required = false, defaultValue = "0") double userLat,
+            @RequestParam(required = false, defaultValue = "0") double userLng
+    ) {
+        try {
+            // Lấy userId từ token JWT (được thiết lập trong JwtAuthenticationFilter)
+            Long userId = (Long) request.getAttribute("userId");
+            
+            // Lấy tất cả nhà hàng từ danh sách ID
+            List<Restaurant> allRestaurants = restaurantRepo.findAllById(ids);
+            
+            // Chuyển đổi sang DTO
+            List<RestaurantDTO> restaurantDTOs = allRestaurants.stream()
+                .map(restaurant -> {
+                    // Tính khoảng cách và thời gian
+                    DistanceService.RouteInfo routeInfo;
+                    if (userLat != 0 && userLng != 0) {
+                        routeInfo = distanceService.getDistanceAndDuration(
+                                userLng, userLat,
+                                restaurant.getLongitude(), restaurant.getLatitude()
+                        );
+                    } else {
+                        // Giá trị mặc định nếu không có vị trí người dùng
+                        routeInfo = new DistanceService.RouteInfo(0, 0);
+                    }
+                    
+                    // Lấy địa chỉ từ tọa độ
+                    String address = geocodingService.getAddressFromCoordinates(
+                        restaurant.getLatitude(),
+                        restaurant.getLongitude()
+                    );
+                    
+                    // Tạo DTO
+                    RestaurantDTO dto = RestaurantDTO.fromEntity(
+                            restaurant, 
+                            address,
+                            routeInfo.distanceInMeters, 
+                            routeInfo.durationInSeconds
+                    );
+                    
+                    // Đánh dấu là yêu thích (vì danh sách này được lấy từ danh sách yêu thích)
+                    dto.setIsFavorite(true);
+                    
+                    return dto;
+                })
+                .sorted(Comparator.comparingDouble(RestaurantDTO::getDistance))
+                .collect(Collectors.toList());
+            
+            // Tạo response
+            Map<String, Object> response = new HashMap<>();
+            response.put("restaurants", restaurantDTOs);
+            response.put("totalItems", restaurantDTOs.size());
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of(
+                "error", "Đã xảy ra lỗi khi lấy danh sách nhà hàng: " + e.getMessage()
+            ));
+        }
     }
 }

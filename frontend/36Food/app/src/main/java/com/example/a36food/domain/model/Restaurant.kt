@@ -32,5 +32,6 @@ data class Restaurant(
     val categories: List<String> = emptyList(),
     val createdAt: Long = System.currentTimeMillis(),
     val durationInMinutes: Int? = null,
-    val orderCount: Long? = null
+    val orderCount: Long? = null,
+    val isFavorite: Boolean = false
 )

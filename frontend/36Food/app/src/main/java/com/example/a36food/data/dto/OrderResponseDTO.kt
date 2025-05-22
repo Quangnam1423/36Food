@@ -1,12 +1,21 @@
 package com.example.a36food.data.dto
 
+import com.google.gson.annotations.SerializedName
+import java.util.Date
+
 data class OrderResponseDTO(
     val orderId: Long,
-    val orderStatus: String,
-    val orderDate: String,   // ISO-8601 format string cho LocalDateTime
-    val updatedAt: String?,  // Có thể null
+    val status: String?, // Đã xóa SerializedName và để status có thể null
+    val orderDate: Date,
+    val updatedAt: Date?,
     val totalAmount: Double,
-    val deliveryFee: Double?,
-    val restaurantAddress: String?,  // Địa chỉ nhà hàng (nơi giao)
-    val customerAddress: String?     // Địa chỉ khách hàng (nơi nhận)
+    val itemsTotal: Double,
+    val deliveryFee: Double,
+    val note: String?,
+    val restaurantId: String?,
+    val restaurantAddress: String?,
+    val customerAddress: String?,
+    val shippingAddress: String?,
+    val items: List<OrderItemDTO> = emptyList()
 )
+

@@ -1,6 +1,5 @@
 package Manager.Restaurant.mai.controller;
 
-import Manager.Restaurant.mai.dto.*;
 import Manager.Restaurant.mai.entity.*;
 import Manager.Restaurant.mai.service.*;
 import org.springframework.http.ResponseEntity;

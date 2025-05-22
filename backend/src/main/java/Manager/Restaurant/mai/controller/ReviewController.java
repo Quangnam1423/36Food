@@ -8,11 +8,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/reviews")
@@ -23,12 +21,22 @@ public class ReviewController {
     private final UserRepository userRepo;
     private final MenuItemRepository itemRepo;
     private final RestaurantRepository restaurantRepo;
-    private final OrderRepository orderRepo;
-
+    private final OrderRepository orderRepo;    
+    
     @PostMapping
-    public ResponseEntity<?> addReview(@RequestBody Map<String, Object> data) {
+    public ResponseEntity<?> addReview(
+            jakarta.servlet.http.HttpServletRequest request,
+            @RequestBody Map<String, Object> data) {
         try {
-            Long userId = Long.valueOf(data.get("userId").toString());
+            // Lấy userId từ token JWT (được thiết lập trong JwtAuthenticationFilter)
+            Long userId = (Long) request.getAttribute("userId");
+            
+            if (userId == null) {
+                return ResponseEntity.status(401).body(Map.of(
+                    "error", "Không tìm thấy thông tin người dùng trong token"
+                ));
+            }
+            
             Long restaurantId = Long.valueOf(data.get("restaurantId").toString());
             String content = data.get("content").toString();
             float rating = Float.parseFloat(data.get("rating").toString());
@@ -49,19 +57,27 @@ public class ReviewController {
                     .restaurant(restaurant)
                     .food(food)
                     .order(order)
-                    .content(content)
+                    .content(content)                    
                     .rating(rating)
                     .imageUrls(imageUrls)
                     .isAnonymous(isAnonymous)
-                    .createdAt(Instant.now())
+                    .createdAt(LocalDateTime.now())
                     .isDeleted(false)
-                    .build();
+                    .build();            Review savedReview = reviewRepo.save(review);
 
-            reviewRepo.save(review);
-
-            return ResponseEntity.ok(Map.of("message", "Đánh giá đã được thêm", "reviewId", review.getId()));
+            // Chuyển đổi review thành DTO để trả về thông tin chi tiết hơn
+            ReviewDTO reviewDTO = ReviewDTO.fromEntity(savedReview);
+            
+            return ResponseEntity.ok(Map.of(
+                "message", "Đánh giá đã được thêm thành công", 
+                "reviewId", savedReview.getId(),
+                "review", reviewDTO
+            ));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Dữ liệu không hợp lệ hoặc thiếu.");
+            e.printStackTrace(); // Log lỗi để debug
+            return ResponseEntity.badRequest().body(Map.of(
+                "error", "Dữ liệu không hợp lệ hoặc thiếu: " + e.getMessage()
+            ));
         }
     }
 
@@ -70,7 +86,9 @@ public class ReviewController {
         List<Review> reviews = reviewRepo.findByRestaurant_IdAndIsDeletedFalse(restaurantId);
         List<ReviewDTO> result = reviews.stream().map(ReviewDTO::fromEntity).toList();
         return ResponseEntity.ok(result);
-    }    @GetMapping("/item/{itemId}")
+    }    
+    
+    @GetMapping("/item/{itemId}")
     public ResponseEntity<?> getReviewsByItem(@PathVariable Long itemId) {
         List<Review> reviews = reviewRepo.findByFood_ItemIdAndIsDeletedFalse(itemId);
         List<ReviewDTO> result = reviews.stream().map(ReviewDTO::fromEntity).toList();
@@ -129,6 +147,98 @@ public class ReviewController {
                 "totalPages", totalPages,
                 "currentPage", page,
                 "hasMore", page < totalPages - 1,
+                "averageRating", averageRating
+        );
+        
+        return ResponseEntity.ok(response);
+    }    
+    
+    /**
+     * Lấy tất cả danh sách đánh giá của người dùng (không phân trang)
+     * @param userId ID của người dùng
+     * @return Danh sách tất cả các đánh giá của người dùng
+     */    @GetMapping("/user/{userId}")
+    public ResponseEntity<?> getUserReviews(
+            @PathVariable Long userId,
+            jakarta.servlet.http.HttpServletRequest request
+    ) {
+        System.out.println("Accessing /reviews/user/" + userId + " endpoint");
+        System.out.println("Authorization header: " + request.getHeader("Authorization"));
+        
+        // Kiểm tra xem người dùng có tồn tại không
+        if (!userRepo.existsById(userId)) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        List<Review> reviews = reviewRepo.findByUser_UserIdAndIsDeletedFalse(userId);
+        
+        // Sắp xếp theo thời gian mới nhất
+        reviews.sort((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
+        
+        // Chuyển đổi tất cả đánh giá sang DTO đơn giản hơn (chỉ chứa thông tin review, không kèm thông tin chi tiết người dùng)
+        List<ReviewDTO> reviewDTOs = reviews.stream()
+                .map(ReviewDTO::fromEntity)
+                .toList();
+        
+        // Tính toán rating trung bình cho tất cả đánh giá của người dùng
+        float averageRating = 0;
+        if (!reviews.isEmpty()) {
+            averageRating = (float) reviews.stream()
+                    .mapToDouble(Review::getRating)
+                    .average()
+                    .orElse(0);
+        }
+        
+        Map<String, Object> response = Map.of(
+                "reviews", reviewDTOs,
+                "totalCount", reviewDTOs.size(),
+                "averageRating", averageRating
+        );
+        
+        return ResponseEntity.ok(response);
+    }/**
+     * Lấy tất cả danh sách đánh giá của người dùng đăng nhập hiện tại (không phân trang)
+     * @param request HttpServletRequest để lấy thông tin người dùng từ token JWT
+     * @return Danh sách tất cả các đánh giá của người dùng hiện tại
+     */    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUserReviews(
+            jakarta.servlet.http.HttpServletRequest request
+    ) {
+        // Lấy userId từ token JWT (được thiết lập trong JwtAuthenticationFilter)
+        Long userId = (Long) request.getAttribute("userId");
+        
+        System.out.println("Accessing /reviews/me endpoint with userId from token: " + userId);
+        
+        if (userId == null) {
+            // Log headers for debugging
+            System.out.println("Authorization header: " + request.getHeader("Authorization"));
+            return ResponseEntity.status(401).body(Map.of(
+                "error", "Không tìm thấy thông tin người dùng trong token"
+            ));
+        }
+        
+        List<Review> reviews = reviewRepo.findByUser_UserIdAndIsDeletedFalse(userId);
+        
+        // Sắp xếp theo thời gian mới nhất
+        reviews.sort((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
+        
+        // Chuyển đổi tất cả đánh giá sang DTO đơn giản hơn (chỉ chứa thông tin review, không kèm thông tin chi tiết người dùng)
+        List<ReviewDTO> reviewDTOs = reviews.stream()
+                .map(ReviewDTO::fromEntity)
+                .toList();
+        
+        // Tính toán rating trung bình cho tất cả đánh giá của người dùng
+        float averageRating = 0;
+        if (!reviews.isEmpty()) {
+            averageRating = (float) reviews.stream()
+                    .mapToDouble(Review::getRating)
+                    .average()
+                    .orElse(0);
+        }
+        
+        Map<String, Object> response = Map.of(
+                "reviews", reviewDTOs,
+                "totalCount", reviewDTOs.size(),
                 "averageRating", averageRating
         );
         

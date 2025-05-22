@@ -5,6 +5,7 @@ import com.example.a36food.data.api.CartApi
 import com.example.a36food.data.api.LocationApi
 import com.example.a36food.data.api.OrderApi
 import com.example.a36food.data.api.RestaurantApi
+import com.example.a36food.data.api.ReviewApi
 import com.example.a36food.data.api.UserApi
 import com.example.a36food.data.network.NetworkConnectionManager
 import com.example.a36food.data.network.interceptors.AuthInterceptor
@@ -36,13 +37,7 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideBaseUrl(): String {
-        return "http://192.168.86.81:8080/" // For Android emulator
-    }
-
-    @Provides
-    @Singleton
-    fun provideGson(): Gson {
-        return GsonBuilder().setLenient().create()
+        return "http://192.168.2.106:8080/" // For Android emulator
     }
 
     @Provides
@@ -66,6 +61,15 @@ object NetworkModule {
             .addInterceptor(loggingInterceptor)
             .addInterceptor(authInterceptor)
             .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideGson(): Gson {
+        return GsonBuilder()
+            .setLenient()
+            .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
+            .create()
     }
 
     @Provides
@@ -111,4 +115,11 @@ object NetworkModule {
     fun provideOrderApi(retrofit: Retrofit) : OrderApi {
         return retrofit.create(OrderApi::class.java)
     }
+
+    @Provides
+    @Singleton
+    fun provideReviewApi(retrofit: Retrofit) : ReviewApi {
+        return retrofit.create(ReviewApi::class.java)
+    }
 }
+

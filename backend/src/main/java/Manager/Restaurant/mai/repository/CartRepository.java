@@ -1,7 +1,6 @@
 package Manager.Restaurant.mai.repository;
 
 import Manager.Restaurant.mai.entity.Cart;
-import Manager.Restaurant.mai.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

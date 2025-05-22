@@ -3,6 +3,8 @@ package com.example.a36food.data.api
 import com.example.a36food.data.dto.OrderDetailResponse
 import com.example.a36food.data.dto.OrderRequestDTO
 import com.example.a36food.data.dto.OrderResponseDTO
+import com.example.a36food.data.dto.ReorderRequestDTO
+import com.example.a36food.data.dto.ReorderResponseDTO
 import com.example.a36food.domain.model.Order
 import retrofit2.Response
 import retrofit2.http.Body
@@ -42,4 +44,23 @@ interface OrderApi {
     suspend fun createDraftOrder(
         @Header("Authorization") token: String
     ): Response<OrderResponseDTO>
+
+    @GET("orders/user/processing")
+    suspend fun getUserProcessingOrders(
+        @Header("Authorization") token: String
+    ): Response<List<OrderResponseDTO>>
+
+    @GET("orders/user/filter")
+    suspend fun getUserOrdersWithFilter(
+        @Header("Authorization") token: String,
+        @Query("status") status: String? = null,
+        @Query("startDate") startDate: String? = null,
+        @Query("endDate") endDate: String? = null
+    ): Response<List<OrderResponseDTO>>
+
+    @POST("orders/reorder")
+    suspend fun reorderOrder(
+        @Header("Authorization") token: String,
+        @Body reorderRequest: ReorderRequestDTO
+    ): Response<ReorderResponseDTO>
 }

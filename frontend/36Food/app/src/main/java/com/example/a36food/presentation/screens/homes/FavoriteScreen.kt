@@ -21,17 +21,21 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.Fastfood
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -43,6 +47,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -51,28 +57,46 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import com.example.a36food.R
 import com.example.a36food.Screen
-import com.example.a36food.domain.model.BusinessHours
-import com.example.a36food.domain.model.OpeningStatus
 import com.example.a36food.domain.model.Restaurant
 import com.example.a36food.domain.model.ServiceType
+import com.example.a36food.presentation.viewmodel.FavoriteViewModel
 import com.example.a36food.ui.components.BottomNavBar
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun FavoriteScreen(
+    viewModel: FavoriteViewModel = hiltViewModel(),
     onNavigateToHome: () -> Unit = {},
     onNavigateToHistory: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
     onNavigateToSearch: () -> Unit = {},
-    onRestaurantClick: (String) -> Unit = {}
+    onRestaurantClick: (String) -> Unit = {},
+    onNetworkError: () -> Unit = {}
 ) {
+    val state by viewModel.state.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.setNetworkErrorHandler {
+            onNetworkError()
+        }
+    }
+
+    val pullRefreshState = rememberPullRefreshState(
+        refreshing = state.isRefreshing,
+        onRefresh = { viewModel.refreshData() }
+    )
+
     Scaffold(
         topBar = {
             FavoriteTopAppBar(
@@ -89,11 +113,155 @@ fun FavoriteScreen(
             )
         }
     ) { paddingValues ->
-        FavoriteLayout(
-            modifier = Modifier.padding(paddingValues),
-            onRestaurantClick = onRestaurantClick
-        )
+        Box(
+            modifier = Modifier
+                .padding(paddingValues)
+                .fillMaxSize()
+                .pullRefresh(pullRefreshState)
+        ) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(top = 16.dp, bottom = 16.dp)
+            ) {
+                // Service Type Filter
+                item {
+                    ServiceTypeFilter(
+                        selectedService = state.selectedServiceType,
+                        onServiceSelected = { viewModel.setServiceType(it) },
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
 
+                // Popular Restaurants Section
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color(0xFFF5F5F5))
+                            .padding(vertical = 16.dp)
+                    ) {
+                        Text(
+                            text = "Đặt Nhiều Nhất",
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = Color(0xFFFF5722),
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        if (state.popularRestaurants.isEmpty() && !state.isInitialLoading) {
+                            Text(
+                                text = "Không có dữ liệu",
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier
+                                    .padding(16.dp)
+                                    .fillMaxWidth(),
+                                textAlign = TextAlign.Center,
+                                color = Color.Gray
+                            )
+                        } else {
+                            LazyRow(
+                                contentPadding = PaddingValues(horizontal = 16.dp),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                items(state.popularRestaurants) { restaurant ->
+                                    PopularRestaurantCard(restaurant, onRestaurantClick)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Favorite Restaurants Section
+                item {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Text(
+                        text = "Quán Yêu Thích",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = Color(0xFFFF5722),
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+
+                // Initial Loading State
+                if (state.isInitialLoading) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = Color(0xFFFF5722))
+                        }
+                    }
+                }
+                // Empty State
+                else if (state.favoriteRestaurants.isEmpty()) {
+                    item {
+                        EmptyFavoriteState()
+                    }
+                }
+                // Favorite Restaurants List
+                else {
+                    items(state.favoriteRestaurants) { restaurant ->
+                        FavoriteRestaurantCard(
+                            restaurant = restaurant,
+                            onRestaurantClick = onRestaurantClick,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+
+                    // "Load More" item if there are more pages
+                    if (state.hasMore) {
+                        item {
+                            if (state.isLoadingMore) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(
+                                        color = Color(0xFFFF5722),
+                                        modifier = Modifier.size(32.dp)
+                                    )
+                                }
+                            } else {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp)
+                                        .clickable { viewModel.loadMoreFavorites() },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "Tải thêm",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = Color(0xFFFF5722),
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Pull-to-refresh indicator
+            PullRefreshIndicator(
+                refreshing = state.isRefreshing,
+                state = pullRefreshState,
+                modifier = Modifier.align(Alignment.TopCenter),
+                backgroundColor = Color.White,
+                contentColor = Color(0xFFFF5722)
+            )
+        }
     }
 }
 
@@ -129,112 +297,6 @@ private fun FavoriteTopAppBar(
 }
 
 @Composable
-private fun FavoriteLayout(
-    modifier: Modifier = Modifier,
-    onRestaurantClick: (String) -> Unit
-) {
-    // Your favorite layout implementation here
-    var selectedService by remember { mutableStateOf(ServiceType.ALL) }
-    val restaurants = remember { generateSampleRestaurants() }
-    val favoriteRestaurants = remember { generateSampleFavoriteRestaurants() }
-
-    LazyColumn(
-        modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(top = 16.dp, bottom = 16.dp)
-    ) {
-        // Service Type Filter
-        item {
-            ServiceTypeFilter(
-                selectedService = selectedService,
-                onServiceSelected = { selectedService = it },
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-            Spacer(modifier = Modifier.height(24.dp))
-        }
-
-        // Popular Restaurants Section
-        item {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFFF5F5F5))
-                    .padding(vertical = 16.dp)
-            ) {
-                Text(
-                    text = "Đặt Nhiều Nhất",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = Color(0xFFFF5722),
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(restaurants.take(19)) { restaurant ->
-                        PopularRestaurantCard(restaurant, onRestaurantClick)
-                    }
-                    item {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.padding(8.dp)
-                        ) {
-                            OutlinedIconButton(
-                                onClick = { /*TODO*/ },
-                                border = BorderStroke(1.dp, Color(0xFFFF5722))
-                            ) {
-                                Icon(
-                                    Icons.Default.ArrowForwardIos,
-                                    contentDescription = "Xem thêm",
-                                    tint = Color(0xFFFF5722)
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "Xem thêm",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFFFF5722)
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        // Favorite Restaurants Section
-        item {
-            Spacer(modifier = Modifier.height(24.dp))
-            Text(
-                text = "Quán Yêu Thích",
-                style = MaterialTheme.typography.headlineMedium,
-                color = Color(0xFFFF5722),
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-        }
-
-        if (favoriteRestaurants.isEmpty()) {
-            item {
-                EmptyFavoriteState()
-            }
-        } else {
-            items(favoriteRestaurants) { restaurant ->
-                FavoriteRestaurantCard(
-                    restaurant = restaurant,
-                    onRestaurantClick = onRestaurantClick,
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-        }
-    }
-}
-
-@Composable
 private fun ServiceTypeFilter(
     selectedService: ServiceType,
     onServiceSelected: (ServiceType) -> Unit,
@@ -260,7 +322,7 @@ private fun ServiceTypeFilter(
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            modifier = Modifier.fillMaxWidth().padding(8.dp)
+            modifier = Modifier.fillMaxWidth(0.5f)
         ) {
             ServiceType.entries.forEach { serviceType ->
                 DropdownMenuItem(
@@ -270,62 +332,6 @@ private fun ServiceTypeFilter(
                         expanded = false
                     }
                 )
-            }
-        }
-    }
-}
-
-
-@Composable
-private fun RestaurantSection(
-    restaurants: List<Restaurant>,
-    onRestaurantClick: (String) -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color(0xFFF5F5F5))
-            .padding(vertical = 16.dp)
-    ) {
-        Text(
-            text = "Đặt Nhiều Nhất",
-            style = MaterialTheme.typography.titleLarge,
-            color = Color(0xFFFF5722),
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(restaurants.take(19)) { restaurant ->
-                PopularRestaurantCard(restaurant, onRestaurantClick)
-            }
-            item {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(8.dp)
-                ) {
-                    OutlinedIconButton(
-                        onClick = { /*TODO*/ },
-                        border = BorderStroke(1.dp, Color(0xFFFF5722))
-                    ) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowForwardIos,
-                            contentDescription = "Xem thêm",
-                            tint = Color(0xFFFF5722)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Xem thêm",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFFFF5722)
-                    )
-                }
             }
         }
     }
@@ -346,7 +352,12 @@ private fun PopularRestaurantCard(
     ) {
         Column {
             AsyncImage(
-                model = restaurant.imageUrl,
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(restaurant.imageUrl)
+                    .crossfade(true)
+                    .placeholder(R.drawable.restaurant)
+                    .error(R.drawable.ic_broken_image)
+                    .build(),
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -384,14 +395,21 @@ private fun FavoriteRestaurantCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.fillMaxWidth().clickable { onRestaurantClick(restaurant.id) },
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { onRestaurantClick(restaurant.id) },
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Box {
             Row(modifier = Modifier.fillMaxWidth()) {
                 AsyncImage(
-                    model = restaurant.imageUrl,
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(restaurant.imageUrl)
+                        .crossfade(true)
+                        .placeholder(R.drawable.restaurant)
+                        .error(R.drawable.ic_broken_image)
+                        .build(),
                     contentDescription = null,
                     modifier = Modifier
                         .width(120.dp)
@@ -443,7 +461,7 @@ private fun FavoriteRestaurantCard(
                 }
             }
 
-            // Heart icon
+            // Heart icon - always filled red since these are favorites
             Icon(
                 imageVector = Icons.Default.Favorite,
                 contentDescription = null,
@@ -491,54 +509,3 @@ private fun EmptyFavoriteState() {
     }
 }
 
-private fun generateSampleRestaurants(): List<Restaurant> {
-    return List(20) { index ->
-        Restaurant(
-            id = "1",
-            name = "Phở Thìn Bờ Hồ",
-            imageUrl = "https://example.com/pho.jpg", // tạm thời dùng R.drawable khi hiển thị
-            rating = 4.5f,
-            ratingCount = 234,
-            address = "13 Lò Đúc, Hai Bà Trưng, Hà Nội",
-            priceRange = "20000",
-            openingStatus = OpeningStatus.SCHEDULED,
-            businessHours = BusinessHours(
-                openTime = "07:00",
-                closeTime = "22:00"
-            ),
-            serviceType = ServiceType.FOOD,
-            phoneNumber = "0123456789",
-            likes = 156,
-            categories = listOf("Phở", "Món Việt", "Đặc sản")
-        )
-    }
-}
-
-private fun generateSampleFavoriteRestaurants(): List<Restaurant> {
-    return List(5) { index ->
-        Restaurant(
-            id = "1",
-            name = "Phở Thìn Bờ Hồ",
-            imageUrl = "https://example.com/pho.jpg",
-            rating = 4.5f,
-            ratingCount = 234,
-            address = "13 Lò Đúc, Hai Bà Trưng, Hà Nội",
-            priceRange = "20000",
-            openingStatus = OpeningStatus.SCHEDULED,
-            businessHours = BusinessHours(
-                openTime = "07:00",
-                closeTime = "22:00"
-            ),
-            serviceType = ServiceType.FOOD,
-            phoneNumber = "0123456789",
-            likes = 156,
-            categories = listOf("Phở", "Món Việt", "Đặc sản")
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun FavoriteScreenPreview() {
-    FavoriteScreen()
-}

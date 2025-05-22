@@ -8,7 +8,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -404,10 +403,7 @@ public class DataInitializer {    // Helper method to create categories for a re
                 new MenuItem(restaurants.get(9), "Nem rán", "Nem rán giòn với nhân thịt, nấm, miến", BigDecimal.valueOf(40000), "Món khai vị", "https://example.com/nem-ran.jpg", LocalDateTime.now(), LocalDateTime.now()),
                 new MenuItem(restaurants.get(9), "Trà đá chanh", "Trà đá với chanh tươi", BigDecimal.valueOf(15000), "Đồ uống", "https://example.com/tra-chanh.jpg", LocalDateTime.now(), LocalDateTime.now())
         );
-        menuItemRepo.saveAll(menuItems);
-
-
-        // --- REVIEW ---
+        menuItemRepo.saveAll(menuItems);        // --- REVIEW ---
         List<Review> reviews = List.of(
                 Review.builder()
                         .user(users.get(1))
@@ -417,7 +413,7 @@ public class DataInitializer {    // Helper method to create categories for a re
                         .content("Ngon, giá hợp lý")
                         .rating(4.5f)
                         .imageUrls(List.of("https://example.com/images/review1.jpg"))
-                        .createdAt(Instant.now())
+                        .createdAt(LocalDateTime.now())
                         .isAnonymous(false)
                         .isDeleted(false)
                         .build(),
@@ -430,7 +426,7 @@ public class DataInitializer {    // Helper method to create categories for a re
                         .content("Đồ uống mát, thơm mùi cam")
                         .rating(4.0f)
                         .imageUrls(List.of("https://example.com/images/review2.jpg"))
-                        .createdAt(Instant.now())
+                        .createdAt(LocalDateTime.now())
                         .isAnonymous(false)
                         .isDeleted(false)
                         .build(),
@@ -443,8 +439,8 @@ public class DataInitializer {    // Helper method to create categories for a re
                         .content("Bún chả chuẩn vị Hà Nội")
                         .rating(5.0f)
                         .imageUrls(List.of())
-                        .createdAt(Instant.now())
-                        .isAnonymous(true)
+                        .createdAt(LocalDateTime.now())
+                        .isAnonymous(false)
                         .isDeleted(false)
                         .build(),
 
@@ -456,7 +452,7 @@ public class DataInitializer {    // Helper method to create categories for a re
                         .content("Phở ngon, nước dùng ngọt")
                         .rating(4.2f)
                         .imageUrls(List.of("https://example.com/images/review4.jpg"))
-                        .createdAt(Instant.now())
+                        .createdAt(LocalDateTime.now())
                         .isAnonymous(false)
                         .isDeleted(false)
                         .build(),
@@ -469,10 +465,11 @@ public class DataInitializer {    // Helper method to create categories for a re
                         .content("Bánh mì giòn, pate béo")
                         .rating(4.8f)
                         .imageUrls(List.of())
-                        .createdAt(Instant.now())
-                        .isAnonymous(true)
+                        .createdAt(LocalDateTime.now())
+                        .isAnonymous(false)
                         .isDeleted(false)
                         .build(),
+
                 Review.builder()
                         .user(users.get(0))
                         .food(menuItems.get(5))
@@ -481,7 +478,7 @@ public class DataInitializer {    // Helper method to create categories for a re
                         .content("Sinh tố bơ tuyệt vời! Rất mịn và không quá ngọt.")
                         .rating(4.7f)
                         .imageUrls(List.of("https://example.com/images/review6.jpg"))
-                        .createdAt(Instant.now())
+                        .createdAt(LocalDateTime.now())
                         .isAnonymous(false)
                         .isDeleted(false)
                         .build(),
@@ -494,7 +491,7 @@ public class DataInitializer {    // Helper method to create categories for a re
                         .content("Cơm gà xối mỡ giòn tan, gà mềm.")
                         .rating(4.3f)
                         .imageUrls(List.of())
-                        .createdAt(Instant.now())
+                        .createdAt(LocalDateTime.now())
                         .isAnonymous(false)
                         .isDeleted(false)
                         .build(),
@@ -507,8 +504,8 @@ public class DataInitializer {    // Helper method to create categories for a re
                         .content("Trà đào mát mẻ, nhưng hơi ngọt quá.")
                         .rating(3.8f)
                         .imageUrls(List.of("https://example.com/images/review8.jpg"))
-                        .createdAt(Instant.now())
-                        .isAnonymous(true)
+                        .createdAt(LocalDateTime.now())
+                        .isAnonymous(false)
                         .isDeleted(false)
                         .build(),
 
@@ -520,7 +517,7 @@ public class DataInitializer {    // Helper method to create categories for a re
                         .content("Sinh tố bơ đặc quá, hơi khó uống.")
                         .rating(3.5f)
                         .imageUrls(List.of())
-                        .createdAt(Instant.now())
+                        .createdAt(LocalDateTime.now())
                         .isAnonymous(false)
                         .isDeleted(false)
                         .build(),
@@ -533,8 +530,8 @@ public class DataInitializer {    // Helper method to create categories for a re
                         .content("Phở bò đậm đà, nước dùng thơm và nóng.")
                         .rating(4.9f)
                         .imageUrls(List.of("https://example.com/images/review10.jpg"))
-                        .createdAt(Instant.now())
-                        .isAnonymous(true)
+                        .createdAt(LocalDateTime.now())
+                        .isAnonymous(false)
                         .isDeleted(false)
                         .build()
         );

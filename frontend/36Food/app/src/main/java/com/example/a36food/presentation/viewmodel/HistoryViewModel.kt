@@ -414,4 +414,53 @@ class HistoryViewModel @Inject constructor(
     private fun showSuccessMessage(message: String) {
         _state.update { it.copy(error = "Thành công: $message") }
     }
+
+    fun submitReview(
+        restaurantId: String,
+        content: String,
+        rating: Float,
+        isAnonymous: Boolean,
+        imageUrls: List<String>,
+        foodId: String,
+        orderId: String
+    ) {
+        viewModelScope.launch {
+            _state.update { it.copy(isLoading = true, error = null) }
+
+            val token = sharedPreferences.getString("access_token", null)
+            if (token.isNullOrEmpty()) {
+                _state.update { it.copy(isLoading = false, error = "Vui lòng đăng nhập để gửi đánh giá") }
+                return@launch
+            }
+
+            val result = networkErrorHandler.safeApiCall(
+                apiCall = {
+                    reviewRepository.createReview(
+                        token = token,
+                        restaurantId = restaurantId,
+                        content = content,
+                        rating = rating,
+                        isAnonymous = isAnonymous,
+                        imageUrls = imageUrls,
+                        foodId = foodId,
+                        orderId = orderId
+                    )
+                },
+                onNetworkError = { _onNetworkError?.invoke() }
+            )
+
+            result.fold(
+                onSuccess = { response ->
+                    _state.update { it.copy(isLoading = false, error = null) }
+                    // Reload user reviews after successful submission
+                    loadUserReviews()
+                    // Show success message
+                    showSuccessMessage(response.message)
+                },
+                onFailure = { error ->
+                    _state.update { it.copy(isLoading = false, error = error.message) }
+                }
+            )
+        }
+    }
 }

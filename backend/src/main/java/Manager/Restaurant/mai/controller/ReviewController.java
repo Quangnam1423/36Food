@@ -30,21 +30,77 @@ public class ReviewController {
         try {
             // Lấy userId từ token JWT (được thiết lập trong JwtAuthenticationFilter)
             Long userId = (Long) request.getAttribute("userId");
-            
-            if (userId == null) {
+              if (userId == null) {
                 return ResponseEntity.status(401).body(Map.of(
                     "error", "Không tìm thấy thông tin người dùng trong token"
                 ));
             }
             
-            Long restaurantId = Long.valueOf(data.get("restaurantId").toString());
-            String content = data.get("content").toString();
-            float rating = Float.parseFloat(data.get("rating").toString());
-            boolean isAnonymous = Boolean.parseBoolean(data.get("isAnonymous").toString());
-            List<String> imageUrls = (List<String>) data.getOrDefault("imageUrls", List.of());
+            // Safely parse required fields
+            Long restaurantId;
+            String content;
+            float rating;
+            boolean isAnonymous;
+            
+            try {
+                Object restaurantIdObj = data.get("restaurantId");
+                if (restaurantIdObj == null || (restaurantIdObj instanceof String && ((String)restaurantIdObj).isEmpty())) {
+                    return ResponseEntity.badRequest().body(Map.of(
+                        "error", "Thiếu thông tin nhà hàng"
+                    ));
+                }
+                restaurantId = Long.valueOf(restaurantIdObj.toString());
+                
+                Object contentObj = data.get("content");
+                content = contentObj != null ? contentObj.toString() : "";
+                
+                Object ratingObj = data.get("rating");
+                if (ratingObj == null || (ratingObj instanceof String && ((String)ratingObj).isEmpty())) {
+                    return ResponseEntity.badRequest().body(Map.of(
+                        "error", "Thiếu đánh giá sao"
+                    ));
+                }
+                rating = Float.parseFloat(ratingObj.toString());
+                
+                Object isAnonymousObj = data.get("isAnonymous");
+                isAnonymous = isAnonymousObj != null && Boolean.parseBoolean(isAnonymousObj.toString());
+            } catch (NumberFormatException e) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Dữ liệu không hợp lệ: " + e.getMessage()
+                ));
+            }
+            
+            // Handle imageUrls safely - ensure it's never null
+            List<String> imageUrls;
+            try {
+                Object imageUrlsObj = data.get("imageUrls");
+                if (imageUrlsObj == null || (imageUrlsObj instanceof String && ((String)imageUrlsObj).isEmpty())) {
+                    imageUrls = List.of(); // Empty list if imageUrls is null or empty string
+                } else if (imageUrlsObj instanceof List) {
+                    imageUrls = (List<String>) imageUrlsObj;
+                } else {
+                    imageUrls = List.of(); // Default to empty list for any other case
+                }            } catch (Exception e) {
+                imageUrls = List.of(); // Default to empty list if any exception occurs
+            }
 
-            Long foodId = data.get("foodId") != null ? Long.valueOf(data.get("foodId").toString()) : null;
-            Long orderId = data.get("orderId") != null ? Long.valueOf(data.get("orderId").toString()) : null;
+            // Safely parse optional fields
+            Long foodId = null;
+            Long orderId = null;
+            
+            try {
+                Object foodIdObj = data.get("foodId");
+                if (foodIdObj != null && !(foodIdObj instanceof String && ((String)foodIdObj).isEmpty())) {
+                    foodId = Long.valueOf(foodIdObj.toString());
+                }
+                
+                Object orderIdObj = data.get("orderId");
+                if (orderIdObj != null && !(orderIdObj instanceof String && ((String)orderIdObj).isEmpty())) {
+                    orderId = Long.valueOf(orderIdObj.toString());
+                }
+            } catch (NumberFormatException e) {
+                // Just leave as null if there's a parsing error
+            }
 
             User user = userRepo.findById(userId).orElseThrow();
             Restaurant restaurant = restaurantRepo.findById(restaurantId).orElseThrow();

@@ -7,7 +7,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
@@ -23,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -42,6 +45,11 @@ import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.text.input.ImeAction
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -390,6 +398,7 @@ private fun OrderCard(
     // State for dialog visibility
     var showCancelDialog by remember { mutableStateOf(false) }
     var showReorderDialog by remember { mutableStateOf(false) }
+    var showReviewDialog by remember { mutableStateOf(false) }
 
     // Context for location
     val context = LocalContext.current
@@ -556,8 +565,26 @@ private fun OrderCard(
                         }
                     }
 
-                    // Show reorder button for COMPLETED orders
-                    if (order.status != "PENDING") {
+                    // Show add review and reorder buttons for COMPLETED orders
+                    if (order.status == "COMPLETED") {
+                        // Add Review button
+                        Button(
+                            onClick = { showReviewDialog = true },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFFF9800) // Orange color for review button
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Star,
+                                contentDescription = "Add Review",
+                                tint = Color.White
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Thêm Đánh giá", color = Color.White)
+                        }
+
+                        // Reorder button
                         Button(
                             onClick = { showReorderDialog = true },
                             modifier = Modifier.weight(1f),
@@ -648,6 +675,25 @@ private fun OrderCard(
             }
         )
     }
+
+    // Add Review confirmation dialog
+    if (showReviewDialog) {
+        ReviewFormDialog(
+            order = order,
+            onDismiss = { showReviewDialog = false },
+            onSubmit = { restaurantId, content, rating, isAnonymous, imageUrls, foodId, orderId ->
+                viewModel?.submitReview(
+                    restaurantId = restaurantId,
+                    content = content,
+                    rating = rating,
+                    isAnonymous = isAnonymous,
+                    imageUrls = imageUrls,
+                    foodId = foodId,
+                    orderId = orderId
+                )
+            }
+        )
+    }
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -689,7 +735,7 @@ private fun FilterSection(
         }
     } ?: "N/A"
 
-    // Khi component khởi tạo, chọn đúng tab dựa trên status hiện t���i
+    // Khi component khởi tạo, chọn đúng tab dựa trên status hiện tại
     LaunchedEffect(selectedStatus) {
         selectedStatusIndex = when(selectedStatus) {
             "COMPLETED" -> 1
@@ -1180,3 +1226,329 @@ private fun RatingBar(
     }
 }
 
+@Composable
+private fun ReviewFormDialog(
+    order: OrderResponseDTO,
+    onDismiss: () -> Unit,
+    onSubmit: (String, String, Float, Boolean, List<String>, String, String) -> Unit
+) {
+    var content by remember { mutableStateOf("") }
+    var rating by remember { mutableFloatStateOf(5f) }
+    var isAnonymous by remember { mutableStateOf(false) }
+    var imageUrl by remember { mutableStateOf("") }
+    var imageUrls by remember { mutableStateOf<List<String>>(emptyList()) }
+
+    // For simplicity, we'll use the first food item's details
+    val firstItem = order.items.firstOrNull()
+    // Ensure foodId is not empty and is a valid value
+    val foodId = firstItem?.id?.toString() ?: "0"
+    // Ensure restaurantId is not empty
+    val restaurantId = order.restaurantId?.toString() ?: "0"
+    // Ensure orderId is not empty
+    val orderId = order.orderId.toString()
+
+    // Create a focus manager for improved keyboard handling
+    val focusManager = LocalFocusManager.current
+
+    // Set up for keyboard behavior
+    val scrollState = rememberScrollState()
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.surface,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp)
+                    .verticalScroll(scrollState)
+            ) {
+                Text(
+                    text = "Đánh giá đơn hàng #${order.orderId}",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Food item preview
+                if (firstItem != null) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(
+                                color = MaterialTheme.colorScheme.surfaceVariant,
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(firstItem.imageUrl)
+                                .crossfade(true)
+                                .build(),
+                            contentDescription = firstItem.name,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(60.dp)
+                                .clip(RoundedCornerShape(6.dp))
+                        )
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Column {
+                            Text(
+                                text = firstItem.name,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = "Số lượng: ${firstItem.quantity}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.Gray
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
+                // Rating selection
+                Text(
+                    text = "Đánh giá của bạn",
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    RatingSelectionBar(
+                        currentRating = rating,
+                        onRatingChanged = { rating = it },
+                        starSize = 36.dp
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Review content with improved keyboard handling
+                OutlinedTextField(
+                    value = content,
+                    onValueChange = { content = it },
+                    label = { Text("Nội dung đánh giá") },
+                    placeholder = { Text("Chia sẻ cảm nhận của bạn về món ăn...") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 3,
+                    maxLines = 5,
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            focusManager.clearFocus()
+                        }
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Image URLs (optional)
+                Text(
+                    text = "Thêm ảnh (tùy chọn)",
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = imageUrl,
+                        onValueChange = { imageUrl = it },
+                        label = { Text("URL hình ảnh") },
+                        placeholder = { Text("https://example.com/image.jpg") },
+                        modifier = Modifier.weight(1f),
+                        keyboardOptions = KeyboardOptions(
+                            imeAction = ImeAction.Done
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = {
+                                if (imageUrl.isNotBlank()) {
+                                    imageUrls = imageUrls + imageUrl
+                                    imageUrl = ""
+                                }
+                                focusManager.clearFocus()
+                            }
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    IconButton(
+                        onClick = {
+                            if (imageUrl.isNotBlank()) {
+                                imageUrls = imageUrls + imageUrl
+                                imageUrl = ""
+                                focusManager.clearFocus()
+                            }
+                        },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(
+                                color = MaterialTheme.colorScheme.primary,
+                                shape = CircleShape
+                            )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Add Image URL",
+                            tint = Color.White
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Show added image URLs
+                if (imageUrls.isNotEmpty()) {
+                    LazyRow(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(80.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(imageUrls) { url ->
+                            Box(modifier = Modifier.size(80.dp)) {
+                                AsyncImage(
+                                    model = ImageRequest.Builder(LocalContext.current)
+                                        .data(url)
+                                        .crossfade(true)
+                                        .build(),
+                                    contentDescription = "Review image",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .size(80.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                )
+
+                                IconButton(
+                                    onClick = {
+                                        imageUrls = imageUrls.filter { it != url }
+                                    },
+                                    modifier = Modifier
+                                        .size(24.dp)
+                                        .align(Alignment.TopEnd)
+                                        .background(
+                                            color = Color(0xFFF44336),
+                                            shape = CircleShape
+                                        )
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = "Remove Image",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
+                // Anonymous option
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { isAnonymous = !isAnonymous }
+                        .padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = isAnonymous,
+                        onCheckedChange = { isAnonymous = it }
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Text(
+                        text = "Đánh giá ẩn danh",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Action buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(
+                        onClick = onDismiss
+                    ) {
+                        Text("Hủy")
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Button(
+                        onClick = {
+                            // Validate all fields before submission
+                            if (content.isNotBlank() && rating > 0) {
+                                onSubmit(
+                                    restaurantId,
+                                    content,
+                                    rating,
+                                    isAnonymous,
+                                    imageUrls,
+                                    foodId,
+                                    orderId
+                                )
+                                onDismiss()
+                            }
+                        },
+                        enabled = content.isNotBlank() && rating > 0
+                    ) {
+                        Text("Gửi đánh giá")
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RatingSelectionBar(
+    currentRating: Float,
+    onRatingChanged: (Float) -> Unit,
+    starSize: Dp = 48.dp
+) {
+    Row {
+        repeat(5) { index ->
+            val position = index + 1
+            val isFilled = position <= currentRating
+
+            IconButton(
+                onClick = { onRatingChanged(position.toFloat()) },
+                modifier = Modifier.size(starSize)
+            ) {
+                Icon(
+                    imageVector = if (isFilled) Icons.Default.Star else Icons.Default.StarOutline,
+                    contentDescription = "Rate $position",
+                    tint = Color(0xFFFFB74D),
+                    modifier = Modifier.size(starSize)
+                )
+            }
+        }
+    }
+}

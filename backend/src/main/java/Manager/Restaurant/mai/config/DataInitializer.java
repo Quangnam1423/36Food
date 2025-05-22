@@ -239,8 +239,7 @@ public class DataInitializer {    // Helper method to create categories for a re
         restaurant9.setMenuItems(new ArrayList<>());
         restaurant9.setCategories(new ArrayList<>());
         restaurants.add(restaurant9);
-        
-        // Restaurant 10: Bún Đậu Mắm Tôm Hà Nội
+          // Restaurant 10: Bún Đậu Mắm Tôm Hà Nội
         Restaurant restaurant10 = new Restaurant();
         restaurant10.setName("Bún Đậu Mắm Tôm Hà Nội");
         restaurant10.setImageUrl("https://example.com/image10.jpg");
@@ -259,6 +258,88 @@ public class DataInitializer {    // Helper method to create categories for a re
         restaurant10.setMenuItems(new ArrayList<>());
         restaurant10.setCategories(new ArrayList<>());
         restaurants.add(restaurant10);
+        
+        // Thêm các nhà hàng khu vực Hà Đông
+        
+        // Restaurant 11: Phở Hà Đông
+        Restaurant restaurant11 = new Restaurant();
+        restaurant11.setName("Phở Hà Đông");
+        restaurant11.setImageUrl("https://example.com/pho-ha-dong.jpg");
+        restaurant11.setRating(4.7f);
+        restaurant11.setRatingCount(250);
+        restaurant11.setPriceRange("40k-80k");
+        restaurant11.setOpeningStatus("OPEN");
+        restaurant11.setBusinessHours("06:00-22:00");
+        restaurant11.setPhoneNumber("0966888777");
+        restaurant11.setLikes(950);
+        restaurant11.setReviewsCount(180);
+        restaurant11.setDistance(0.0);
+        restaurant11.setCreatedAt(System.currentTimeMillis());
+        restaurant11.setLatitude(20.982342);  // Tọa độ khu vực Hà Đông
+        restaurant11.setLongitude(105.787498);
+        restaurant11.setMenuItems(new ArrayList<>());
+        restaurant11.setCategories(new ArrayList<>());
+        restaurants.add(restaurant11);
+        
+        // Restaurant 12: Bún Cá Hà Đông
+        Restaurant restaurant12 = new Restaurant();
+        restaurant12.setName("Bún Cá Ngon Hà Đông");
+        restaurant12.setImageUrl("https://example.com/bun-ca-ha-dong.jpg");
+        restaurant12.setRating(4.5f);
+        restaurant12.setRatingCount(180);
+        restaurant12.setPriceRange("45k-90k");
+        restaurant12.setOpeningStatus("OPEN");
+        restaurant12.setBusinessHours("07:00-21:00");
+        restaurant12.setPhoneNumber("0977123456");
+        restaurant12.setLikes(780);
+        restaurant12.setReviewsCount(150);
+        restaurant12.setDistance(0.0);
+        restaurant12.setCreatedAt(System.currentTimeMillis());
+        restaurant12.setLatitude(20.980129);  // Tọa độ khác ở Hà Đông
+        restaurant12.setLongitude(105.775642);
+        restaurant12.setMenuItems(new ArrayList<>());
+        restaurant12.setCategories(new ArrayList<>());
+        restaurants.add(restaurant12);
+        
+        // Restaurant 13: Cháo Ngon Hà Đông
+        Restaurant restaurant13 = new Restaurant();
+        restaurant13.setName("Cháo Ngon Hà Đông");
+        restaurant13.setImageUrl("https://example.com/chao-ha-dong.jpg");
+        restaurant13.setRating(4.6f);
+        restaurant13.setRatingCount(160);
+        restaurant13.setPriceRange("30k-60k");
+        restaurant13.setOpeningStatus("OPEN");
+        restaurant13.setBusinessHours("06:00-21:00");
+        restaurant13.setPhoneNumber("0988777666");
+        restaurant13.setLikes(680);
+        restaurant13.setReviewsCount(130);
+        restaurant13.setDistance(0.0);
+        restaurant13.setCreatedAt(System.currentTimeMillis());
+        restaurant13.setLatitude(20.974567);  // Tọa độ khác ở Hà Đông
+        restaurant13.setLongitude(105.789321);
+        restaurant13.setMenuItems(new ArrayList<>());
+        restaurant13.setCategories(new ArrayList<>());
+        restaurants.add(restaurant13);
+        
+        // Restaurant 14: Chè Ngon Hà Đông
+        Restaurant restaurant14 = new Restaurant();
+        restaurant14.setName("Chè Ngon Hà Đông");
+        restaurant14.setImageUrl("https://example.com/che-ha-dong.jpg");
+        restaurant14.setRating(4.8f);
+        restaurant14.setRatingCount(220);
+        restaurant14.setPriceRange("20k-50k");
+        restaurant14.setOpeningStatus("OPEN");
+        restaurant14.setBusinessHours("09:00-22:00");
+        restaurant14.setPhoneNumber("0933444555");
+        restaurant14.setLikes(1100);
+        restaurant14.setReviewsCount(210);
+        restaurant14.setDistance(0.0);
+        restaurant14.setCreatedAt(System.currentTimeMillis());
+        restaurant14.setLatitude(20.969876);  // Tọa độ khác ở Hà Đông
+        restaurant14.setLongitude(105.782134);
+        restaurant14.setMenuItems(new ArrayList<>());
+        restaurant14.setCategories(new ArrayList<>());
+        restaurants.add(restaurant14);
         
         restaurantRepo.saveAll(restaurants);
         
@@ -290,9 +371,21 @@ public class DataInitializer {    // Helper method to create categories for a re
         
         // Restaurant 8: Quán Nướng Hàn Quốc
         createCategoriesForRestaurant(restaurants.get(8), List.of("Món nướng", "Lẩu", "Món ăn kèm", "Đồ uống"), categoryRepo);
-        
-        // Restaurant 9: Bún Đậu Mắm Tôm
+          // Restaurant 9: Bún Đậu Mắm Tôm
         createCategoriesForRestaurant(restaurants.get(9), List.of("Bún đậu", "Nem rán", "Đồ nguội", "Đồ uống"), categoryRepo);
+        
+        // Thêm categories cho các nhà hàng khu vực Hà Đông
+        // Restaurant 10: Phở Hà Đông
+        createCategoriesForRestaurant(restaurants.get(10), List.of("Phở bò", "Phở gà", "Phở vịt", "Đồ uống"), categoryRepo);
+        
+        // Restaurant 11: Bún Cá Hà Đông
+        createCategoriesForRestaurant(restaurants.get(11), List.of("Bún cá", "Bún mọc", "Bún riêu", "Đồ uống"), categoryRepo);
+        
+        // Restaurant 12: Cháo Ngon Hà Đông
+        createCategoriesForRestaurant(restaurants.get(12), List.of("Cháo gà", "Cháo tim cật", "Cháo sườn", "Đồ uống"), categoryRepo);
+        
+        // Restaurant 13: Chè Ngon Hà Đông
+        createCategoriesForRestaurant(restaurants.get(13), List.of("Chè đỗ đen", "Chè bưởi", "Chè thập cẩm", "Đồ uống"), categoryRepo);
         
         // Save the restaurants with their categories
         restaurantRepo.saveAll(restaurants);
@@ -334,9 +427,7 @@ public class DataInitializer {    // Helper method to create categories for a re
                 new Voucher(null, "SUMMER20", 20.0f, LocalDateTime.now().plusDays(7), "Ưu đãi mùa hè -20%"),
                 new Voucher(null, "LUNCH15", 15.0f, LocalDateTime.now().plusDays(10), "Giảm 15% vào giờ trưa")
         );
-        voucherRepo.saveAll(vouchers);
-
-        // --- ORDER ---
+        voucherRepo.saveAll(vouchers);        // --- ORDER ---
         List<Order> orders = new ArrayList<>();
 
         for (int i = 0; i < 12; i++) {
@@ -357,7 +448,44 @@ public class DataInitializer {    // Helper method to create categories for a re
                 newOrder.setDeleted(false);
 
                 orders.add(newOrder);
-        }                orderRepo.saveAll(orders);
+        }
+        
+        // Thêm các đơn hàng hoàn thành cho người dùng từ các nhà hàng mới thêm vào
+        for (int u = 0; u < users.size(); u++) {
+            // Thêm đơn hàng từ nhà hàng Phở
+            Order phoOrder = new Order();
+            phoOrder.setUser(users.get(u));
+            phoOrder.setPayment(payments.get(u % payments.size()));
+            phoOrder.setOrderDate(LocalDateTime.now().minusDays(u + 2));
+            phoOrder.setTotalAmount(new BigDecimal("120000"));
+            phoOrder.setOrderStatus("COMPLETED");
+            phoOrder.setShippingAddress(addresses.get(u));
+            phoOrder.setRestaurantId(String.valueOf(restaurants.get(10).getId()));
+            phoOrder.setRestaurantAddress("Số 25 Quang Trung, Hà Đông, Hà Nội");
+            phoOrder.setCustomerAddress(addresses.get(u).getAdr());
+            phoOrder.setOrderCreatedAt(LocalDateTime.now().minusDays(u + 2));
+            phoOrder.setOrderUpdatedAt(LocalDateTime.now().minusDays(u + 1));
+            phoOrder.setDeleted(false);
+            orders.add(phoOrder);
+            
+            // Thêm đơn hàng từ nhà hàng Chè
+            Order cheOrder = new Order();
+            cheOrder.setUser(users.get(u));
+            cheOrder.setPayment(payments.get(u % payments.size()));
+            cheOrder.setOrderDate(LocalDateTime.now().minusDays(u + 3));
+            cheOrder.setTotalAmount(new BigDecimal("70000"));
+            cheOrder.setOrderStatus("COMPLETED");
+            cheOrder.setShippingAddress(addresses.get(u));
+            cheOrder.setRestaurantId(String.valueOf(restaurants.get(13).getId()));
+            cheOrder.setRestaurantAddress("Số 56 Nguyễn Viết Xuân, Hà Đông, Hà Nội");
+            cheOrder.setCustomerAddress(addresses.get(u).getAdr());
+            cheOrder.setOrderCreatedAt(LocalDateTime.now().minusDays(u + 3));
+            cheOrder.setOrderUpdatedAt(LocalDateTime.now().minusDays(u + 2));
+            cheOrder.setDeleted(false);
+            orders.add(cheOrder);
+        }
+        
+        orderRepo.saveAll(orders);
 
 
         // --- MENU ITEM ---
@@ -392,8 +520,7 @@ public class DataInitializer {    // Helper method to create categories for a re
                 new MenuItem(restaurants.get(7), "Pizza hải sản", "Pizza với tôm, mực, sò điệp", BigDecimal.valueOf(220000), "Món chính", "https://example.com/pizza-seafood.jpg", LocalDateTime.now(), LocalDateTime.now()),
                 new MenuItem(restaurants.get(7), "Pizza thịt nguội nấm", "Pizza với thịt nguội, nấm và phô mai", BigDecimal.valueOf(190000), "Món chính", "https://example.com/pizza-ham.jpg", LocalDateTime.now(), LocalDateTime.now()),
                 new MenuItem(restaurants.get(7), "Coca Cola", "Nước ngọt có gas", BigDecimal.valueOf(25000), "Đồ uống", "https://example.com/coca.jpg", LocalDateTime.now(), LocalDateTime.now()),
-                
-                // Món ăn cho nhà hàng Quán Nướng Hàn Quốc (restaurants.get(8))
+                  // Món ăn cho nhà hàng Quán Nướng Hàn Quốc (restaurants.get(8))
                 new MenuItem(restaurants.get(8), "Set nướng 2 người", "Set nướng gồm thịt bò, thịt heo, kim chi, kèm rau và đồ ăn kèm", BigDecimal.valueOf(350000), "Món chính", "https://example.com/korean-bbq.jpg", LocalDateTime.now(), LocalDateTime.now()),
                 new MenuItem(restaurants.get(8), "Lẩu kim chi", "Lẩu cay kiểu Hàn Quốc với kim chi, thịt bò, hải sản", BigDecimal.valueOf(280000), "Món chính", "https://example.com/kimchi-hotpot.jpg", LocalDateTime.now(), LocalDateTime.now()),
                 new MenuItem(restaurants.get(8), "Soju", "Rượu gạo Hàn Quốc", BigDecimal.valueOf(100000), "Đồ uống", "https://example.com/soju.jpg", LocalDateTime.now(), LocalDateTime.now()),
@@ -401,7 +528,37 @@ public class DataInitializer {    // Helper method to create categories for a re
                 // Món ăn cho nhà hàng Bún Đậu Mắm Tôm (restaurants.get(9))
                 new MenuItem(restaurants.get(9), "Set bún đậu 2 người", "Bún, đậu hũ chiên, chả cốm, thịt luộc, kèm rau sống", BigDecimal.valueOf(120000), "Món chính", "https://example.com/bun-dau.jpg", LocalDateTime.now(), LocalDateTime.now()),
                 new MenuItem(restaurants.get(9), "Nem rán", "Nem rán giòn với nhân thịt, nấm, miến", BigDecimal.valueOf(40000), "Món khai vị", "https://example.com/nem-ran.jpg", LocalDateTime.now(), LocalDateTime.now()),
-                new MenuItem(restaurants.get(9), "Trà đá chanh", "Trà đá với chanh tươi", BigDecimal.valueOf(15000), "Đồ uống", "https://example.com/tra-chanh.jpg", LocalDateTime.now(), LocalDateTime.now())
+                new MenuItem(restaurants.get(9), "Trà đá chanh", "Trà đá với chanh tươi", BigDecimal.valueOf(15000), "Đồ uống", "https://example.com/tra-chanh.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                
+                // Món ăn cho Phở Hà Đông (restaurants.get(10))
+                new MenuItem(restaurants.get(10), "Phở bò phổ thông", "Phở bò truyền thống với thịt bò tái", BigDecimal.valueOf(50000), "Phở bò", "https://example.com/pho-bo-thuong.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                new MenuItem(restaurants.get(10), "Phở bò đặc biệt", "Phở bò với đủ loại thịt: tái, nạm, gầu, sách", BigDecimal.valueOf(70000), "Phở bò", "https://example.com/pho-bo-dac-biet.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                new MenuItem(restaurants.get(10), "Phở gà phổ thông", "Phở với thịt gà ta", BigDecimal.valueOf(45000), "Phở gà", "https://example.com/pho-ga-thuong.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                new MenuItem(restaurants.get(10), "Phở gà đặc biệt", "Phở với thịt gà ta nguyên con", BigDecimal.valueOf(65000), "Phở gà", "https://example.com/pho-ga-dac-biet.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                new MenuItem(restaurants.get(10), "Phở vịt quay", "Phở với thịt vịt quay", BigDecimal.valueOf(60000), "Phở vịt", "https://example.com/pho-vit-quay.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                new MenuItem(restaurants.get(10), "Trà đá", "Trà đá miễn phí", BigDecimal.valueOf(0), "Đồ uống", "https://example.com/tra-da.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                
+                // Món ăn cho Bún Cá Hà Đông (restaurants.get(11))
+                new MenuItem(restaurants.get(11), "Bún cá rô đồng", "Bún với cá rô đồng tươi", BigDecimal.valueOf(55000), "Bún cá", "https://example.com/bun-ca-ro.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                new MenuItem(restaurants.get(11), "Bún cá chép", "Bún với cá chép tươi", BigDecimal.valueOf(60000), "Bún cá", "https://example.com/bun-ca-chep.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                new MenuItem(restaurants.get(11), "Bún mọc", "Bún với chả mọc thịt lợn", BigDecimal.valueOf(50000), "Bún mọc", "https://example.com/bun-moc.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                new MenuItem(restaurants.get(11), "Bún riêu cua", "Bún với gạch cua, đậu phụ rán", BigDecimal.valueOf(55000), "Bún riêu", "https://example.com/bun-rieu.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                new MenuItem(restaurants.get(11), "Chanh muối", "Nước chanh muối giải khát", BigDecimal.valueOf(15000), "Đồ uống", "https://example.com/chanh-muoi.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                
+                // Món ăn cho Cháo Ngon Hà Đông (restaurants.get(12))
+                new MenuItem(restaurants.get(12), "Cháo gà phổ thông", "Cháo nấu với thịt gà ta", BigDecimal.valueOf(40000), "Cháo gà", "https://example.com/chao-ga-thuong.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                new MenuItem(restaurants.get(12), "Cháo gà đặc biệt", "Cháo với gà ta nguyên con", BigDecimal.valueOf(60000), "Cháo gà", "https://example.com/chao-ga-dac-biet.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                new MenuItem(restaurants.get(12), "Cháo tim cật", "Cháo với tim, gan, cật lợn", BigDecimal.valueOf(45000), "Cháo tim cật", "https://example.com/chao-tim-cat.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                new MenuItem(restaurants.get(12), "Cháo sườn", "Cháo với sườn non", BigDecimal.valueOf(50000), "Cháo sườn", "https://example.com/chao-suon.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                new MenuItem(restaurants.get(12), "Nước sấu", "Nước sấu đặc trưng Hà Nội", BigDecimal.valueOf(15000), "Đồ uống", "https://example.com/nuoc-sau.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                
+                // Món ăn cho Chè Ngon Hà Đông (restaurants.get(13))
+                new MenuItem(restaurants.get(13), "Chè đỗ đen size nhỏ", "Chè đỗ đen với nước cốt dừa", BigDecimal.valueOf(20000), "Chè đỗ đen", "https://example.com/che-do-den-nho.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                new MenuItem(restaurants.get(13), "Chè đỗ đen size lớn", "Chè đỗ đen với nước cốt dừa, phần lớn", BigDecimal.valueOf(30000), "Chè đỗ đen", "https://example.com/che-do-den-lon.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                new MenuItem(restaurants.get(13), "Chè bưởi size nhỏ", "Chè bưởi thanh mát", BigDecimal.valueOf(25000), "Chè bưởi", "https://example.com/che-buoi-nho.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                new MenuItem(restaurants.get(13), "Chè bưởi size lớn", "Chè bưởi thanh mát, phần lớn", BigDecimal.valueOf(35000), "Chè bưởi", "https://example.com/che-buoi-lon.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                new MenuItem(restaurants.get(13), "Chè thập cẩm size nhỏ", "Chè với đủ loại topping", BigDecimal.valueOf(25000), "Chè thập cẩm", "https://example.com/che-thap-cam-nho.jpg", LocalDateTime.now(), LocalDateTime.now()),
+                new MenuItem(restaurants.get(13), "Chè thập cẩm size lớn", "Chè với đủ loại topping, phần lớn", BigDecimal.valueOf(40000), "Chè thập cẩm", "https://example.com/che-thap-cam-lon.jpg", LocalDateTime.now(), LocalDateTime.now())
         );
         menuItemRepo.saveAll(menuItems);        // --- REVIEW ---
         List<Review> reviews = List.of(
@@ -531,6 +688,159 @@ public class DataInitializer {    // Helper method to create categories for a re
                         .rating(4.9f)
                         .imageUrls(List.of("https://example.com/images/review10.jpg"))
                         .createdAt(LocalDateTime.now())
+                        .isAnonymous(false)
+                        .isDeleted(false)
+                        .build(),
+                
+                // Thêm đánh giá cho các món ăn của Phở Hà Đông
+                Review.builder()
+                        .user(users.get(0))
+                        .food(menuItems.get(27))  // Phở bò phổ thông
+                        .restaurant(menuItems.get(27).getRestaurant())
+                        .order(orders.get(12))
+                        .content("Phở bò ngon, nước dùng trong và ngọt thanh")
+                        .rating(4.7f)
+                        .imageUrls(List.of("https://example.com/images/review-pho-bo.jpg"))
+                        .createdAt(LocalDateTime.now().minusDays(2))
+                        .isAnonymous(false)
+                        .isDeleted(false)
+                        .build(),
+                        
+                Review.builder()
+                        .user(users.get(1))
+                        .food(menuItems.get(28))  // Phở bò đặc biệt
+                        .restaurant(menuItems.get(28).getRestaurant())
+                        .order(orders.get(16))
+                        .content("Phở bò đặc biệt thịt nhiều, đầy đặn, ngon!")
+                        .rating(4.9f)
+                        .imageUrls(List.of("https://example.com/images/review-pho-bo-dac-biet.jpg"))
+                        .createdAt(LocalDateTime.now().minusDays(3))
+                        .isAnonymous(false)
+                        .isDeleted(false)
+                        .build(),
+                        
+                Review.builder()
+                        .user(users.get(2))
+                        .food(menuItems.get(29))  // Phở gà phổ thông
+                        .restaurant(menuItems.get(29).getRestaurant())
+                        .order(orders.get(18))
+                        .content("Phở gà thịt mềm, nước dùng nhạt")
+                        .rating(3.5f)
+                        .imageUrls(List.of())
+                        .createdAt(LocalDateTime.now().minusDays(4))
+                        .isAnonymous(false)
+                        .isDeleted(false)
+                        .build(),
+                          Review.builder()
+                        .user(users.get(3))
+                        .food(menuItems.get(31))  // Phở vịt quay
+                        .restaurant(menuItems.get(31).getRestaurant())
+                        .order(orders.get(19))  // Changed from 20 to 19 (valid index)
+                        .content("Phở vịt quay vịt giòn thơm, nước dùng đậm đà")
+                        .rating(4.8f)
+                        .imageUrls(List.of("https://example.com/images/review-pho-vit.jpg"))
+                        .createdAt(LocalDateTime.now().minusDays(5))
+                        .isAnonymous(false)
+                        .isDeleted(false)
+                        .build(),
+                
+                // Thêm đánh giá cho các món ăn của Chè Ngon Hà Đông
+                Review.builder()
+                        .user(users.get(0))
+                        .food(menuItems.get(43))  // Chè đỗ đen size nhỏ
+                        .restaurant(menuItems.get(43).getRestaurant())
+                        .order(orders.get(13))
+                        .content("Chè đỗ đen ngọt vừa, thơm mùi dừa")
+                        .rating(4.6f)
+                        .imageUrls(List.of("https://example.com/images/review-che-do-den.jpg"))
+                        .createdAt(LocalDateTime.now().minusDays(3))
+                        .isAnonymous(false)
+                        .isDeleted(false)
+                        .build(),
+                        
+                Review.builder()
+                        .user(users.get(1))
+                        .food(menuItems.get(45))  // Chè bưởi size nhỏ
+                        .restaurant(menuItems.get(45).getRestaurant())
+                        .order(orders.get(17))
+                        .content("Chè bưởi thơm mát, bưởi tươi ngon")
+                        .rating(4.8f)
+                        .imageUrls(List.of("https://example.com/images/review-che-buoi.jpg"))
+                        .createdAt(LocalDateTime.now().minusDays(4))
+                        .isAnonymous(false)
+                        .isDeleted(false)
+                        .build(),
+                        
+                Review.builder()
+                        .user(users.get(2))
+                        .food(menuItems.get(47))  // Chè thập cẩm size nhỏ
+                        .restaurant(menuItems.get(47).getRestaurant())
+                        .order(orders.get(19))
+                        .content("Chè thập cẩm đầy đặn, nhiều topping")
+                        .rating(4.7f)
+                        .imageUrls(List.of("https://example.com/images/review-che-thap-cam.jpg"))
+                        .createdAt(LocalDateTime.now().minusDays(5))
+                        .isAnonymous(false)
+                        .isDeleted(false)
+                        .build(),                Review.builder()
+                        .user(users.get(3))
+                        .food(menuItems.get(47))  // Chè thập cẩm size lớn (changed from 48 to 47)
+                        .restaurant(menuItems.get(47).getRestaurant())
+                        .order(orders.get(18))  // Changed from 21 to 18 (valid index)
+                        .content("Chè thập cẩm size lớn nhiều quá không ăn hết, nhưng rất ngon!")
+                        .rating(4.5f)
+                        .imageUrls(List.of("https://example.com/images/review-che-thap-cam-lon.jpg"))
+                        .createdAt(LocalDateTime.now().minusDays(6))
+                        .isAnonymous(false)
+                        .isDeleted(false)
+                        .build(),
+                        
+                // Thêm đánh giá cho các món ăn của Bún Cá Hà Đông
+                Review.builder()
+                        .user(users.get(0))
+                        .food(menuItems.get(33))  // Bún cá rô đồng
+                        .restaurant(menuItems.get(33).getRestaurant())
+                        .content("Bún cá rô đồng thơm ngon, cá tươi")
+                        .rating(4.5f)
+                        .imageUrls(List.of())
+                        .createdAt(LocalDateTime.now().minusDays(7))
+                        .isAnonymous(false)
+                        .isDeleted(false)
+                        .build(),
+                        
+                Review.builder()
+                        .user(users.get(1))
+                        .food(menuItems.get(35))  // Bún mọc
+                        .restaurant(menuItems.get(35).getRestaurant())
+                        .content("Bún mọc chả mềm, nước dùng ngọt, rất ngon")
+                        .rating(4.8f)
+                        .imageUrls(List.of("https://example.com/images/review-bun-moc.jpg"))
+                        .createdAt(LocalDateTime.now().minusDays(8))
+                        .isAnonymous(false)
+                        .isDeleted(false)
+                        .build(),
+                
+                // Thêm đánh giá cho các món ăn của Cháo Ngon Hà Đông
+                Review.builder()
+                        .user(users.get(2))
+                        .food(menuItems.get(38))  // Cháo gà phổ thông
+                        .restaurant(menuItems.get(38).getRestaurant())
+                        .content("Cháo gà nhạt, gà ít")
+                        .rating(3.2f)
+                        .imageUrls(List.of())
+                        .createdAt(LocalDateTime.now().minusDays(9))
+                        .isAnonymous(false)
+                        .isDeleted(false)
+                        .build(),
+                        
+                Review.builder()
+                        .user(users.get(3))
+                        .food(menuItems.get(40))  // Cháo tim cật
+                        .restaurant(menuItems.get(40).getRestaurant())
+                        .content("Cháo tim cật đầy đặn, lòng tươi ngon")
+                        .rating(4.7f)
+                        .imageUrls(List.of("https://example.com/images/review-chao-tim-cat.jpg"))
+                        .createdAt(LocalDateTime.now().minusDays(10))
                         .isAnonymous(false)
                         .isDeleted(false)
                         .build()

@@ -551,7 +551,7 @@ fun CategoryFilterSection(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         Text(
             text = "Danh mục",
@@ -560,25 +560,28 @@ fun CategoryFilterSection(
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
-        Row(
+        // Horizontal scrollable tab row for categories
+        androidx.compose.foundation.lazy.LazyRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             // "Tất cả" filter chip
-            FilterChip(
-                selected = selectedCategory == null,
-                onClick = { onCategorySelected(null) },
-                label = { Text("Tất cả") },
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = MaterialTheme.colorScheme.primary,
-                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+            item {
+                FilterChip(
+                    selected = selectedCategory == null,
+                    onClick = { onCategorySelected(null) },
+                    label = { Text("Tất cả") },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                    )
                 )
-            )
+            }
 
             // Category filter chips
-            categories.forEach { category ->
+            items(categories) { category ->
                 FilterChip(
                     selected = category == selectedCategory,
                     onClick = { onCategorySelected(category) },

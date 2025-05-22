@@ -11,8 +11,7 @@ import Manager.Restaurant.mai.entity.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class RestaurantDTO {
-    private Long id;
+public class RestaurantDTO {    private Long id;
     private String name;
     private String imageUrl;
     private Float rating;
@@ -30,6 +29,7 @@ public class RestaurantDTO {
     private Long createdAt;
     private Integer durationInMinutes;
     private Long orderCount; // Số lượng đơn hàng đã bán
+    private Boolean isFavorite; // Đánh dấu nhà hàng có đang được yêu thích hay không
     
     /**
      * Tạo RestaurantDTO từ entity Restaurant bao gồm cả danh sách categories
@@ -53,12 +53,12 @@ public class RestaurantDTO {
                 .phoneNumber(res.getPhoneNumber())
                 .likes(res.getLikes())
                 .reviewsCount(res.getReviewsCount())
-                .distance(distanceInMeters / 1000.0)
-                .categories(categoryNames)
+                .distance(distanceInMeters / 1000.0)                .categories(categoryNames)
                 .menuItemsByCategory(null) // Will be set when needed
                 .createdAt(res.getCreatedAt())
                 .durationInMinutes((int)durationInSeconds / 60)
                 .orderCount(null) // Will be set when needed
+                .isFavorite(false) // Default is not favorite, will be updated if needed
                 .build();
     }
     

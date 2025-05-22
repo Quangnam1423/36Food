@@ -5,11 +5,12 @@ import Manager.Restaurant.mai.entity.Restaurant;
 import Manager.Restaurant.mai.dto.*;
 import Manager.Restaurant.mai.repository.*;
 import Manager.Restaurant.mai.service.DistanceService;
+import Manager.Restaurant.mai.service.FavoriteRestaurantService;
 import Manager.Restaurant.mai.service.GeocodingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -18,25 +19,28 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/restaurants")
 @RequiredArgsConstructor
-public class RestaurantController {    
-    private final RestaurantRepository restaurantRepo;
+public class RestaurantController {      private final RestaurantRepository restaurantRepo;
     private final DistanceService distanceService;
     private final GeocodingService geocodingService;
     private final MenuItemRepository menuItemRepo;
     private final OrderRepository orderRepo;
     private final ReviewRepository reviewRepo;
-    private final CategoryRepository categoryRepo;  
-
-    // GET /restaurants lấy tất cả nhà hàng có trong hệ thống
+    private final CategoryRepository categoryRepo;
+    private final FavoriteRestaurantService favoriteRestaurantService;    // GET /restaurants lấy tất cả nhà hàng có trong hệ thống
     @GetMapping
     public ResponseEntity<List<RestaurantDTO>> getAllRestaurants(
         @RequestParam(required = true) double userLat,
-        @RequestParam(required = true) double userLng
+        @RequestParam(required = true) double userLng,
+        HttpServletRequest request
     ) {
+        // Lấy userId từ token JWT (được thiết lập trong JwtAuthenticationFilter)
+        Long userId = (Long) request.getAttribute("userId");
+        
         List<RestaurantDTO> result = restaurantRepo.findAll().stream()
         .map(restaurant -> {
             DistanceService.RouteInfo routeInfo = distanceService.getDistanceAndDuration(
@@ -50,30 +54,42 @@ public class RestaurantController {
             );
 
             // Sử dụng phiên bản có categories để đảm bảo trả về đầy đủ thông tin
-            return RestaurantDTO.fromEntity(
+            RestaurantDTO dto = RestaurantDTO.fromEntity(
                     restaurant, 
                     address,
                     routeInfo.distanceInMeters, 
                     routeInfo.durationInSeconds
             );
+            
+            // Kiểm tra nếu nhà hàng có trong danh sách yêu thích không
+            if (userId != null) {
+                boolean isFavorite = favoriteRestaurantService.isFavorite(userId, restaurant.getId().toString());
+                dto.setIsFavorite(isFavorite);
+            }
+            
+            return dto;
         })
             .sorted(Comparator.comparingDouble(RestaurantDTO::getDistance))
             .toList();
         
         return ResponseEntity.ok(result);
-    }    
-    
-    // Trả về nhà hàng gần với pagination và metadata
+    }
+      // Trả về nhà hàng gần với pagination và metadata
     @GetMapping("/nearby-paged")
     public ResponseEntity<Map<String, Object>> getNearbyRestaurantsPaged(
             @RequestParam double userLat,
             @RequestParam double userLng,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "10") double radiusInKm
+            @RequestParam(defaultValue = "10") double radiusInKm,
+            HttpServletRequest request
     ) {
         // Chuyển đổi bán kính từ km sang mét
-        double radiusInMeters = radiusInKm * 1000;          
+        double radiusInMeters = radiusInKm * 1000;
+        
+        // Lấy userId từ token JWT (được thiết lập trong JwtAuthenticationFilter)
+        Long userId = (Long) request.getAttribute("userId");
+          
         List<RestaurantDTO> nearbyRestaurants = restaurantRepo.findAll().stream()
                 .map(restaurant -> {
                     DistanceService.RouteInfo routeInfo = distanceService.getDistanceAndDuration(
@@ -87,12 +103,20 @@ public class RestaurantController {
                     );
 
                     // Sử dụng phiên bản có categories
-                    return RestaurantDTO.fromEntity(
+                    RestaurantDTO dto = RestaurantDTO.fromEntity(
                             restaurant, 
                             address,
                             routeInfo.distanceInMeters, 
                             routeInfo.durationInSeconds
                     );
+                    
+                    // Kiểm tra nếu nhà hàng có trong danh sách yêu thích không
+                    if (userId != null) {
+                        boolean isFavorite = favoriteRestaurantService.isFavorite(userId, restaurant.getId().toString());
+                        dto.setIsFavorite(isFavorite);
+                    }
+                    
+                    return dto;
                 })
                 // Lọc nhà hàng trong bán kính quy định
                 .filter(dto -> dto.getDistance() <= radiusInMeters)
@@ -138,13 +162,13 @@ public class RestaurantController {
      * @param page Số trang (mặc định là 0)
      * @param size Kích thước trang (mặc định là 10)
      * @return Danh sách nhà hàng bán chạy nhất
-     */
-    @GetMapping("/popular")
+     */    @GetMapping("/popular")
     public ResponseEntity<Map<String, Object>> getPopularRestaurants(
             @RequestParam double userLat,
             @RequestParam double userLng,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "10") int size,
+            HttpServletRequest request
     ) {        
         // Lấy danh sách nhà hàng và số lượng đơn hàng tương ứng
         Map<Restaurant, Long> restaurantOrderCount = new HashMap<>();
@@ -155,6 +179,9 @@ public class RestaurantController {
         
         // Get total number of orders to distribute randomly
         long totalOrders = orderRepo.count();
+        
+        // Lấy userId từ token JWT (được thiết lập trong JwtAuthenticationFilter)
+        Long userId = (Long) request.getAttribute("userId");
         
         // For each restaurant, create a semi-realistic order count
         for (Restaurant restaurant : allRestaurants) {
@@ -189,6 +216,12 @@ public class RestaurantController {
                     
                     // Thêm trường orderCount để hiển thị số lượng đơn hàng
                     dto.setOrderCount(entry.getValue());
+                    
+                    // Kiểm tra nếu nhà hàng có trong danh sách yêu thích không
+                    if (userId != null) {
+                        boolean isFavorite = favoriteRestaurantService.isFavorite(userId, restaurant.getId().toString());
+                        dto.setIsFavorite(isFavorite);
+                    }
                     
                     return dto;
                 })
@@ -233,20 +266,24 @@ public class RestaurantController {
      * @param page Số trang (mặc định là 0)
      * @param size Kích thước trang (mặc định là 10)
      * @return Danh sách nhà hàng theo đánh giá
-     */
-    @GetMapping("/top-rated")
+     */    @GetMapping("/top-rated")
     public ResponseEntity<Map<String, Object>> getTopRatedRestaurants(
             @RequestParam double userLat,
             @RequestParam double userLng,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "10") int size,
+            HttpServletRequest request
     ) {
         Map<Restaurant, Double> restaurantRatings = reviewRepo.findAll().stream()
                 .filter(review -> !review.isDeleted() && review.getRestaurant() != null)
                 .collect(Collectors.groupingBy(
                         review -> review.getRestaurant(),
                         Collectors.averagingDouble(review -> review.getRating())
-                ));          
+                ));
+        
+        // Lấy userId từ token JWT (được thiết lập trong JwtAuthenticationFilter)
+        Long userId = (Long) request.getAttribute("userId");
+          
         List<RestaurantDTO> topRatedRestaurants = restaurantRatings.entrySet().stream()
                 .map(entry -> {
                     Restaurant restaurant = entry.getKey();
@@ -271,6 +308,12 @@ public class RestaurantController {
                     
                     // Ghi đè rating từ tính toán thực tế
                     dto.setRating(entry.getValue().floatValue());
+                    
+                    // Kiểm tra nếu nhà hàng có trong danh sách yêu thích không
+                    if (userId != null) {
+                        boolean isFavorite = favoriteRestaurantService.isFavorite(userId, restaurant.getId().toString());
+                        dto.setIsFavorite(isFavorite);
+                    }
                     
                     return dto;
                 })
@@ -305,18 +348,21 @@ public class RestaurantController {
         
         return ResponseEntity.ok(response);
     }    
-    
-    // GET /restaurants/{id} lấy thông tin chi tiết của một nhà hàng
+      // GET /restaurants/{id} lấy thông tin chi tiết của một nhà hàng
     @GetMapping("/{id}")
     public ResponseEntity<?> getRestaurantById(
             @PathVariable Long id,
             @RequestParam(required = true) double userLat,
-            @RequestParam(required = true) double userLng
+            @RequestParam(required = true) double userLng,
+            HttpServletRequest request
     ) {
         // Check if id is not actually a number but a path intended for another endpoint
         if (id.toString().contains("nearby") || id.toString().contains("popular") || id.toString().contains("top")) {
             return ResponseEntity.badRequest().body("Invalid restaurant ID. Maybe you meant to use an endpoint like /nearby-paged instead of /" + id);
         }
+        
+        // Lấy userId từ token JWT (được thiết lập trong JwtAuthenticationFilter)
+        Long userId = (Long) request.getAttribute("userId");
         
         return restaurantRepo.findById(id)
                 .map(restaurant -> {
@@ -337,6 +383,12 @@ public class RestaurantController {
                         routeInfo.distanceInMeters,
                         routeInfo.durationInSeconds
                     );
+                    
+                    // Kiểm tra nếu nhà hàng có trong danh sách yêu thích không
+                    if (userId != null) {
+                        boolean isFavorite = favoriteRestaurantService.isFavorite(userId, restaurant.getId().toString());
+                        dto.setIsFavorite(isFavorite);
+                    }
                     
                     return ResponseEntity.ok(dto);
                 })
@@ -457,13 +509,13 @@ public class RestaurantController {
      * @param userLng Kinh độ người dùng
      * @param searchBy Tìm theo "category" hoặc "name" hoặc "all"
      * @return Danh sách các nhà hàng phù hợp với từ khóa tìm kiếm
-     */
-    @GetMapping("/search")
+     */    @GetMapping("/search")
     public ResponseEntity<?> searchRestaurants(
             @RequestParam String keyword,
             @RequestParam double userLat,
             @RequestParam double userLng,
-            @RequestParam(defaultValue = "all") String searchBy
+            @RequestParam(defaultValue = "all") String searchBy,
+            HttpServletRequest request
     ) {
         List<Restaurant> restaurants = new ArrayList<>();
         
@@ -482,6 +534,9 @@ public class RestaurantController {
                 .distinct()
                 .collect(Collectors.toList());
         
+        // Lấy userId từ token JWT (được thiết lập trong JwtAuthenticationFilter)
+        Long userId = (Long) request.getAttribute("userId");
+        
         // Chuyển đổi danh sách nhà hàng thành DTO để trả về
         List<RestaurantDTO> result = distinctRestaurants.stream()
                 .map(restaurant -> {
@@ -498,12 +553,20 @@ public class RestaurantController {
                     );
                     
                     // Tạo DTO với thông tin cần thiết
-                    return RestaurantDTO.fromEntity(
+                    RestaurantDTO dto = RestaurantDTO.fromEntity(
                             restaurant,
                             address,
                             routeInfo.distanceInMeters,
                             routeInfo.durationInSeconds
                     );
+                    
+                    // Kiểm tra nếu nhà hàng có trong danh sách yêu thích không
+                    if (userId != null) {
+                        boolean isFavorite = favoriteRestaurantService.isFavorite(userId, restaurant.getId().toString());
+                        dto.setIsFavorite(isFavorite);
+                    }
+                    
+                    return dto;
                 })
                 // Sắp xếp kết quả theo khoảng cách, gần nhất lên đầu
                 .sorted(Comparator.comparingDouble(RestaurantDTO::getDistance))
